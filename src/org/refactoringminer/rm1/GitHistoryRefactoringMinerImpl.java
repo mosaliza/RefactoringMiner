@@ -235,6 +235,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 				UMLModelDiff modelDiff = parentUMLModel.diff(currentUMLModel, renamedFilesHint);
 				refactoringsAtRevision = modelDiff.getRefactorings();
 				MotivationExtractor motivationExtractor = new MotivationExtractor(modelDiff, refactoringsAtRevision);
+				motivationExtractor.detectAllRefactoringMotivations();
 				refactoringsAtRevision = filter(refactoringsAtRevision);
 			}
 			else {

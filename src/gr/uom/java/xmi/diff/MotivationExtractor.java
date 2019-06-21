@@ -10,7 +10,12 @@ import org.refactoringminer.api.RefactoringType;
 
 import gr.uom.java.xmi.UMLClass;
 import gr.uom.java.xmi.UMLOperation;
+import gr.uom.java.xmi.decomposition.AbstractStatement;
+import gr.uom.java.xmi.decomposition.CompositeStatementObject;
+import gr.uom.java.xmi.decomposition.OperationBody;
 import gr.uom.java.xmi.decomposition.OperationInvocation;
+import gr.uom.java.xmi.decomposition.StatementObject;
+import gr.uom.java.xmi.decomposition.UMLOperationBodyMapper;
 
 public class MotivationExtractor {
 	private UMLModelDiff modelDiff;
@@ -75,7 +80,7 @@ public class MotivationExtractor {
 		}	
 	}
 
-	public void detectExtractOperationMotivation(List<Refactoring> refList) {		
+	private void detectExtractOperationMotivation(List<Refactoring> refList) {		
 		
 		//Motivation Detection algorithms that depends on other refactorings of the same type
 		isDecomposeMethodToImroveReadability(refList);
@@ -83,60 +88,127 @@ public class MotivationExtractor {
 		
 		//Motivation Detection algorithms that can detect the motivation independently for each refactoring
 		for(Refactoring ref : refList){
-			if(isExtractReusableMethod(ref))
-			setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);								
+			if(isExtractReusableMethod(ref)) {
+				setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
+			}
+			if(isIntroduceAlternativeMethodSignature(ref)) {
+				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE, ref);
+			}
+			if(isReplaceMethodPreservingBackwardCompatibility(ref)){
+				setRefactoringMotivation(MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY, ref);
+			}
+			if(isExtractFacilitateExtension(ref)){
+				setRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+			}
 		}
 		//Print All detected refactorings
 		printDetectedRefactoringMotivations();			
 	}
-
-	private void printDetectedRefactoringMotivations() {
-		// TODO Auto-generated method stub	
+	
+	private boolean isReplaceMethodPreservingBackwardCompatibility(Refactoring ref) {
+		if( ref instanceof ExtractOperationRefactoring){
+			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
+			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
+			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
+			List<OperationInvocation> listExtractedOpInvokations = extractOpRefactoring.getExtractedOperationInvocations();
+			/*DETECTION RULE: Check if source Operation after extraction is a delegate AND
+			* IF the method parameters OR name has changed
+			*/
+			if( listExtractedOpInvokations.size() == 1 && 
+					!sourceOpAfterExtraction.equalParameters(extractedOperation) ||
+					!extractedOperation.getName().equals(sourceOpAfterExtraction.getName())){
+				//TODO: Also Check if the source method after extraction has the @Deprecated annotation
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private boolean isIntroduceAlternativeMethodSignature(Refactoring ref) {
+		if( ref instanceof ExtractOperationRefactoring){
+			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
+			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
+			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
+			//OperationInvocation Invocation = sourceOpAfterExtraction.isDelegate();
+			List<OperationInvocation> listExtractedOpInvokations = extractOpRefactoring.getExtractedOperationInvocations();
+				if( listExtractedOpInvokations.size() == 1 && !sourceOpAfterExtraction.equalParameters(extractedOperation)){
+					OperationBody sourceOpBodyAfterExtraction = sourceOpAfterExtraction.getBody();
+					int countStatements = sourceOpBodyAfterExtraction.statementCount();
+ 					if(countStatements == 1){
+						return true;
+					}
+					else{
+						//TODO:Temporary Variables should be excluded
+						CompositeStatementObject compositeStatement = sourceOpBodyAfterExtraction.getCompositeStatement();
+						List <AbstractStatement> listStatements = compositeStatement.getStatements();
+						for(AbstractStatement statement : listStatements) {
+						}
+					}
+				}
+			}			
+		return false;
+	}
+	
+	private boolean isExtractFacilitateExtension(Refactoring ref){
+		if( ref instanceof ExtractOperationRefactoring){
+			ExtractOperationRefactoring extractRefactoring = (ExtractOperationRefactoring)ref;
+			UMLOperationBodyMapper umlBodyMapper = extractRefactoring.getBodyMapper();
+			int countNonMappedLeavesAndInnerNodesT1 = 0;
+			int countNonMappedLeavesAndIneerNodesT2 = 0;
+			List<StatementObject> listNotMappedLeavesT1 = umlBodyMapper.getNonMappedLeavesT1();
+			List<CompositeStatementObject> listNotMappedInnerNodesT1 = umlBodyMapper.getNonMappedInnerNodesT1();
+			List<StatementObject> listNotMappedLeavesT2 = umlBodyMapper.getNonMappedLeavesT2();
+			List<CompositeStatementObject> listNotMappedInnerNodesT2 = umlBodyMapper.getNonMappedInnerNodesT2();
+			countNonMappedLeavesAndInnerNodesT1 = listNotMappedInnerNodesT1.size()+listNotMappedLeavesT1.size();
+			countNonMappedLeavesAndIneerNodesT2 = listNotMappedInnerNodesT2.size()+listNotMappedLeavesT2.size();
+			//DETECTION RULE: Detect if Some statements(InnerNode or Leave) added either to T1 or T2
+			if( countNonMappedLeavesAndInnerNodesT1 != 0 || countNonMappedLeavesAndIneerNodesT2 != 0) {
+				if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE) &&
+						!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY))
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean isExtractReusableMethod(Refactoring ref) {		
 		
-			if(ref instanceof ExtractOperationRefactoring) {
-				ExtractOperationRefactoring extractOp = (ExtractOperationRefactoring)ref;
-				UMLOperation extractedOperation = extractOp.getExtractedOperation();
-				UMLOperation sourceOperationAfterRefactoring = extractOp.getSourceOperationAfterExtraction();
-				UMLClassBaseDiff classDiff = modelDiff.getUMLClassDiff(sourceOperationAfterRefactoring.getClassName());
-				int extractOperationInvocationCount = 0 ;
-				
-				if(classDiff != null) {
-					UMLClass classAfterRefactoring = classDiff.getNextClass();
-					for(UMLOperation operation : classAfterRefactoring.getOperations()) {
-						//check if other operation in class after refactoring, call the extracted method
-						if(!operation.equals(sourceOperationAfterRefactoring) && !operation.equals(extractedOperation)) {
-							List<OperationInvocation> invocations = operation.getAllOperationInvocations();
-							for(OperationInvocation invocation : invocations) {
-								if(invocation.matchesOperation(extractedOperation)) {
-									extractOperationInvocationCount++;
-									System.out.println();
-								}
+		if(ref instanceof ExtractOperationRefactoring) {
+			ExtractOperationRefactoring extractOp = (ExtractOperationRefactoring)ref;
+			UMLOperation extractedOperation = extractOp.getExtractedOperation();
+			UMLOperation sourceOperationAfterRefactoring = extractOp.getSourceOperationAfterExtraction();
+			UMLClassBaseDiff classDiff = modelDiff.getUMLClassDiff(sourceOperationAfterRefactoring.getClassName());
+			int extractOperationInvocationCount = 0 ;
+			
+			if(classDiff != null) {
+				UMLClass classAfterRefactoring = classDiff.getNextClass();
+				for(UMLOperation operation : classAfterRefactoring.getOperations()) {
+					//check if other operation in class after refactoring, call the extracted method
+					if(!operation.equals(sourceOperationAfterRefactoring) && !operation.equals(extractedOperation)) {
+						List<OperationInvocation> invocations = operation.getAllOperationInvocations();
+						for(OperationInvocation invocation : invocations) {
+							if(invocation.matchesOperation(extractedOperation)) {
+								extractOperationInvocationCount++;
 							}
 						}
 					}
 				}
-				/* DETECTION RULE:
-				 * IF Invocations to Extracted method from source method after Extraction is more than one OR 
-				 *  there are other Invocations from other methods to extracted operation*/
-				if(extractOp.getExtractedOperationInvocations().size()>1 || extractOperationInvocationCount != 0) 
-				{
-					/*AND if the extraction operation is not detected as duplicated removal before
-					 * (All Extract Operations that tend to remove duplication are also are reused.)*/
-					List<MotivationType> listMotivations = mapRefactoringMotivations.get(ref);
-					if(!listMotivations.contains(MotivationType.EM_REMOVE_DUPLICATION)){
-						//System.out.print("Motivation: Extract Reusable Method");
-						return true;
-					}
-				}	
 			}
-			
-			return false;	
+			/* DETECTION RULE:
+			 * IF Invocations to Extracted method from source method after Extraction is more than one OR 
+			 *  there are other Invocations from other methods to extracted operation*/
+			if(extractOp.getExtractedOperationInvocations().size()>1 || extractOperationInvocationCount != 0) {
+				/*AND if the extraction operation is not detected as duplicated removal before
+				 * (All Extract Operations that tend to remove duplication are also reused.)*/
+				if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
+					return true;
+				}
+			}	
+		}		
+		return false;	
 	}
 	
-	public boolean isDecomposeMethodToImroveReadability(List<Refactoring> refList) {
+	private boolean isDecomposeMethodToImroveReadability(List<Refactoring> refList) {
 		
 		Map<UMLOperation, List<ExtractOperationRefactoring>> extractOperationMapWithSourceOperationAsKey = new HashMap<>();
 		for (Refactoring ref : refList) {
@@ -203,6 +275,19 @@ public class MotivationExtractor {
 		return false;
 	}
 	
+	private boolean isMotivationDetected(Refactoring ref, MotivationType type){
+		
+		List<MotivationType> listMotivations = mapRefactoringMotivations.get(ref);
+		if(listMotivations == null) {
+			return false;
+		}
+		else {
+			if(listMotivations.contains(type)){
+				return true;
+			}
+		}	
+		return false;
+	}
 	private void setRefactoringMotivation(MotivationType motivationType, Refactoring ref) {
 		if (mapRefactoringMotivations.containsKey(ref)){
 			mapRefactoringMotivations.get(ref).add(motivationType);
@@ -226,5 +311,9 @@ public class MotivationExtractor {
 				mapClassifiedRefactorings.put(type,listRefactoring);
 			}
 		}
+	}
+	
+	private void printDetectedRefactoringMotivations() {
+		// TODO Auto-generated method stub	
 	}
 }
