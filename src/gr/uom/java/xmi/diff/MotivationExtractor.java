@@ -117,8 +117,16 @@ public class MotivationExtractor {
 			if( listExtractedOpInvokations.size() == 1 && 
 					!sourceOpAfterExtraction.equalParameters(extractedOperation) ||
 					!extractedOperation.getName().equals(sourceOpAfterExtraction.getName())){
-				//TODO: Also Check if the source method after extraction has the @Deprecated annotation
-				return true;
+				OperationBody sourceOpBodyAfterExtraction = sourceOpAfterExtraction.getBody();
+				int countStatements = sourceOpBodyAfterExtraction.statementCount();
+					if(countStatements == 1){
+					return true;
+				}
+				else{
+				/*TODO: Also Check if the source method after extraction has the @Deprecated annotation
+				 * Temporary Variables should be excluded.
+				 */
+				}
 			}
 		}
 		return false;
@@ -225,6 +233,7 @@ public class MotivationExtractor {
 				}
 			}
 		}
+		int countDecomposeMethodToImproveReadability = 0;
 		for(UMLOperation key : extractOperationMapWithSourceOperationAsKey.keySet()) {
 			List<ExtractOperationRefactoring> list = extractOperationMapWithSourceOperationAsKey.get(key);
 			/*DETECTION RULE: if multiple extract operations have the same source Operation
@@ -235,12 +244,13 @@ public class MotivationExtractor {
 				for(ExtractOperationRefactoring ref : list) {
 					//Set Motivation for each refactoring with the same source Operation
 					setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
-					//System.out.println(ref);
+					countDecomposeMethodToImproveReadability++;
 				}
-				return true;
 			}
 		}
-		
+		if(countDecomposeMethodToImproveReadability >= 2) {
+			return true;
+		}
 		return false;	
 	}
 	
@@ -260,7 +270,7 @@ public class MotivationExtractor {
 				}
 			}			
 		}
-		
+		int countRemoveDuplicationExtractRefactorings = 0;
 		for(UMLOperation extractOperation : sourceOperationMapWithExtractedOperationAsKey.keySet()){
 			List<ExtractOperationRefactoring> listSourceOperations = sourceOperationMapWithExtractedOperationAsKey.get(extractOperation);	
 			/*DETECTION RULE: if multiple source operations(The Extract Refactorings that contain them)
@@ -268,9 +278,12 @@ public class MotivationExtractor {
 			if(listSourceOperations.size() > 1){
 				for(ExtractOperationRefactoring extractOp : listSourceOperations){
 					setRefactoringMotivation(MotivationType.EM_REMOVE_DUPLICATION, extractOp);
+					countRemoveDuplicationExtractRefactorings++;
 				}
-				return true;
 			}
+		}
+		if(countRemoveDuplicationExtractRefactorings >= 2) {
+			return true;
 		}
 		return false;
 	}

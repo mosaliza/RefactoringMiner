@@ -16,10 +16,10 @@ public class Main {
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 
 		Repository repo = gitService.cloneIfNotExists(
-				"tmp/gradle",
-				"https://github.com/gradle/gradle.git");
-		miner.detectAtCommit(repo, "https://github.com/gradle/gradle.git",
-				"79c66ceab11dae0b9fd1dade7bb4120028738705", new RefactoringHandler() {
+				"tmp/alluxio",
+				"https://github.com/Alluxio/alluxio.git");
+		miner.detectAtCommit(repo, "https://github.com/Alluxio/alluxio.git",
+				"ed966510ccf8441115614e2258aea61df0ea55f5", new RefactoringHandler() {
 			@Override
 			public void handle(RevCommit commitData, List<Refactoring> refactorings) {
 				for(Refactoring ref : refactorings) {
