@@ -100,11 +100,40 @@ public class MotivationExtractor {
 			if(isExtractFacilitateExtension(ref)){
 				setRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
 			}
+			if(IsExtractedtoEnableRecursion(ref)) {
+				setRefactoringMotivation(MotivationType.EM_ENABLE_RECURSION, ref);
+			}
 		}
 		//Print All detected refactorings
 		printDetectedRefactoringMotivations();			
 	}
 	
+	private boolean IsExtractedtoEnableRecursion(Refactoring ref) {
+		if(ref instanceof ExtractOperationRefactoring) {
+			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring) ref;
+			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
+			UMLClassBaseDiff classDiff = modelDiff.getUMLClassDiff(extractedOperation.getClassName());
+			int countExtractedOperationRecursiveInvocations = 0;
+			if(classDiff != null) {
+				UMLClass classAfterRefactoring = classDiff.getNextClass();
+				for(UMLOperation operation : classAfterRefactoring.getOperations()) {
+					if(operation.equals(extractedOperation)) {
+						List<OperationInvocation> listInvokations = operation.getAllOperationInvocations();
+						for( OperationInvocation invocation : listInvokations) {
+							if(invocation.matchesOperation(extractedOperation)){
+								countExtractedOperationRecursiveInvocations++;
+							}
+						}
+					}
+				}
+			}
+			if(countExtractedOperationRecursiveInvocations != 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private boolean isReplaceMethodPreservingBackwardCompatibility(Refactoring ref) {
 		if( ref instanceof ExtractOperationRefactoring){
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
