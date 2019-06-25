@@ -9,7 +9,9 @@ import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
 
 import gr.uom.java.xmi.UMLClass;
+import gr.uom.java.xmi.UMLModel;
 import gr.uom.java.xmi.UMLOperation;
+import gr.uom.java.xmi.UMLRealization;
 import gr.uom.java.xmi.decomposition.AbstractStatement;
 import gr.uom.java.xmi.decomposition.CompositeStatementObject;
 import gr.uom.java.xmi.decomposition.OperationBody;
@@ -100,14 +102,87 @@ public class MotivationExtractor {
 			if(isExtractFacilitateExtension(ref)){
 				setRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
 			}
+			if(IsExtractedToImproveTestability(ref)) {
+				setRefactoringMotivation(MotivationType.EM_IMPROVE_TESTABILITY, ref);
+			}
 			if(IsExtractedtoEnableRecursion(ref)) {
 				setRefactoringMotivation(MotivationType.EM_ENABLE_RECURSION, ref);
+			}
+			if(IsExtractedToEnableOverriding(ref)) {
+				setRefactoringMotivation(MotivationType.EM_ENABLE_OVERRIDING, ref);
+				
 			}
 		}
 		//Print All detected refactorings
 		printDetectedRefactoringMotivations();			
 	}
 	
+	private boolean IsExtractedToEnableOverriding(Refactoring ref) {
+		List<UMLOperation> operationsOverridingeExtractedOperations = new ArrayList<UMLOperation>();
+		if(ref instanceof ExtractOperationRefactoring){
+		ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
+		UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
+		UMLClassBaseDiff extractedOperationClassDiff = modelDiff.getUMLClassDiff(extractedOperation.getClassName());
+		if(extractedOperationClassDiff != null) {
+			UMLClass extractedOperationNextClass = extractedOperationClassDiff.getNextClass();
+			for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
+				UMLClass nextClass = classDiff.getNextClass();
+				isOperationOverridenInClass(extractedOperation, extractedOperationNextClass, nextClass,
+						operationsOverridingeExtractedOperations);
+			}
+			for(UMLClass addedClass : modelDiff.getAddedClasses()) {
+				isOperationOverridenInClass(extractedOperation, extractedOperationNextClass, addedClass,
+						operationsOverridingeExtractedOperations);	
+			}
+		}
+		if(operationsOverridingeExtractedOperations.size() > 0)
+			return true;
+
+		}
+		return false;
+	}
+
+	private void isOperationOverridenInClass(UMLOperation extractedOperation, UMLClass extractedOperationNextClass,
+			UMLClass nextClass, List<UMLOperation> operationsOverridingeExtractedOperations) {
+		if(nextClass.isSubTypeOf(extractedOperationNextClass)){
+			for(UMLOperation operation : nextClass.getOperations()) {
+				if(operation.equalSignature(extractedOperation))
+					operationsOverridingeExtractedOperations.add(operation);
+				}
+			}
+		}
+
+	private boolean IsExtractedToImproveTestability(Refactoring ref) {
+		List<UMLOperation> operationsTestingExtractedOperation = new ArrayList<UMLOperation>();
+		if(ref instanceof ExtractOperationRefactoring) {
+			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
+			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
+			for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
+				UMLClass nextClass = classDiff.getNextClass();
+				isOperationTestedInClass(nextClass, extractedOperation, operationsTestingExtractedOperation);
+			}
+			for(UMLClass addedClass : modelDiff.getAddedClasses()) {
+				isOperationTestedInClass(addedClass, extractedOperation, operationsTestingExtractedOperation);
+			}
+		}
+		if(operationsTestingExtractedOperation.size() > 0)
+			return true;
+		return false;
+	}
+
+	private void isOperationTestedInClass(UMLClass nextClass, UMLOperation extractedOperation,
+			List<UMLOperation> operationsTestingExtractedOperation) {
+		for(UMLOperation operation : nextClass.getOperations()) {
+			if(operation.hasTestAnnotation() || nextClass.isTestClass()) {
+				for(OperationInvocation invocation : operation.getAllOperationInvocations()) {
+					if(invocation.matchesOperation(extractedOperation, operation.variableTypeMap(), modelDiff)) {
+						operationsTestingExtractedOperation.add(operation);
+					}
+				}
+			}
+		}
+	}
+
 	private boolean IsExtractedtoEnableRecursion(Refactoring ref) {
 		if(ref instanceof ExtractOperationRefactoring) {
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring) ref;

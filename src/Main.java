@@ -16,10 +16,10 @@ public class Main {
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 
 		Repository repo = gitService.cloneIfNotExists(
-				"tmp/liferay-plugins",
-				"https://github.com/liferay/liferay-plugins.git");
-		miner.detectAtCommit(repo, "https://github.com/liferay/liferay-plugins.git",
-				"7c7ecf4cffda166938efd0ae34830e2979c25c73", new RefactoringHandler() {
+				"tmp/spring-data-rest",
+				"https://github.com/spring-projects/spring-data-rest.git");
+		miner.detectAtCommit(repo, "https://github.com/spring-projects/spring-data-rest.git",
+				"b7cba6a700d8c5e456cdeffe9c5bf54563eab7d3", new RefactoringHandler() {
 			@Override
 			public void handle(RevCommit commitData, List<Refactoring> refactorings) {
 				for(Refactoring ref : refactorings) {

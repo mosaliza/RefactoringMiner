@@ -70,6 +70,14 @@ public class UMLModelDiff {
       this.deletedFolderPaths = new LinkedHashSet<String>();
    }
 
+   public List<UMLClass> getAddedClasses() {
+	   return addedClasses;
+   }
+
+   public List<UMLClassDiff> getCommonClassDiffList() {
+	   return commonClassDiffList;
+   }
+
    public void reportAddedClass(UMLClass umlClass) {
 	   if(!addedClasses.contains(umlClass))
 		   this.addedClasses.add(umlClass);
