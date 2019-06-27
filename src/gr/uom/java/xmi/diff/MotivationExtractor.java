@@ -8,10 +8,12 @@ import java.util.Map;
 import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
 
+import gr.uom.java.xmi.LocationInfo.CodeElementType;
 import gr.uom.java.xmi.UMLClass;
 import gr.uom.java.xmi.UMLModel;
 import gr.uom.java.xmi.UMLOperation;
 import gr.uom.java.xmi.UMLRealization;
+import gr.uom.java.xmi.UMLType;
 import gr.uom.java.xmi.decomposition.AbstractStatement;
 import gr.uom.java.xmi.decomposition.CompositeStatementObject;
 import gr.uom.java.xmi.decomposition.OperationBody;
@@ -110,13 +112,52 @@ public class MotivationExtractor {
 			}
 			if(IsExtractedToEnableOverriding(ref)) {
 				setRefactoringMotivation(MotivationType.EM_ENABLE_OVERRIDING, ref);
-				
+			}
+			if(IsExtractedtoIntroduceAsyncOperation(ref)) {
+				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ASYNC_OPERATION, ref);
 			}
 		}
 		//Print All detected refactorings
 		printDetectedRefactoringMotivations();			
 	}
 	
+	private boolean IsExtractedtoIntroduceAsyncOperation(Refactoring ref) {
+		//1-Is there any keywords that shows source Operation after extraction is Introducing async operation
+		//2-If there is s keyword it a subtype of Cthread or Implementing IRunnable run method
+		//3- is there any calls from within the run method to extracted operation
+		boolean bExtractedOpInvoked = false;
+		boolean bRunMethodExists = false;
+		boolean bExtractedMethodInvocationIsInsideRun = false;
+		if(ref instanceof ExtractOperationRefactoring){
+			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
+			UMLOperation sourceOperationAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
+			CodeRange rangeExtractedOperationInvokation = new CodeRange("", 0, 0, 0, 0, CodeElementType.METHOD_INVOCATION);
+			CodeRange rangeRunMethodInvokation = new CodeRange("", 0, 0, 0, 0, CodeElementType.METHOD_INVOCATION);
+			for(OperationInvocation Invokation : sourceOperationAfterExtraction.getAllOperationInvocations()) {
+				if(Invokation.matchesOperation(extractOpRefactoring.getExtractedOperation(), sourceOperationAfterExtraction.variableTypeMap(), modelDiff)) {
+					bExtractedOpInvoked = true;
+					rangeExtractedOperationInvokation = Invokation.codeRange();		
+				}
+				if(Invokation.getMethodName().equals("run")){
+					bRunMethodExists = true;
+					rangeRunMethodInvokation = Invokation.codeRange();
+				}		
+			}
+			if(bExtractedOpInvoked && bRunMethodExists) {
+				if(rangeRunMethodInvokation.getEndLine() >= rangeExtractedOperationInvokation.getEndLine() &&
+						rangeRunMethodInvokation.getEndColumn() > rangeExtractedOperationInvokation.getEndLine() &&
+						rangeRunMethodInvokation.getStartLine() <= rangeExtractedOperationInvokation.getStartLine() &&
+						rangeRunMethodInvokation.getStartColumn() < rangeExtractedOperationInvokation.getStartColumn()) {
+					bExtractedMethodInvocationIsInsideRun = true;
+				}	
+			}
+		}
+		if(bExtractedMethodInvocationIsInsideRun) {
+			return true;
+		}			
+		return false;
+	}
+
 	private boolean IsExtractedToEnableOverriding(Refactoring ref) {
 		List<UMLOperation> operationsOverridingeExtractedOperations = new ArrayList<UMLOperation>();
 		if(ref instanceof ExtractOperationRefactoring){

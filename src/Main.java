@@ -16,10 +16,10 @@ public class Main {
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 
 		Repository repo = gitService.cloneIfNotExists(
-				"tmp/spring-data-rest",
-				"https://github.com/spring-projects/spring-data-rest.git");
-		miner.detectAtCommit(repo, "https://github.com/spring-projects/spring-data-rest.git",
-				"b7cba6a700d8c5e456cdeffe9c5bf54563eab7d3", new RefactoringHandler() {
+				"tmp/android_frameworks_base",
+				"https://github.com/CyanogenMod/android_frameworks_base.git");
+		miner.detectAtCommit(repo,"https://github.com/CyanogenMod/android_frameworks_base.git",
+				"4587c32ab8a1c8e2169e4f93491a8c927216a6ab", new RefactoringHandler() {
 			@Override
 			public void handle(RevCommit commitData, List<Refactoring> refactorings) {
 				for(Refactoring ref : refactorings) {
