@@ -1,25 +1,33 @@
 package gr.uom.java.xmi.diff;
 
+import java.beans.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
+import org.eclipse.jdt.internal.core.search.matching.MatchLocatorParser.ClassAndMethodDeclarationVisitor;
 import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
 
 import gr.uom.java.xmi.LocationInfo.CodeElementType;
+import gr.uom.java.xmi.UMLAnonymousClass;
 import gr.uom.java.xmi.UMLClass;
 import gr.uom.java.xmi.UMLModel;
 import gr.uom.java.xmi.UMLOperation;
+import gr.uom.java.xmi.UMLParameter;
 import gr.uom.java.xmi.UMLRealization;
 import gr.uom.java.xmi.UMLType;
 import gr.uom.java.xmi.decomposition.AbstractStatement;
+import gr.uom.java.xmi.decomposition.AnonymousClassDeclarationObject;
 import gr.uom.java.xmi.decomposition.CompositeStatementObject;
+import gr.uom.java.xmi.decomposition.ObjectCreation;
 import gr.uom.java.xmi.decomposition.OperationBody;
 import gr.uom.java.xmi.decomposition.OperationInvocation;
 import gr.uom.java.xmi.decomposition.StatementObject;
 import gr.uom.java.xmi.decomposition.UMLOperationBodyMapper;
+import gr.uom.java.xmi.decomposition.VariableDeclaration;
 
 public class MotivationExtractor {
 	private UMLModelDiff modelDiff;
@@ -113,50 +121,92 @@ public class MotivationExtractor {
 			if(IsExtractedToEnableOverriding(ref)) {
 				setRefactoringMotivation(MotivationType.EM_ENABLE_OVERRIDING, ref);
 			}
+			if(IsExtractedToIntroduceFactoryMethod(ref)) {
+				setRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
+			}
 			if(IsExtractedtoIntroduceAsyncOperation(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ASYNC_OPERATION, ref);
 			}
+			
 		}
 		//Print All detected refactorings
 		printDetectedRefactoringMotivations();			
 	}
 	
+	private boolean IsExtractedToIntroduceFactoryMethod(Refactoring ref) {
+		if(ref instanceof ExtractOperationRefactoring) {
+			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring) ref;
+			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
+			List<VariableDeclaration> listVariableDeclerations = extractedOperation.getAllVariableDeclarations();
+			List<ObjectCreation> listReturnTypeObjectsCreatedInReturnStatement = new ArrayList<ObjectCreation>();
+			UMLParameter returnParameter =  extractedOperation.getReturnParameter();
+			UMLType returnParameterType = returnParameter.getType();
+			List<String> returnStatementVariables = new ArrayList<String>();
+			Map<String ,List<ObjectCreation>> returnStatementobjectCreationsMap = new HashMap<String,List<ObjectCreation>>();
+			for(AbstractStatement statement : extractedOperation.getBody().getCompositeStatement().getStatements()) {
+				if(statement.getLocationInfo().getCodeElementType().equals(CodeElementType.RETURN_STATEMENT)) {
+					returnStatementVariables = statement.getVariables();
+					returnStatementobjectCreationsMap = statement.getCreationMap();
+					for(String objectCreationString : returnStatementobjectCreationsMap.keySet() ) {
+						List<ObjectCreation> listObjectCreation = returnStatementobjectCreationsMap.get(objectCreationString);
+						for(ObjectCreation objectCreation: listObjectCreation) {
+							if(objectCreation.getType().equalClassType(returnParameterType) ||
+									returnParameterType.equalsWithSubType(objectCreation.getType())) {
+								listReturnTypeObjectsCreatedInReturnStatement.add(objectCreation);
+							}
+						}
+					}
+					if(listReturnTypeObjectsCreatedInReturnStatement.size() == 1) {
+						return true;
+					}
+				}
+			}
+			//Find All the Variable Declerations with same Type as return parameter
+			Map<UMLType,String> variableTypeNameMap = new HashMap<UMLType, String>();
+			for(VariableDeclaration variableDecleration: listVariableDeclerations){
+				if(variableDecleration.getType().equalClassType(returnParameterType)) {
+					variableTypeNameMap.put(variableDecleration.getType(), variableDecleration.getVariableName()); 
+				}
+			}
+			//Check if return statement returns a variable of Return parameter type
+			for(UMLType type : variableTypeNameMap.keySet()) {
+				if( returnStatementVariables.size() == 1 && returnStatementVariables.contains(variableTypeNameMap.get(type))){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	private boolean IsExtractedtoIntroduceAsyncOperation(Refactoring ref) {
-		//1-Is there any keywords that shows source Operation after extraction is Introducing async operation
-		//2-If there is s keyword it a subtype of Cthread or Implementing IRunnable run method
-		//3- is there any calls from within the run method to extracted operation
-		boolean bExtractedOpInvoked = false;
-		boolean bRunMethodExists = false;
-		boolean bExtractedMethodInvocationIsInsideRun = false;
+
 		if(ref instanceof ExtractOperationRefactoring){
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
 			UMLOperation sourceOperationAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
-			CodeRange rangeExtractedOperationInvokation = new CodeRange("", 0, 0, 0, 0, CodeElementType.METHOD_INVOCATION);
-			CodeRange rangeRunMethodInvokation = new CodeRange("", 0, 0, 0, 0, CodeElementType.METHOD_INVOCATION);
-			for(OperationInvocation Invokation : sourceOperationAfterExtraction.getAllOperationInvocations()) {
-				if(Invokation.matchesOperation(extractOpRefactoring.getExtractedOperation(), sourceOperationAfterExtraction.variableTypeMap(), modelDiff)) {
-					bExtractedOpInvoked = true;
-					rangeExtractedOperationInvokation = Invokation.codeRange();		
+			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
+			OperationBody sourceBody = sourceOperationAfterExtraction.getBody();
+			CompositeStatementObject sourceCompositeStatement = sourceBody.getCompositeStatement();
+			for(AbstractStatement statement : sourceCompositeStatement.getStatements()) {
+				if(statement.getTypes().contains("Runnable")){								
+					List<AnonymousClassDeclarationObject> anonymousClassDeclerations = statement.getAnonymousClassDeclarations();
+					for(AnonymousClassDeclarationObject decleration: anonymousClassDeclerations) {
+						Map<String,List<OperationInvocation>> declerationMethodInvocationMap = decleration.getMethodInvocationMap();
+						for(String methodInvocation : declerationMethodInvocationMap.keySet()) {
+							List<OperationInvocation> invocations = declerationMethodInvocationMap.get(methodInvocation);
+							for(OperationInvocation invocation : invocations) {
+								if(invocation.matchesOperation(extractedOperation)){
+									return true;
+								}
+							}	
+						}
+					}
 				}
-				if(Invokation.getMethodName().equals("run")){
-					bRunMethodExists = true;
-					rangeRunMethodInvokation = Invokation.codeRange();
-				}		
-			}
-			if(bExtractedOpInvoked && bRunMethodExists) {
-				if(rangeRunMethodInvokation.getEndLine() >= rangeExtractedOperationInvokation.getEndLine() &&
-						rangeRunMethodInvokation.getEndColumn() > rangeExtractedOperationInvokation.getEndLine() &&
-						rangeRunMethodInvokation.getStartLine() <= rangeExtractedOperationInvokation.getStartLine() &&
-						rangeRunMethodInvokation.getStartColumn() < rangeExtractedOperationInvokation.getStartColumn()) {
-					bExtractedMethodInvocationIsInsideRun = true;
-				}	
 			}
 		}
-		if(bExtractedMethodInvocationIsInsideRun) {
-			return true;
-		}			
+		
 		return false;
 	}
+	
 
 	private boolean IsExtractedToEnableOverriding(Refactoring ref) {
 		List<UMLOperation> operationsOverridingeExtractedOperations = new ArrayList<UMLOperation>();

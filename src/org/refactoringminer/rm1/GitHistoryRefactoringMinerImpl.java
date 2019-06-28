@@ -528,8 +528,14 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 			populateWithGitHubAPI(gitURL, currentCommitId, fileContentsBefore, fileContentsCurrent, renamedFilesHint, repositoryDirectoriesBefore, repositoryDirectoriesCurrent);
 			UMLModel currentUMLModel = createModel(fileContentsCurrent, repositoryDirectoriesCurrent);
 			UMLModel parentUMLModel = createModel(fileContentsBefore, repositoryDirectoriesBefore);
-			//  Diff between currentModel e parentModel
-			refactoringsAtRevision = parentUMLModel.diff(currentUMLModel, renamedFilesHint).getRefactorings();
+			
+			// Diff between currentModel e parentModel
+			UMLModelDiff modelDiff = parentUMLModel.diff(currentUMLModel, renamedFilesHint);
+			refactoringsAtRevision = modelDiff.getRefactorings();
+			MotivationExtractor motivationExtractor = new MotivationExtractor(modelDiff, refactoringsAtRevision);
+			motivationExtractor.detectAllRefactoringMotivations();
+
+			
 			refactoringsAtRevision = filter(refactoringsAtRevision);
 		}
 		catch(RefactoringMinerTimedOutException e) {

@@ -16,9 +16,19 @@ public class Main {
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 
 		Repository repo = gitService.cloneIfNotExists(
-				"tmp/android_frameworks_base",
-				"https://github.com/CyanogenMod/android_frameworks_base.git");
-		miner.detectAtCommit(repo,"https://github.com/CyanogenMod/android_frameworks_base.git",
+				"tmp/bitcoinj",
+				"https://github.com/bitcoinj/bitcoinj.git");
+		miner.detectAtCommit("https://github.com/bitcoinj/bitcoinj.git",
+				"12602650ce99f34cb530fc24266c23e39733b0bb", new RefactoringHandler() {
+					@Override
+					public void handle(RevCommit commitData, List<Refactoring> refactorings) {
+						for(Refactoring ref : refactorings) {
+							System.out.println(ref);
+						}
+					}
+				},100);
+		
+		/*miner.detectAtCommit(repo,"https://github.com/CyanogenMod/android_frameworks_base.git",
 				"4587c32ab8a1c8e2169e4f93491a8c927216a6ab", new RefactoringHandler() {
 			@Override
 			public void handle(RevCommit commitData, List<Refactoring> refactorings) {
@@ -26,6 +36,6 @@ public class Main {
 					System.out.println(ref);
 				}
 			}
-		});
+		});*/
 	}
 }
