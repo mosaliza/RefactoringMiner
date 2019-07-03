@@ -51,12 +51,13 @@ public class MotivationExtractor {
 				
 	private void detectMotivataion(RefactoringType type) {	
 		
+		List<Refactoring> listRef = mapClassifiedRefactorings.get(type);
 		switch (type) {
 		case EXTRACT_OPERATION :
-			List<Refactoring> listRef = mapClassifiedRefactorings.get(type);
 			detectExtractOperationMotivation(listRef);
 			break;
 		case MOVE_CLASS:
+			detectMoveClassMotivation(listRef);
 			break;
 		case MOVE_ATTRIBUTE:
 			
@@ -92,14 +93,28 @@ public class MotivationExtractor {
 		}	
 	}
 
-	private void detectExtractOperationMotivation(List<Refactoring> refList) {		
+	private void detectMoveClassMotivation(List<Refactoring> listRef) {
+		for(Refactoring ref : listRef){
+			if(IsMoveClassToAppropriateContainer(ref)) {
+				setRefactoringMotivation(MotivationType.MC_MOVE_CLASS_TO_APPROPRIATE_CONTAINER, ref);
+			}
+		}
+	}
+
+
+	private boolean IsMoveClassToAppropriateContainer(Refactoring ref) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private void detectExtractOperationMotivation(List<Refactoring> listRef) {		
 		
 		//Motivation Detection algorithms that depends on other refactorings of the same type
-		isDecomposeMethodToImroveReadability(refList);
-		isMethodExtractedToRemoveDuplication(refList);
+		isDecomposeMethodToImroveReadability(listRef);
+		isMethodExtractedToRemoveDuplication(listRef);
 		
 		//Motivation Detection algorithms that can detect the motivation independently for each refactoring
-		for(Refactoring ref : refList){
+		for(Refactoring ref : listRef){
 			if(isExtractReusableMethod(ref)) {
 				setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
 			}
