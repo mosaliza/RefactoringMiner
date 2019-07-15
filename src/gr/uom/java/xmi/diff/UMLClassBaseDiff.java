@@ -25,6 +25,7 @@ import gr.uom.java.xmi.decomposition.OperationInvocation;
 import gr.uom.java.xmi.decomposition.StatementObject;
 import gr.uom.java.xmi.decomposition.UMLOperationBodyMapper;
 import gr.uom.java.xmi.decomposition.VariableDeclaration;
+import gr.uom.java.xmi.decomposition.VariableReferenceExtractor;
 import gr.uom.java.xmi.decomposition.replacement.MethodInvocationReplacement;
 import gr.uom.java.xmi.decomposition.replacement.Replacement;
 import gr.uom.java.xmi.decomposition.replacement.Replacement.ReplacementType;
@@ -91,9 +92,9 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 	public void process() throws RefactoringMinerTimedOutException {
 		processInheritance();
 		processOperations();
+		createBodyMappers();
 		processAttributes();
 		checkForAttributeChanges();
-		createBodyMappers();
 		processAnonymousClasses();
 		checkForOperationSignatureChanges();
 		checkForInlinedOperations();
@@ -161,7 +162,8 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 			else if(!attribute.equals(attributeWithTheSameName) && !attributeDiffListContainsAttribute(attribute, attributeWithTheSameName)) {
 				UMLAttributeDiff attributeDiff = new UMLAttributeDiff(attribute, attributeWithTheSameName);
 				if(attributeDiff.isTypeChanged()) {
-					ChangeAttributeTypeRefactoring ref = new ChangeAttributeTypeRefactoring(attribute.getVariableDeclaration(), attributeWithTheSameName.getVariableDeclaration(), originalClass.getName(), nextClass.getName());
+					ChangeAttributeTypeRefactoring ref = new ChangeAttributeTypeRefactoring(attribute.getVariableDeclaration(), attributeWithTheSameName.getVariableDeclaration(), originalClass.getName(), nextClass.getName(),
+							VariableReferenceExtractor.findReferences(attribute.getVariableDeclaration(), attributeWithTheSameName.getVariableDeclaration(), operationBodyMapperList));
 					refactorings.add(ref);
 				}
 				this.attributeDiffList.add(attributeDiff);
@@ -175,7 +177,8 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 			else if(!attribute.equals(attributeWithTheSameName) && !attributeDiffListContainsAttribute(attributeWithTheSameName, attribute)) {
 				UMLAttributeDiff attributeDiff = new UMLAttributeDiff(attributeWithTheSameName, attribute);
 				if(attributeDiff.isTypeChanged()) {
-					ChangeAttributeTypeRefactoring ref = new ChangeAttributeTypeRefactoring(attributeWithTheSameName.getVariableDeclaration(), attribute.getVariableDeclaration(), originalClass.getName(), nextClass.getName());
+					ChangeAttributeTypeRefactoring ref = new ChangeAttributeTypeRefactoring(attributeWithTheSameName.getVariableDeclaration(), attribute.getVariableDeclaration(), originalClass.getName(), nextClass.getName(),
+							VariableReferenceExtractor.findReferences(attributeWithTheSameName.getVariableDeclaration(), attribute.getVariableDeclaration(), operationBodyMapperList));
 					refactorings.add(ref);
 				}
 				this.attributeDiffList.add(attributeDiff);
@@ -550,7 +553,8 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 								refactorings.add(ref);
 								if(!a1.getVariableDeclaration().getType().equals(a2.getVariableDeclaration().getType())) {
 									ChangeAttributeTypeRefactoring refactoring = new ChangeAttributeTypeRefactoring(a1.getVariableDeclaration(), a2.getVariableDeclaration(),
-											getOriginalClassName(), getNextClassName());
+											getOriginalClassName(), getNextClassName(),
+											VariableReferenceExtractor.findReferences(a1.getVariableDeclaration(), a2.getVariableDeclaration(), operationBodyMapperList));
 									refactorings.add(refactoring);
 								}
 								break;//it's not necessary to repeat the same process for all candidates in the set
@@ -1155,8 +1159,10 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 				int countableStatements = 0;
 				int parameterizedVariableDeclarationStatements = 0;
 				UMLOperation addedOperation = operationBodyMapper.getOperation2();
+				List<String> nonMappedLeavesT1 = new ArrayList<String>();
 				for(StatementObject statement : operationBodyMapper.getNonMappedLeavesT1()) {
 					if(statement.countableStatement()) {
+						nonMappedLeavesT1.add(statement.getString());
 						for(String parameterName : addedOperation.getParameterNameList()) {
 							if(statement.getVariableDeclaration(parameterName) != null) {
 								parameterizedVariableDeclarationStatements++;
@@ -1166,7 +1172,17 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 						countableStatements++;
 					}
 				}
-				return countableStatements == parameterizedVariableDeclarationStatements && countableStatements > 0;
+				int nonMappedLeavesExactlyMatchedInTheBodyOfAddedOperation = 0;
+				for(UMLOperation operation : addedOperations) {
+					if(!operation.equals(addedOperation) && operation.getBody() != null) {
+						for(StatementObject statement : operation.getBody().getCompositeStatement().getLeaves()) {
+							if(nonMappedLeavesT1.contains(statement.getString())) {
+								nonMappedLeavesExactlyMatchedInTheBodyOfAddedOperation++;
+							}
+						}
+					}
+				}
+				return (countableStatements == parameterizedVariableDeclarationStatements || countableStatements == nonMappedLeavesExactlyMatchedInTheBodyOfAddedOperation + parameterizedVariableDeclarationStatements) && countableStatements > 0;
 			}
 			else if(operationBodyMapper.nonMappedElementsT1() == 0 && operationBodyMapper.nonMappedElementsT2() > 0 && operationBodyMapper.getNonMappedInnerNodesT2().size() == 0) {
 				int countableStatements = 0;

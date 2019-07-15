@@ -1,5 +1,6 @@
 package gr.uom.java.xmi.diff;
 
+import java.util.List;
 import java.util.Set;
 
 import gr.uom.java.xmi.LocationInfo;
@@ -66,6 +67,22 @@ public class CodeRange {
 	public CodeRange setCodeElement(String codeElement) {
 		this.codeElement = codeElement;
 		return this;
+	}
+
+	public boolean subsumes(CodeRange other) {
+		return this.filePath.equals(other.filePath) &&
+				this.startLine <= other.startLine &&
+				this.endLine >= other.endLine;
+	}
+
+	public boolean subsumes(List<? extends AbstractCodeFragment> statements) {
+		int subsumedStatements = 0;
+		for(AbstractCodeFragment statement : statements) {
+			if(subsumes(statement.codeRange())) {
+				subsumedStatements++;
+			}
+		}
+		return subsumedStatements == statements.size();
 	}
 
 	public String toString() {

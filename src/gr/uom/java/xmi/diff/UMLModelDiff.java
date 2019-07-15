@@ -14,6 +14,7 @@ import gr.uom.java.xmi.decomposition.OperationInvocation;
 import gr.uom.java.xmi.decomposition.StatementObject;
 import gr.uom.java.xmi.decomposition.UMLOperationBodyMapper;
 import gr.uom.java.xmi.decomposition.VariableDeclaration;
+import gr.uom.java.xmi.decomposition.VariableReferenceExtractor;
 import gr.uom.java.xmi.decomposition.replacement.MergeVariableReplacement;
 import gr.uom.java.xmi.decomposition.replacement.Replacement;
 import gr.uom.java.xmi.decomposition.replacement.Replacement.ReplacementType;
@@ -424,6 +425,14 @@ public class UMLModelDiff {
 			   }
 			   if(!repositoryDirectories.contains(removedClassSourceFolder)) {
 				   deletedFolderPaths.add(removedClassSourceFolder);
+				   //add deleted sub-directories
+				   String subDirectory = new String(removedClassSourceFolder);
+				   while(subDirectory.contains("/")) {
+					   subDirectory = subDirectory.substring(0, subDirectory.lastIndexOf("/"));
+					   if(!repositoryDirectories.contains(subDirectory)) {
+						   deletedFolderPaths.add(subDirectory);
+					   }
+				   }
 			   }
 			   if(matcher.match(removedClass, addedClass, renamedFile)) {
 				   if(!conflictingMoveOfTopLevelClass(removedClass, addedClass)) {
@@ -899,7 +908,7 @@ public class UMLModelDiff {
 	   if(attributeOfExtractedClassType != null)
 		   threshold = 0;
 	   if(commonOperations.size() > threshold || commonAttributes.size() > threshold) {
-		   return new ExtractClassRefactoring(umlClass, classDiff.getNextClass(), commonOperations, commonAttributes, attributeOfExtractedClassType);
+		   return new ExtractClassRefactoring(umlClass, classDiff.getOriginalClass(), commonOperations, commonAttributes, attributeOfExtractedClassType);
 	   }
 	   return null;
    }
@@ -1120,9 +1129,9 @@ public class UMLModelDiff {
 		   if(moveClassRefactorings.size() > 1 && isSourcePackageDeleted(renamePackageRefactoring)) {
 			   refactorings.add(renamePackageRefactoring);
 		   }
-		   else {
+		   //else {
 			   refactorings.addAll(moveClassRefactorings);
-		   }
+		   //}
 	   }
 	   refactorings.addAll(moveSourceFolderRefactorings);
 	   return refactorings;
@@ -1228,7 +1237,8 @@ public class UMLModelDiff {
 							 refactorings.add(ref);
 							 if(!a1.getVariableDeclaration().getType().equals(a2.getVariableDeclaration().getType())) {
 									ChangeAttributeTypeRefactoring refactoring = new ChangeAttributeTypeRefactoring(a1.getVariableDeclaration(), a2.getVariableDeclaration(),
-											diff.getOriginalClassName(), diff.getNextClassName());
+											diff.getOriginalClassName(), diff.getNextClassName(),
+											VariableReferenceExtractor.findReferences(a1.getVariableDeclaration(), a2.getVariableDeclaration(), diff.getOperationBodyMapperList()));
 									refactorings.add(refactoring);
 								}
 							 break;//it's not necessary to repeat the same process for all candidates in the set

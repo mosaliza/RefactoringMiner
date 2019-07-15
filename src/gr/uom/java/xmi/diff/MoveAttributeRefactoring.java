@@ -21,10 +21,12 @@ public class MoveAttributeRefactoring implements Refactoring {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(getName()).append("\t");
-		sb.append(movedAttribute);
+		sb.append(getOriginalAttribute());
 		sb.append(" from class ");
 		sb.append(getSourceClassName());
-		sb.append(" to class ");
+		sb.append(" to ");
+		sb.append(getMovedAttribute());
+		sb.append(" from class ");
 		sb.append(getTargetClassName());
 		return sb.toString();
 	}
@@ -111,7 +113,7 @@ public class MoveAttributeRefactoring implements Refactoring {
 		List<CodeRange> ranges = new ArrayList<CodeRange>();
 		ranges.add(originalAttribute.codeRange()
 				.setDescription("original attribute declaration")
-				.setCodeElement(originalAttribute.getVariableDeclaration().toString()));
+				.setCodeElement(originalAttribute.toString()));
 		return ranges;
 	}
 
@@ -120,7 +122,7 @@ public class MoveAttributeRefactoring implements Refactoring {
 		List<CodeRange> ranges = new ArrayList<CodeRange>();
 		ranges.add(movedAttribute.codeRange()
 				.setDescription("moved attribute declaration")
-				.setCodeElement(movedAttribute.getVariableDeclaration().toString()));
+				.setCodeElement(movedAttribute.toString()));
 		return ranges;
 	}
 }

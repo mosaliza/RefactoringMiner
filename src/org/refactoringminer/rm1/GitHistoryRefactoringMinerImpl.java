@@ -7,6 +7,7 @@ import gr.uom.java.xmi.diff.UMLModelDiff;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,10 +49,13 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.kohsuke.github.GHCommit;
+import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHPullRequestCommitDetail;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHTree;
 import org.kohsuke.github.GHTreeEntry;
 import org.kohsuke.github.GitHub;
+import org.kohsuke.github.PagedIterable;
 import org.refactoringminer.api.Churn;
 import org.refactoringminer.api.GitHistoryRefactoringMiner;
 import org.refactoringminer.api.GitService;
@@ -66,6 +71,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 
 	Logger logger = LoggerFactory.getLogger(GitHistoryRefactoringMinerImpl.class);
 	private Set<RefactoringType> refactoringTypesToConsider = null;
+	private GitHub gitHub;
 	
 	public GitHistoryRefactoringMinerImpl() {
 		this.setRefactoringTypesToConsider(
@@ -185,7 +191,6 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 				refactoringsAtRevision = Collections.emptyList();
 			}
 			handler.handle(commitId, refactoringsAtRevision);
-			handler.handle(currentCommit, refactoringsAtRevision);
 			
 			walk.dispose();
 		}
@@ -209,7 +214,14 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 					fileContents.put(pathString, writer.toString());
 				}
 				if(pathString.endsWith(".java")) {
-					repositoryDirectories.add(pathString.substring(0, pathString.lastIndexOf("/")));
+					String directory = pathString.substring(0, pathString.lastIndexOf("/"));
+					repositoryDirectories.add(directory);
+					//include sub-directories
+					String subDirectory = new String(directory);
+					while(subDirectory.contains("/")) {
+						subDirectory = subDirectory.substring(0, subDirectory.lastIndexOf("/"));
+						repositoryDirectories.add(subDirectory);
+					}
 				}
 			}
 		}
@@ -260,7 +272,14 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 			String path = file.getPath();
 			String relativePath = path.substring(folder.getPath().length()+1, path.length()).replaceAll(systemFileSeparator, "/");
 			if(relativePath.endsWith(".java")) {
-				repositoryDirectories.add(relativePath.substring(0, relativePath.lastIndexOf("/")));
+				String directory = relativePath.substring(0, relativePath.lastIndexOf("/"));
+				repositoryDirectories.add(directory);
+				//include sub-directories
+				String subDirectory = new String(directory);
+				while(subDirectory.contains("/")) {
+					subDirectory = subDirectory.substring(0, subDirectory.lastIndexOf("/"));
+					repositoryDirectories.add(subDirectory);
+				}
 			}
 		}
 		return repositoryDirectories;
@@ -297,27 +316,13 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 
 	private String populateWithGitHubAPI(String cloneURL, String currentCommitId,
 			List<String> filesBefore, List<String> filesCurrent, Map<String, String> renamedFilesHint) throws IOException {
-		Properties prop = new Properties();
-		InputStream input = new FileInputStream("github-credentials.properties");
-		prop.load(input);
-		String username = prop.getProperty("username");
-		String password = prop.getProperty("password");
-		String parentCommitId = null;
-		GitHub gitHub = null;
-		if (username != null && password != null) {
-			gitHub = GitHub.connectUsingPassword(username, password);
-			if(gitHub.isCredentialValid()) {
-				logger.info("Connected to GitHub with account: " + username);
-			}
-		}
-		else {
-			gitHub = GitHub.connect();
-		}
+		logger.info("Processing {} {} ...", cloneURL, currentCommitId);
+		GitHub gitHub = connectToGitHub();
 		//https://github.com/ is 19 chars
 		String repoName = cloneURL.substring(19, cloneURL.indexOf(".git"));
 		GHRepository repository = gitHub.getRepository(repoName);
 		GHCommit commit = repository.getCommit(currentCommitId);
-		parentCommitId = commit.getParents().get(0).getSHA1();
+		String parentCommitId = commit.getParents().get(0).getSHA1();
 		List<GHCommit.File> commitFiles = commit.getFiles();
 		for (GHCommit.File commitFile : commitFiles) {
 			if (commitFile.getFileName().endsWith(".java")) {
@@ -339,6 +344,32 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 			}
 		}
 		return parentCommitId;
+	}
+
+	private GitHub connectToGitHub() {
+		if(gitHub == null) {
+			try {
+				Properties prop = new Properties();
+				InputStream input = new FileInputStream("github-credentials.properties");
+				prop.load(input);
+				String username = prop.getProperty("username");
+				String password = prop.getProperty("password");
+				if (username != null && password != null) {
+					gitHub = GitHub.connectUsingPassword(username, password);
+					if(gitHub.isCredentialValid()) {
+						logger.info("Connected to GitHub with account: " + username);
+					}
+				}
+				else {
+					gitHub = GitHub.connect();
+				}
+			} catch(FileNotFoundException e) {
+				logger.warn("File github-credentials.properties was not found in RefactoringMiner's execution directory", e);
+			} catch(IOException ioe) {
+				ioe.printStackTrace();
+			}
+		}
+		return gitHub;
 	}
 
 	protected List<Refactoring> filter(List<Refactoring> refactoringsAtRevision) {
@@ -395,7 +426,8 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 	}
 
 	@Override
-	public void detectAtCommit(Repository repository, String cloneURL, String commitId, RefactoringHandler handler) {
+	public void detectAtCommit(Repository repository, String commitId, RefactoringHandler handler) {
+		String cloneURL = repository.getConfig().getString("remote", "origin", "url");
 		File metadataFolder = repository.getDirectory();
 		File projectFolder = metadataFolder.getParentFile();
 		GitService gitService = new GitServiceImpl();
@@ -422,11 +454,11 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 		}
 	}
 
-	public void detectAtCommit(Repository repository, String cloneURL, String commitId, RefactoringHandler handler, int timeout) {
+	public void detectAtCommit(Repository repository, String commitId, RefactoringHandler handler, int timeout) {
 		ExecutorService service = Executors.newSingleThreadExecutor();
 		Future<?> f = null;
 		try {
-			Runnable r = () -> detectAtCommit(repository, cloneURL, commitId, handler);
+			Runnable r = () -> detectAtCommit(repository, commitId, handler);
 			f = service.submit(r);
 			f.get(timeout, TimeUnit.SECONDS);
 		} catch (TimeoutException e) {
@@ -520,22 +552,16 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 	protected List<Refactoring> detectRefactorings(final RefactoringHandler handler, String gitURL, String currentCommitId) {
 		List<Refactoring> refactoringsAtRevision = Collections.emptyList();
 		try {
-			Set<String> repositoryDirectoriesBefore = new LinkedHashSet<String>();
-			Set<String> repositoryDirectoriesCurrent = new LinkedHashSet<String>();
-			Map<String, String> fileContentsBefore = new LinkedHashMap<String, String>();
-			Map<String, String> fileContentsCurrent = new LinkedHashMap<String, String>();
-			Map<String, String> renamedFilesHint = new HashMap<String, String>();
+			Set<String> repositoryDirectoriesBefore = ConcurrentHashMap.newKeySet();
+			Set<String> repositoryDirectoriesCurrent = ConcurrentHashMap.newKeySet();
+			Map<String, String> fileContentsBefore = new ConcurrentHashMap<String, String>();
+			Map<String, String> fileContentsCurrent = new ConcurrentHashMap<String, String>();
+			Map<String, String> renamedFilesHint = new ConcurrentHashMap<String, String>();
 			populateWithGitHubAPI(gitURL, currentCommitId, fileContentsBefore, fileContentsCurrent, renamedFilesHint, repositoryDirectoriesBefore, repositoryDirectoriesCurrent);
 			UMLModel currentUMLModel = createModel(fileContentsCurrent, repositoryDirectoriesCurrent);
 			UMLModel parentUMLModel = createModel(fileContentsBefore, repositoryDirectoriesBefore);
-			
-			// Diff between currentModel e parentModel
-			UMLModelDiff modelDiff = parentUMLModel.diff(currentUMLModel, renamedFilesHint);
-			refactoringsAtRevision = modelDiff.getRefactorings();
-			MotivationExtractor motivationExtractor = new MotivationExtractor(modelDiff, refactoringsAtRevision);
-			motivationExtractor.detectAllRefactoringMotivations();
-
-			
+			//  Diff between currentModel e parentModel
+			refactoringsAtRevision = parentUMLModel.diff(currentUMLModel, renamedFilesHint).getRefactorings();
 			refactoringsAtRevision = filter(refactoringsAtRevision);
 		}
 		catch(RefactoringMinerTimedOutException e) {
@@ -553,75 +579,96 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 
 	private void populateWithGitHubAPI(String cloneURL, String currentCommitId,
 			Map<String, String> filesBefore, Map<String, String> filesCurrent, Map<String, String> renamedFilesHint,
-			Set<String> repositoryDirectoriesBefore, Set<String> repositoryDirectoriesCurrent) throws IOException {
-		Properties prop = new Properties();
-		InputStream input = new FileInputStream("github-credentials.properties");
-		prop.load(input);
-		String username = prop.getProperty("username");
-		String password = prop.getProperty("password");
-		String parentCommitId = null;
-		GitHub gitHub = null;
-		if (username != null && password != null) {
-			gitHub = GitHub.connectUsingPassword(username, password);
-			if(gitHub.isCredentialValid()) {
-				logger.info("Connected to GitHub with account: " + username);
-			}
-		}
-		else {
-			gitHub = GitHub.connect();
-		}
+			Set<String> repositoryDirectoriesBefore, Set<String> repositoryDirectoriesCurrent) throws IOException, InterruptedException {
+		logger.info("Processing {} {} ...", cloneURL, currentCommitId);
+		GitHub gitHub = connectToGitHub();
 		//https://github.com/ is 19 chars
 		String repoName = cloneURL.substring(19, cloneURL.indexOf(".git"));
 		GHRepository repository = gitHub.getRepository(repoName);
 		GHCommit currentCommit = repository.getCommit(currentCommitId);
-		parentCommitId = currentCommit.getParents().get(0).getSHA1();
-		Set<String> deletedAndRenamedFileParentDirectories = new LinkedHashSet<String>();
+		final String parentCommitId = currentCommit.getParents().get(0).getSHA1();
+		Set<String> deletedAndRenamedFileParentDirectories = ConcurrentHashMap.newKeySet();
 		List<GHCommit.File> commitFiles = currentCommit.getFiles();
+		ExecutorService pool = Executors.newFixedThreadPool(commitFiles.size());
 		for (GHCommit.File commitFile : commitFiles) {
 			String fileName = commitFile.getFileName();
 			if (commitFile.getFileName().endsWith(".java")) {
 				if (commitFile.getStatus().equals("modified")) {
-					URL currentRawURL = commitFile.getRawUrl();
-					InputStream currentRawFileInputStream = currentRawURL.openStream();
-					String currentRawFile = IOUtils.toString(currentRawFileInputStream);
-					String rawURLInParentCommit = currentRawURL.toString().replace(currentCommitId, parentCommitId);
-					InputStream parentRawFileInputStream = new URL(rawURLInParentCommit).openStream();
-					String parentRawFile = IOUtils.toString(parentRawFileInputStream);
-					filesBefore.put(fileName, parentRawFile);
-					filesCurrent.put(fileName, currentRawFile);
+					Runnable r = () -> {
+						try {
+							URL currentRawURL = commitFile.getRawUrl();
+							InputStream currentRawFileInputStream = currentRawURL.openStream();
+							String currentRawFile = IOUtils.toString(currentRawFileInputStream);
+							String rawURLInParentCommit = currentRawURL.toString().replace(currentCommitId, parentCommitId);
+							InputStream parentRawFileInputStream = new URL(rawURLInParentCommit).openStream();
+							String parentRawFile = IOUtils.toString(parentRawFileInputStream);
+							filesBefore.put(fileName, parentRawFile);
+							filesCurrent.put(fileName, currentRawFile);
+						}
+						catch(IOException e) {
+							e.printStackTrace();
+						}
+					};
+					pool.submit(r);
 				}
 				else if (commitFile.getStatus().equals("added")) {
-					URL currentRawURL = commitFile.getRawUrl();
-					InputStream currentRawFileInputStream = currentRawURL.openStream();
-					String currentRawFile = IOUtils.toString(currentRawFileInputStream);
-					filesCurrent.put(fileName, currentRawFile);
+					Runnable r = () -> {
+						try {
+							URL currentRawURL = commitFile.getRawUrl();
+							InputStream currentRawFileInputStream = currentRawURL.openStream();
+							String currentRawFile = IOUtils.toString(currentRawFileInputStream);
+							filesCurrent.put(fileName, currentRawFile);
+						}
+						catch(IOException e) {
+							e.printStackTrace();
+						}
+					};
+					pool.submit(r);
 				}
 				else if (commitFile.getStatus().equals("removed")) {
-					URL rawURL = commitFile.getRawUrl();
-					InputStream rawFileInputStream = rawURL.openStream();
-					String rawFile = IOUtils.toString(rawFileInputStream);
-					filesBefore.put(fileName, rawFile);
-					if(fileName.contains("/")) {
-						deletedAndRenamedFileParentDirectories.add(fileName.substring(0, fileName.lastIndexOf("/")));
-					}
+					Runnable r = () -> {
+						try {
+							URL rawURL = commitFile.getRawUrl();
+							InputStream rawFileInputStream = rawURL.openStream();
+							String rawFile = IOUtils.toString(rawFileInputStream);
+							filesBefore.put(fileName, rawFile);
+							if(fileName.contains("/")) {
+								deletedAndRenamedFileParentDirectories.add(fileName.substring(0, fileName.lastIndexOf("/")));
+							}
+						}
+						catch(IOException e) {
+							e.printStackTrace();
+						}
+					};
+					pool.submit(r);
 				}
 				else if (commitFile.getStatus().equals("renamed")) {
-					String previousFilename = commitFile.getPreviousFilename();
-					URL currentRawURL = commitFile.getRawUrl();
-					InputStream currentRawFileInputStream = currentRawURL.openStream();
-					String currentRawFile = IOUtils.toString(currentRawFileInputStream);
-					String rawURLInParentCommit = currentRawURL.toString().replace(currentCommitId, parentCommitId).replace(fileName, previousFilename);
-					InputStream parentRawFileInputStream = new URL(rawURLInParentCommit).openStream();
-					String parentRawFile = IOUtils.toString(parentRawFileInputStream);
-					filesBefore.put(previousFilename, parentRawFile);
-					filesCurrent.put(fileName, currentRawFile);
-					renamedFilesHint.put(previousFilename, fileName);
-					if(previousFilename.contains("/")) {
-						deletedAndRenamedFileParentDirectories.add(previousFilename.substring(0, previousFilename.lastIndexOf("/")));
-					}
+					Runnable r = () -> {
+						try {
+							String previousFilename = commitFile.getPreviousFilename();
+							URL currentRawURL = commitFile.getRawUrl();
+							InputStream currentRawFileInputStream = currentRawURL.openStream();
+							String currentRawFile = IOUtils.toString(currentRawFileInputStream);
+							String rawURLInParentCommit = currentRawURL.toString().replace(currentCommitId, parentCommitId).replace(fileName, previousFilename);
+							InputStream parentRawFileInputStream = new URL(rawURLInParentCommit).openStream();
+							String parentRawFile = IOUtils.toString(parentRawFileInputStream);
+							filesBefore.put(previousFilename, parentRawFile);
+							filesCurrent.put(fileName, currentRawFile);
+							renamedFilesHint.put(previousFilename, fileName);
+							if(previousFilename.contains("/")) {
+								deletedAndRenamedFileParentDirectories.add(previousFilename.substring(0, previousFilename.lastIndexOf("/")));
+							}
+						}
+						catch(IOException e) {
+							e.printStackTrace();
+						}
+					};
+					pool.submit(r);
 				}
 			}
 		}
+		pool.shutdown();
+		pool.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
 		repositoryDirectories(currentCommit.getTree(), "", repositoryDirectoriesCurrent, deletedAndRenamedFileParentDirectories);
 		//allRepositoryDirectories(currentCommit.getTree(), "", repositoryDirectoriesCurrent);
 		//GHCommit parentCommit = repository.getCommit(parentCommitId);
@@ -642,6 +689,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 					repositoryDirectories.add(path);
 				}
 				else {
+					repositoryDirectories.add(path);
 					GHTree asTree = entry.asTree();
 					if(asTree != null) {
 						repositoryDirectories(asTree, path, repositoryDirectories, targetPaths);
@@ -653,7 +701,10 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 
 	private boolean atLeastOneStartsWith(Set<String> targetPaths, String path) {
 		for(String targetPath : targetPaths) {
-			if(targetPath.startsWith(path)) {
+			if(path.endsWith("/") && targetPath.startsWith(path)) {
+				return true;
+			}
+			else if(!path.endsWith("/") && targetPath.startsWith(path + "/")) {
 				return true;
 			}
 		}
@@ -679,4 +730,17 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 		}
 	}
 	*/
+
+	@Override
+	public void detectAtPullRequest(String cloneURL, int pullRequestId, RefactoringHandler handler, int timeout) throws IOException {
+		GitHub gitHub = connectToGitHub();
+		//https://github.com/ is 19 chars
+		String repoName = cloneURL.substring(19, cloneURL.indexOf(".git"));
+		GHRepository repository = gitHub.getRepository(repoName);
+		GHPullRequest pullRequest = repository.getPullRequest(pullRequestId);
+		PagedIterable<GHPullRequestCommitDetail> commits = pullRequest.listCommits();
+		for(GHPullRequestCommitDetail commit : commits) {
+			detectAtCommit(cloneURL, commit.getSha(), handler, timeout);
+		}
+	}
 }
