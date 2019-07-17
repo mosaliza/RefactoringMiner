@@ -1,6 +1,5 @@
 package gr.uom.java.xmi.diff;
 
-import java.beans.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,7 +47,11 @@ public class MotivationExtractor {
 			detectMotivataion(type);
 		}
 	}
-				
+
+	public Map<Refactoring, List<MotivationType>> getMapRefactoringMotivations() {
+		return mapRefactoringMotivations;
+	}
+
 	private void detectMotivataion(RefactoringType type) {	
 		
 		List<Refactoring> listRef = mapClassifiedRefactorings.get(type);
@@ -301,14 +304,17 @@ public class MotivationExtractor {
 					if(operation.equals(extractedOperation)) {
 						List<OperationInvocation> listInvokations = operation.getAllOperationInvocations();
 						for( OperationInvocation invocation : listInvokations) {
-							if(invocation.matchesOperation(extractedOperation)){
+							boolean noExpression = invocation.getExpression() == null;
+							boolean thisExpression = invocation.getExpression() != null && invocation.getExpression().equals("this");
+							boolean noOrThisExpresion = noExpression || thisExpression;
+							if(invocation.matchesOperation(extractedOperation) && noOrThisExpresion){
 								countExtractedOperationRecursiveInvocations++;
 							}
 						}
 					}
 				}
 			}
-			if(countExtractedOperationRecursiveInvocations != 0) {
+			if(countExtractedOperationRecursiveInvocations > 0) {
 				return true;
 			}
 		}
