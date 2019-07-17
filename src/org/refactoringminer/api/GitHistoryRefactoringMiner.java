@@ -1,6 +1,11 @@
 package org.refactoringminer.api;
 
+import java.util.List;
+import java.util.Map;
+
 import org.eclipse.jgit.lib.Repository;
+
+import gr.uom.java.xmi.diff.MotivationType;
 
 /**
  * Detect refactorings in the git history.
@@ -97,16 +102,6 @@ public interface GitHistoryRefactoringMiner {
 	 * @throws Exception propagated from org.kohsuke.github API
 	 */
 	void detectAtPullRequest(String gitURL, int pullRequest, RefactoringHandler handler, int timeout) throws Exception;
-
-	/**
-	 * Detect refactorings performed in the specified commit. All required information is extracted using the GitHub API.
-	 *
-	 * @param gitURL The git URL of the repository.
-	 * @param commitId The SHA key that identifies the commit.
-	 * @param handler A handler object that is responsible to process the detected refactorings.
-	 * @param timeout A timeout, in seconds. When timeout is reached, the operation stops and returns no refactorings.
-	 */
-	void detectAtCommit(String gitURL, String commitId, RefactoringHandler handler, int timeout);
 
 	/**
 	 * Detect refactorings performed in the specified commit. 

@@ -22,7 +22,7 @@ public enum MotivationType {
 	MC_CONVERT_TO_TOP_LEVEL_CONTAINER("MC: Convert to top-level container"),
 	MC_REMOVE_INNER_CLASS_FROM_DEPRECATED_CONTAINER("MC: Remove inner classes from deprecated container"),
 	MC_REMOVE_FROM_PUBLIC_API("MC: Remove from public API"),
-	MC_CONVERT_TO_INEER_CLASS("MC: Convert to inner class"),
+	MC_CONVERT_TO_INNER_CLASS("MC: Convert to inner class"),
 	MC_ELIMINATE_DEPENDENCIES("MC: Isolate dependencies"),
 	MC_ELIMINATE_REDUNDANT_SUB_PACKAGE("MC: Eliminate redundant sub-package"),
 	MC_BACKWARD_COMPATIBILITY("MC: Backward compatibility"),

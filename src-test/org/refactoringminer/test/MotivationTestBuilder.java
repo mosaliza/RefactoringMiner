@@ -115,7 +115,7 @@ public class MotivationTestBuilder {
 				if (m.ignoreNonSpecifiedCommits) {
 					// It is faster to only look at particular commits
 					for (String commitId : m.getCommits()) {
-						refactoringDetector.detectAtCommit(rep, m.cloneUrl, commitId, m);
+						refactoringDetector.detectAtCommit(rep, commitId, m);
 						//refactoringDetector.detectAtCommit(m.cloneUrl, commitId, m, 100);
 					}
 				} else {
@@ -132,7 +132,7 @@ public class MotivationTestBuilder {
 			Counter motivationTypeCounter = cMap.get(motivType);
 			if (motivationTypeCounter != null) {
 				System.out
-						.println(String.format("%-7s", motivType.toString()) + buildResultMessage(motivationTypeCounter));
+						.println(String.format("%-50s", motivType.toString()) + buildResultMessage(motivationTypeCounter));
 			}
 		}
 
@@ -265,7 +265,7 @@ public class MotivationTestBuilder {
 				for (Refactoring ref : mapRefactoringMotivations.keySet()) {
 					List<MotivationType> listMotivations = mapRefactoringMotivations.get(ref);
 					for(MotivationType m: listMotivations) {
-						motivationsFound.add(m.toString());	
+						motivationsFound.add(m.getDescription());	
 					}	
 				}
 				for (Refactoring refactoring : refactorings) {
@@ -308,13 +308,13 @@ public class MotivationTestBuilder {
 					for (String motivation : motivationsFound) {
 						matcher.unknown.add(motivation);
 						this.unknownCount++;
-						count(UNK,Enum.valueOf(MotivationType.class, motivation).getDescription());
+						count(UNK,motivation);
 					}
 				} else {
 					for (String motivation : motivationsFound) {
 						matcher.notExpected.add(motivation);
 						this.falsePositiveCount++;
-						count(FP, Enum.valueOf(MotivationType.class, motivation).getDescription());
+						count(FP, motivation);
 					}
 				}
 

@@ -21,7 +21,7 @@ public class Main {
 		miner.detectAtCommit("https://github.com/bitcoinj/bitcoinj.git",
 				"12602650ce99f34cb530fc24266c23e39733b0bb", new RefactoringHandler() {
 					@Override
-					public void handle(RevCommit commitData, List<Refactoring> refactorings) {
+					public void handle(String commitId, List<Refactoring> refactorings) {
 						for(Refactoring ref : refactorings) {
 							System.out.println(ref);
 						}
