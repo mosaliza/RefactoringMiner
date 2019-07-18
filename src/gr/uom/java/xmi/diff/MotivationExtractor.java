@@ -5,18 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
-import org.eclipse.jdt.internal.core.search.matching.MatchLocatorParser.ClassAndMethodDeclarationVisitor;
+
 import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
 
 import gr.uom.java.xmi.LocationInfo.CodeElementType;
-import gr.uom.java.xmi.UMLAnonymousClass;
 import gr.uom.java.xmi.UMLClass;
-import gr.uom.java.xmi.UMLModel;
 import gr.uom.java.xmi.UMLOperation;
 import gr.uom.java.xmi.UMLParameter;
-import gr.uom.java.xmi.UMLRealization;
 import gr.uom.java.xmi.UMLType;
 import gr.uom.java.xmi.decomposition.AbstractStatement;
 import gr.uom.java.xmi.decomposition.AnonymousClassDeclarationObject;
@@ -394,42 +390,78 @@ public class MotivationExtractor {
 		}
 		return false;
 	}
+	
+	
+	
+	
 
 	private boolean isExtractReusableMethod(Refactoring ref) {		
 		
 		if(ref instanceof ExtractOperationRefactoring) {
-			ExtractOperationRefactoring extractOp = (ExtractOperationRefactoring)ref;
-			UMLOperation extractedOperation = extractOp.getExtractedOperation();
-			UMLOperation sourceOperationAfterRefactoring = extractOp.getSourceOperationAfterExtraction();
-			UMLClassBaseDiff classDiff = modelDiff.getUMLClassDiff(sourceOperationAfterRefactoring.getClassName());
+			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
 			int extractOperationInvocationCount = 0 ;
-			
-			if(classDiff != null) {
-				UMLClass classAfterRefactoring = classDiff.getNextClass();
-				for(UMLOperation operation : classAfterRefactoring.getOperations()) {
-					//check if other operation in class after refactoring, call the extracted method
-					if(!operation.equals(sourceOperationAfterRefactoring) && !operation.equals(extractedOperation)) {
-						List<OperationInvocation> invocations = operation.getAllOperationInvocations();
-						for(OperationInvocation invocation : invocations) {
-							if(invocation.matchesOperation(extractedOperation)) {
-								extractOperationInvocationCount++;
-							}
-						}
+			for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
+				if(classDiff != null) {
+					UMLClass nextClass = classDiff.getNextClass();
+					extractOperationInvocationCount += extractedOperationInvocationsCountInClass(extractOpRefactoring, nextClass);
 					}
 				}
-			}
+			for(UMLClass addedClass : modelDiff.getAddedClasses()) {
+				extractOperationInvocationCount += extractedOperationInvocationsCountInClass(extractOpRefactoring, addedClass);
+				}
 			/* DETECTION RULE:
 			 * IF Invocations to Extracted method from source method after Extraction is more than one OR 
 			 *  there are other Invocations from other methods to extracted operation*/
-			if(extractOp.getExtractedOperationInvocations().size()>1 || extractOperationInvocationCount != 0) {
+			if(extractOpRefactoring.getExtractedOperationInvocations().size()>1 || extractOperationInvocationCount > 0) {
 				/*AND if the extraction operation is not detected as duplicated removal before
 				 * (All Extract Operations that tend to remove duplication are also reused.)*/
 				if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
 					return true;
 				}
-			}	
-		}		
+			}		
+		}
 		return false;	
+	}
+
+	private int extractedOperationInvocationsCountInClass(ExtractOperationRefactoring extractOpRefactoring, UMLClass nextClass) {
+		int countInvocations = 0;
+		for(UMLOperation operation : nextClass.getOperations()) {
+			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
+			UMLOperation sourceOperationAfterExtration = extractOpRefactoring.getSourceOperationAfterExtraction();
+			//check if other operations in  class calls the extracted method
+			if(!operation.equals(sourceOperationAfterExtration) && !operation.equals(extractedOperation)) {
+				List<OperationInvocation> invocations = operation.getAllOperationInvocations();
+				for(OperationInvocation invocation : invocations) {
+					if(invocation.matchesOperation(extractedOperation,operation.variableTypeMap(), modelDiff)) {
+						List<UMLOperation> listEqualOperations = getAllEqualOperations(extractedOperation);
+						if(listEqualOperations.size() == 0) {
+							countInvocations++;	
+						}
+					}
+				}
+			}
+		}
+		return countInvocations;
+	}
+	
+	private List<UMLOperation> getAllEqualOperations(UMLOperation umlOperation) {
+		List<UMLOperation> listEqualOperations = new ArrayList<UMLOperation>();
+		UMLClassBaseDiff umlClassDiff = modelDiff.getUMLClassDiff(umlOperation.getClassName());
+		UMLClass umlClass = umlClassDiff.getNextClass();
+		for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
+			if(classDiff != null) {
+				UMLClass nextCommonClass = classDiff.getNextClass();
+				if(nextCommonClass.matchOperation(umlOperation) != null && !nextCommonClass.equals(umlClass)) {
+						listEqualOperations.add(umlOperation);	
+				}
+			}
+			for(UMLClass addedClass : modelDiff.getAddedClasses() ) {
+					if(addedClass.matchOperation(umlOperation) != null && !addedClass.equals(umlClass)) {
+						listEqualOperations.add(umlOperation);
+				}
+			}
+		}
+		return listEqualOperations;
 	}
 	
 	private boolean isDecomposeMethodToImroveReadability(List<Refactoring> refList) {

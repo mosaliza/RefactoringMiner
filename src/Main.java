@@ -16,26 +16,24 @@ public class Main {
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 
 		Repository repo = gitService.cloneIfNotExists(
-				"tmp/bitcoinj",
-				"https://github.com/bitcoinj/bitcoinj.git");
-		miner.detectAtCommit("https://github.com/bitcoinj/bitcoinj.git",
-				"12602650ce99f34cb530fc24266c23e39733b0bb", new RefactoringHandler() {
+				"tmp1/jmonkeyengine",
+				"https://github.com/jMonkeyEngine/jmonkeyengine.git");
+		/*miner.detectAtCommit("https://github.com/luontola/retrolambda.git",
+				"46b0d84de9c309bca48a99e572e6611693ed5236", new RefactoringHandler() {
 					@Override
 					public void handle(String commitId, List<Refactoring> refactorings) {
 						for(Refactoring ref : refactorings) {
 							System.out.println(ref);
 						}
 					}
-				},100);
+				},100);*/
 		
-		/*miner.detectAtCommit(repo,"https://github.com/CyanogenMod/android_frameworks_base.git",
-				"4587c32ab8a1c8e2169e4f93491a8c927216a6ab", new RefactoringHandler() {
-			@Override
+		miner.detectAtCommit(repo,"5989711f7315abe4c3da0f1516a3eb3a81da6716", new RefactoringHandler() {
 			public void handle(RevCommit commitData, List<Refactoring> refactorings) {
 				for(Refactoring ref : refactorings) {
 					System.out.println(ref);
 				}
 			}
-		});*/
+		});
 	}
 }
