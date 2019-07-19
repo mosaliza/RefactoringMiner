@@ -374,15 +374,28 @@ public class MotivationExtractor {
 			ExtractOperationRefactoring extractRefactoring = (ExtractOperationRefactoring)ref;
 			UMLOperationBodyMapper umlBodyMapper = extractRefactoring.getBodyMapper();
 			int countNonMappedLeavesAndInnerNodesT1 = 0;
-			int countNonMappedLeavesAndIneerNodesT2 = 0;
+			int countNonMappedLeavesAndInnerNodesT2 = 0;
+			int countExtractMethodAddedNodes = 0;
+			int countParentNonMappedLeavesAndInnerNodesT1 = 0;
+			int countParentNonMappedLeavesAndInnerNodesT2 = 0;
+			int countParentExtractMethodAddedNodes = 0;
 			List<StatementObject> listNotMappedLeavesT1 = umlBodyMapper.getNonMappedLeavesT1();
 			List<CompositeStatementObject> listNotMappedInnerNodesT1 = umlBodyMapper.getNonMappedInnerNodesT1();
 			List<StatementObject> listNotMappedLeavesT2 = umlBodyMapper.getNonMappedLeavesT2();
 			List<CompositeStatementObject> listNotMappedInnerNodesT2 = umlBodyMapper.getNonMappedInnerNodesT2();
+			List<StatementObject> parentListNotMappedLeavesT1 = umlBodyMapper.getParentMapper().getNonMappedLeavesT1();
+			List<CompositeStatementObject> parentListNotMappedInnerNodesT1  = umlBodyMapper.getParentMapper().getNonMappedInnerNodesT1();
+			List<StatementObject> parentListNotMappedLeavesT2 = umlBodyMapper.getParentMapper().getNonMappedLeavesT2();
+			List<CompositeStatementObject> parentListNotMappedInnerNodesT2 = umlBodyMapper.getParentMapper().getNonMappedInnerNodesT2();
 			countNonMappedLeavesAndInnerNodesT1 = listNotMappedInnerNodesT1.size()+listNotMappedLeavesT1.size();
-			countNonMappedLeavesAndIneerNodesT2 = listNotMappedInnerNodesT2.size()+listNotMappedLeavesT2.size();
-			//DETECTION RULE: Detect if Some statements(InnerNode or Leave) added either to T1 or T2
-			if( countNonMappedLeavesAndInnerNodesT1 != 0 || countNonMappedLeavesAndIneerNodesT2 != 0) {
+			countNonMappedLeavesAndInnerNodesT2 = listNotMappedInnerNodesT2.size()+listNotMappedLeavesT2.size();
+			countExtractMethodAddedNodes = countNonMappedLeavesAndInnerNodesT1 + countNonMappedLeavesAndInnerNodesT2; 
+			countParentNonMappedLeavesAndInnerNodesT1 = parentListNotMappedInnerNodesT1.size()+parentListNotMappedLeavesT1.size();
+			countParentNonMappedLeavesAndInnerNodesT2 = parentListNotMappedInnerNodesT2.size()+parentListNotMappedLeavesT2.size();
+			countParentExtractMethodAddedNodes = countParentNonMappedLeavesAndInnerNodesT1 + countParentNonMappedLeavesAndInnerNodesT2;
+			//DETECTION RULE: Detect if Some statements(InnerNode or Leave) added either ExtractedOperation or
+			//Source Operation After Extraction
+			if( countExtractMethodAddedNodes > 0 || countParentExtractMethodAddedNodes > 0) {
 				if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE) &&
 						!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY))
 				return true;
