@@ -16,8 +16,8 @@ public class Main {
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 
 		Repository repo = gitService.cloneIfNotExists(
-				"tmp1/MPS",
-				"https://github.com/JetBrains/MPS.git");
+				"tmp1/quasar",
+				"https://github.com/puniverse/quasar.git");
 		/*miner.detectAtCommit("https://github.com/luontola/retrolambda.git",
 				"46b0d84de9c309bca48a99e572e6611693ed5236", new RefactoringHandler() {
 					@Override
@@ -28,7 +28,7 @@ public class Main {
 					}
 				},100);*/
 		
-		miner.detectAtCommit(repo,"797fb7fc1415ac0ebe9a8262677dfa4462ed6cb4", new RefactoringHandler() {
+		miner.detectAtCommit(repo,"c22d40fab8dfe4c5cad9ba582caf0855ff64b324", new RefactoringHandler() {
 			@Override 
 			public void handle(String commitData, List<Refactoring> refactorings) {
 				for(Refactoring ref : refactorings) {

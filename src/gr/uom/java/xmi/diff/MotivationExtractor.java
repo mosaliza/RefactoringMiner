@@ -10,6 +10,7 @@ import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
 
 import gr.uom.java.xmi.LocationInfo.CodeElementType;
+import gr.uom.java.xmi.UMLAnonymousClass;
 import gr.uom.java.xmi.UMLClass;
 import gr.uom.java.xmi.UMLOperation;
 import gr.uom.java.xmi.UMLParameter;
@@ -249,13 +250,20 @@ public class MotivationExtractor {
 
 	private void isOperationOverridenInClass(UMLOperation extractedOperation, UMLClass extractedOperationNextClass,
 			UMLClass nextClass, List<UMLOperation> operationsOverridingeExtractedOperations) {
+		List<UMLAnonymousClass> listAnonymousUmlClasses = nextClass.getAnonymousClassList();
 		if(nextClass.isSubTypeOf(extractedOperationNextClass)){
 			for(UMLOperation operation : nextClass.getOperations()) {
 				if(operation.equalSignature(extractedOperation))
 					operationsOverridingeExtractedOperations.add(operation);
-				}
 			}
 		}
+		for(UMLAnonymousClass anonymousClass : listAnonymousUmlClasses) {
+			for(UMLOperation operation : anonymousClass.getOperations()) {
+				if(operation.equalSignature(extractedOperation))
+					operationsOverridingeExtractedOperations.add(operation);
+			}
+		}
+	}
 
 	private boolean IsExtractedToImproveTestability(Refactoring ref) {
 		List<UMLOperation> operationsTestingExtractedOperation = new ArrayList<UMLOperation>();
