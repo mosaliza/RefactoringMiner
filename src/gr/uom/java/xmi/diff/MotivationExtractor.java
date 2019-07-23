@@ -5,7 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
+import org.eclipse.jdt.internal.core.MoveResourceElementsOperation;
+import org.hamcrest.core.IsInstanceOf;
 import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
 
@@ -103,7 +104,8 @@ public class MotivationExtractor {
 
 
 	private boolean IsMoveClassToAppropriateContainer(Refactoring ref) {
-		// TODO Auto-generated method stub
+		if(ref instanceof MoveClassRefactoring) {
+		}
 		return false;
 	}
 
@@ -286,7 +288,7 @@ public class MotivationExtractor {
 	private void isOperationTestedInClass(UMLClass nextClass, UMLOperation extractedOperation,
 			List<UMLOperation> operationsTestingExtractedOperation) {
 		for(UMLOperation operation : nextClass.getOperations()) {
-			if(operation.hasTestAnnotation() || nextClass.isTestClass()) {
+			if(operation.hasTestAnnotation() || operation.getName().startsWith("test") || nextClass.isTestClass()) {
 				for(OperationInvocation invocation : operation.getAllOperationInvocations()) {
 					if(invocation.matchesOperation(extractedOperation, operation.variableTypeMap(), modelDiff)) {
 						operationsTestingExtractedOperation.add(operation);
