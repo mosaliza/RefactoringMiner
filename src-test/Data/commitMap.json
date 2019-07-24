@@ -2487,7 +2487,7 @@
         "inferredMotivation": false,
         "motivations": [
             {
-                "label": "EM: Facilitate extension",
+                "label": "EM: Extract reusable method",
                 "status": "match2"
             }
         ],
