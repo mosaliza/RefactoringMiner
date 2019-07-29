@@ -2,8 +2,10 @@ package gr.uom.java.xmi.diff;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jdt.internal.compiler.ast.Invocation;
 import org.eclipse.jdt.internal.core.MoveResourceElementsOperation;
@@ -386,62 +388,88 @@ public class MotivationExtractor {
 		if( ref instanceof ExtractOperationRefactoring){
 			ExtractOperationRefactoring extractRefactoring = (ExtractOperationRefactoring)ref;
 			UMLOperationBodyMapper umlBodyMapper = extractRefactoring.getBodyMapper();
-			int countNonMappedLeavesAndInnerNodesT1 = 0;
 			int countNonMappedLeavesAndInnerNodesT2 = 0;
-			int countExtractMethodAddedNodes = 0;
-			int countParentNonMappedLeavesAndInnerNodesT1 = 0;
 			int countParentNonMappedLeavesAndInnerNodesT2 = 0;
-			int countParentExtractMethodAddedNodes = 0;
-			int notMappedSubsumesInvocationstoExtractedMethod = 0;
-			List<StatementObject> listNotMappedLeavesT1 = umlBodyMapper.getNonMappedLeavesT1();
-			List<CompositeStatementObject> listNotMappedInnerNodesT1 = umlBodyMapper.getNonMappedInnerNodesT1();
+			
+			List<CompositeStatementObject> listParentNotMappedCompositesStatementWithInvokationsToExtractedMethod = new ArrayList<CompositeStatementObject>();
+			List<StatementObject> listParentNotMappedLeavesWithInvokationsToExtractedMethod = new ArrayList<StatementObject>();
+			List<String> listParentNeutralLeaves = new ArrayList<String>();
+
+			List<String> listChildNeutralLeaves = new ArrayList<String>();
+
 			List<StatementObject> listNotMappedLeavesT2 = umlBodyMapper.getNonMappedLeavesT2();
-			List<CompositeStatementObject> listNotMappedInnerNodesT2 = umlBodyMapper.getNonMappedInnerNodesT2();
-			List<StatementObject> parentListNotMappedLeavesT1 = umlBodyMapper.getParentMapper().getNonMappedLeavesT1();
-			List<CompositeStatementObject> parentListNotMappedInnerNodesT1  = umlBodyMapper.getParentMapper().getNonMappedInnerNodesT1();
 			List<StatementObject> parentListNotMappedLeavesT2 = umlBodyMapper.getParentMapper().getNonMappedLeavesT2();
 			List<CompositeStatementObject> parentListNotMappedInnerNodesT2 = umlBodyMapper.getParentMapper().getNonMappedInnerNodesT2();
+			Set<CodeElementType> neutralCodeElements = new HashSet<CodeElementType>();
+			neutralCodeElements.add(CodeElementType.SINGLE_VARIABLE_DECLARATION);
+			neutralCodeElements.add(CodeElementType.VARIABLE_DECLARATION_STATEMENT);
+			neutralCodeElements.add(CodeElementType.VARIABLE_DECLARATION_EXPRESSION);
+			neutralCodeElements.add(CodeElementType.VARIABLE_DECLARATION_INITIALIZER);
+			neutralCodeElements.add(CodeElementType.IF_STATEMENT_CONDITION);
+			neutralCodeElements.add(CodeElementType.RETURN_STATEMENT);
+			neutralCodeElements.add(CodeElementType.BLOCK);
+			neutralCodeElements.add(CodeElementType.THROW_STATEMENT);
+			neutralCodeElements.add(CodeElementType.CATCH_CLAUSE_EXCEPTION_NAME);
 			//Removing the T2 nodes (Leaf or Inner) that subsumes calls to Extracted method
-			for(Refactoring refactoring : refList) {
-				if(refactoring instanceof ExtractOperationRefactoring) {
-					ExtractOperationRefactoring extractOperationRefactoring = (ExtractOperationRefactoring)refactoring;
+
 					for(CompositeStatementObject  notMappedCompositeNode :  parentListNotMappedInnerNodesT2) {
 						for(AbstractExpression expression: notMappedCompositeNode.getExpressions()) {
-							for(OperationInvocation invocation : extractOperationRefactoring.getExtractedOperationInvocations()) {
-								if(expression.getLocationInfo().subsumes(invocation.getLocationInfo())) {
-									if(expression.getLocationInfo().getStartLine() == invocation.getLocationInfo().getStartLine() &&
-											expression.getLocationInfo().getEndLine() == invocation.getLocationInfo().getEndLine() &&
-											expression.getLocationInfo().getEndColumn()-invocation.getLocationInfo().getEndColumn() == 1 &&
-											expression.getLocationInfo().getStartColumn() == invocation.getLocationInfo().getStartColumn())
-									notMappedSubsumesInvocationstoExtractedMethod++;
+							for(Refactoring refactoring : refList) {
+								if(refactoring instanceof ExtractOperationRefactoring) {
+									ExtractOperationRefactoring extractOperationRefactoring = (ExtractOperationRefactoring)refactoring;
+									for(OperationInvocation invocation : extractOperationRefactoring.getExtractedOperationInvocations()) {
+										if(expression.getLocationInfo().subsumes(invocation.getLocationInfo())) {
+												listParentNotMappedCompositesStatementWithInvokationsToExtractedMethod.add(notMappedCompositeNode);
+										}			
+									}
 								}
 							}
 						}
-
 					}
 					for(StatementObject  notMappedNode :  parentListNotMappedLeavesT2) {
-						for(OperationInvocation invocation : extractOperationRefactoring.getExtractedOperationInvocations()) {
-							if(notMappedNode.getLocationInfo().subsumes(invocation.getLocationInfo())) {
-								if(notMappedNode.getLocationInfo().getStartLine() == invocation.getLocationInfo().getStartLine() &&
-										notMappedNode.getLocationInfo().getEndLine() == invocation.getLocationInfo().getEndLine() &&
-										notMappedNode.getLocationInfo().getEndColumn()-invocation.getLocationInfo().getEndColumn() == 1 &&
-										notMappedNode.getLocationInfo().getStartColumn() == invocation.getLocationInfo().getStartColumn())
-									notMappedSubsumesInvocationstoExtractedMethod++;
+						for(Refactoring refactoring : refList) {
+							if(refactoring instanceof ExtractOperationRefactoring) {
+								ExtractOperationRefactoring extractOperationRefactoring = (ExtractOperationRefactoring)refactoring;
+								for(OperationInvocation invocation : extractOperationRefactoring.getExtractedOperationInvocations()) {
+									if(notMappedNode.getLocationInfo().subsumes(invocation.getLocationInfo())) {
+										//if(notMappedNode.getLocationInfo().getStartLine() == invocation.getLocationInfo().getStartLine() &&
+												//notMappedNode.getLocationInfo().getEndLine() == invocation.getLocationInfo().getEndLine() &&
+												//notMappedNode.getLocationInfo().getEndColumn()-invocation.getLocationInfo().getEndColumn() == 1 &&
+												//notMappedNode.getLocationInfo().getStartColumn() == invocation.getLocationInfo().getStartColumn()) {
+											listParentNotMappedLeavesWithInvokationsToExtractedMethod.add(notMappedNode);
+										//} 
+									}else {
+										for(CodeElementType type: neutralCodeElements) {
+											if(notMappedNode.getLocationInfo().getCodeElementType().equals(type)){
+												listParentNeutralLeaves.add(notMappedNode.toString());
+											}
+										}
+									}
+								}
 							}
 						}
 					}
-				}		
+						
+			
+
+			for(StatementObject  notMappedNode :  listNotMappedLeavesT2) {
+				for(CodeElementType type: neutralCodeElements) {
+					if(notMappedNode.getLocationInfo().getCodeElementType().equals(type)){
+						listChildNeutralLeaves.add(notMappedNode.toString());
+					}
+				}
 			}
-			countNonMappedLeavesAndInnerNodesT1 = listNotMappedInnerNodesT1.size()+listNotMappedLeavesT1.size();
-			countNonMappedLeavesAndInnerNodesT2 = listNotMappedInnerNodesT2.size()+listNotMappedLeavesT2.size();
-			countExtractMethodAddedNodes = /*countNonMappedLeavesAndInnerNodesT1 + */ countNonMappedLeavesAndInnerNodesT2; 
-			countParentNonMappedLeavesAndInnerNodesT1 = parentListNotMappedInnerNodesT1.size()+parentListNotMappedLeavesT1.size();
-			countParentNonMappedLeavesAndInnerNodesT2 = parentListNotMappedInnerNodesT2.size()+parentListNotMappedLeavesT2.size();
-			countParentNonMappedLeavesAndInnerNodesT2 -= notMappedSubsumesInvocationstoExtractedMethod;
-			countParentExtractMethodAddedNodes = /*countParentNonMappedLeavesAndInnerNodesT1 +*/ countParentNonMappedLeavesAndInnerNodesT2;
-			//DETECTION RULE: Detect if Some statements(InnerNode or Leave) added either ExtractedOperation or
+
+			int filteredListNotMappedLeavesT2 = listNotMappedLeavesT2.size()-listChildNeutralLeaves.size();
+			countNonMappedLeavesAndInnerNodesT2 =  filteredListNotMappedLeavesT2;
+			
+			int filterdParentListNotMappedInnerNodesT2 = parentListNotMappedInnerNodesT2.size()-listParentNotMappedCompositesStatementWithInvokationsToExtractedMethod.size();
+            int filteredParentListNotMappedLeavesT2 = parentListNotMappedLeavesT2.size()-listParentNotMappedLeavesWithInvokationsToExtractedMethod.size()-listParentNeutralLeaves.size();
+			 countParentNonMappedLeavesAndInnerNodesT2 = filterdParentListNotMappedInnerNodesT2 + filteredParentListNotMappedLeavesT2;
+
+			 //DETECTION RULE: Detect if Some statements(InnerNode or Leave) added either ExtractedOperation or
 			//Source Operation After Extraction
-			if( countExtractMethodAddedNodes > 0 || countParentExtractMethodAddedNodes > 0) {
+			if( countNonMappedLeavesAndInnerNodesT2 > 0 || countParentNonMappedLeavesAndInnerNodesT2 > 0) {
 				if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE) &&
 						!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY))
 				return true;
