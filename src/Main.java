@@ -16,8 +16,8 @@ public class Main {
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 
 		Repository repo = gitService.cloneIfNotExists(
-				"tmp1/languagetool",
-				"https://github.com/languagetool-org/languagetool.git");
+				"tmp1/j2objc",
+				"https://github.com/google/j2objc.git");
 		/*miner.detectAtCommit("https://github.com/luontola/retrolambda.git",
 				"46b0d84de9c309bca48a99e572e6611693ed5236", new RefactoringHandler() {
 					@Override
@@ -28,7 +28,7 @@ public class Main {
 					}
 				},100);*/
 		
-		miner.detectAtCommit(repo,"bec15926deb49d2b3f7b979d4cfc819947a434ec", new RefactoringHandler() {
+		miner.detectAtCommit(repo,"fa3e6fa02dadc675f0d487a15cd842b3ac4a0c11", new RefactoringHandler() {
 			@Override 
 			public void handle(String commitData, List<Refactoring> refactorings) {
 				for(Refactoring ref : refactorings) {

@@ -13,6 +13,8 @@ import org.hamcrest.core.IsInstanceOf;
 import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
 
+import com.sun.glass.ui.EventLoop.State;
+
 import gr.uom.java.xmi.LocationInfo.CodeElementType;
 import gr.uom.java.xmi.UMLAnonymousClass;
 import gr.uom.java.xmi.UMLClass;
@@ -146,15 +148,61 @@ public class MotivationExtractor {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ASYNC_OPERATION, ref);
 			}
 			
-			if(isExtractFacilitateExtension(ref,listRef)){
+			if(isExtractFacilitateExtension(ref,listRef)){		
 				setRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
-			}
-			
+			}		
 		}
+		
+		postProcessingForIsExtractFacilitateExtension(listRef);
+		
 		//Print All detected refactorings
 		printDetectedRefactoringMotivations();			
 	}
 	
+	private void postProcessingForIsExtractFacilitateExtension(List<Refactoring> listRef) {
+		//Post Processing  for facilitate extension
+		/*Removing facilitate extension from the cases where multiple extract operations with the same extracted operation
+		 * (LIKE THE CASE OF REMOVE DUPLICATION) exists and at least one of them has no new added code .
+		 *  we will omit the facilitate extension from all the other extract operations
+		 *  of that group as well. Example: j2objc fa3e6fa */
+		boolean extracteOperationwithoutAddedCodeInExtractedMethodExists = false;
+		List<ExtractOperationRefactoring> listExtractOperationstoRemoveDupliction = new ArrayList<ExtractOperationRefactoring>();
+		for(Refactoring refactoring : listRef) {
+			if(refactoring instanceof ExtractOperationRefactoring) {
+				if(mapRefactoringMotivations.containsKey(refactoring)){
+					if(mapRefactoringMotivations.get(refactoring).contains(MotivationType.EM_REMOVE_DUPLICATION)){
+						listExtractOperationstoRemoveDupliction.add((ExtractOperationRefactoring)refactoring);	
+					}
+				}	
+			}
+		}
+		for(ExtractOperationRefactoring refactoring : listExtractOperationstoRemoveDupliction) {
+			int countNeutralNodes = 0;
+			int filteredAddedNodes = 0;// Added Nodes that are not neutral
+			List<StatementObject> listStatementObjectsT2 = new ArrayList<StatementObject>();
+			listStatementObjectsT2 = refactoring.getBodyMapper().getNonMappedLeavesT2();
+			int addedCompositeNodesT2 = refactoring.getBodyMapper().getNonMappedInnerNodesT2().size();
+			int  addedleavesT2 = refactoring.getBodyMapper().getNonMappedLeavesT2().size();
+			for(StatementObject statementObject : listStatementObjectsT2) {
+				if(IsNeutralNodeForFacilitateExtension(statementObject)) {
+					countNeutralNodes++;
+				}
+			}
+			filteredAddedNodes = addedCompositeNodesT2+addedleavesT2-countNeutralNodes;
+			if(filteredAddedNodes == 0) {
+				extracteOperationwithoutAddedCodeInExtractedMethodExists = true;
+				break;
+			}		
+		}
+		if(extracteOperationwithoutAddedCodeInExtractedMethodExists) {
+			for(Refactoring refactoring : listExtractOperationstoRemoveDupliction) {
+				if(mapRefactoringMotivations.get(refactoring).contains(MotivationType.EM_FACILITATE_EXTENSION)) {
+					mapRefactoringMotivations.get(refactoring).remove(MotivationType.EM_FACILITATE_EXTENSION);
+				}
+			}
+		}
+	}
+			
 	private boolean IsExtractedToIntroduceFactoryMethod(Refactoring ref) {
 		if(ref instanceof ExtractOperationRefactoring) {
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring) ref;
@@ -396,24 +444,16 @@ public class MotivationExtractor {
 			List<String> listParentNeutralLeaves = new ArrayList<String>();
 
 			List<String> listChildNeutralLeaves = new ArrayList<String>();
-
 			List<StatementObject> listNotMappedLeavesT2 = umlBodyMapper.getNonMappedLeavesT2();
 			List<StatementObject> parentListNotMappedLeavesT2 = umlBodyMapper.getParentMapper().getNonMappedLeavesT2();
 			List<CompositeStatementObject> parentListNotMappedInnerNodesT2 = umlBodyMapper.getParentMapper().getNonMappedInnerNodesT2();
-			Set<CodeElementType> neutralCodeElements = new HashSet<CodeElementType>();
-			neutralCodeElements.add(CodeElementType.SINGLE_VARIABLE_DECLARATION);
-			neutralCodeElements.add(CodeElementType.VARIABLE_DECLARATION_STATEMENT);
-			neutralCodeElements.add(CodeElementType.VARIABLE_DECLARATION_EXPRESSION);
-			neutralCodeElements.add(CodeElementType.VARIABLE_DECLARATION_INITIALIZER);
-			neutralCodeElements.add(CodeElementType.IF_STATEMENT_CONDITION);
-			neutralCodeElements.add(CodeElementType.RETURN_STATEMENT);
-			neutralCodeElements.add(CodeElementType.BLOCK);
-			neutralCodeElements.add(CodeElementType.THROW_STATEMENT);
-			neutralCodeElements.add(CodeElementType.CATCH_CLAUSE_EXCEPTION_NAME);
+
 			//Removing the T2 nodes (Leaf or Inner) that subsumes calls to Extracted method
 
 					for(CompositeStatementObject  notMappedCompositeNode :  parentListNotMappedInnerNodesT2) {
 						for(AbstractExpression expression: notMappedCompositeNode.getExpressions()) {
+							/*The loop around different Extract refactoring helps omit all the call to different extracted operations
+							from the source operation after extraction*/
 							for(Refactoring refactoring : refList) {
 								if(refactoring instanceof ExtractOperationRefactoring) {
 									ExtractOperationRefactoring extractOperationRefactoring = (ExtractOperationRefactoring)refactoring;
@@ -431,35 +471,20 @@ public class MotivationExtractor {
 							if(refactoring instanceof ExtractOperationRefactoring) {
 								ExtractOperationRefactoring extractOperationRefactoring = (ExtractOperationRefactoring)refactoring;
 								for(OperationInvocation invocation : extractOperationRefactoring.getExtractedOperationInvocations()) {
-									if(notMappedNode.getLocationInfo().subsumes(invocation.getLocationInfo())) {
-										//if(notMappedNode.getLocationInfo().getStartLine() == invocation.getLocationInfo().getStartLine() &&
-												//notMappedNode.getLocationInfo().getEndLine() == invocation.getLocationInfo().getEndLine() &&
-												//notMappedNode.getLocationInfo().getEndColumn()-invocation.getLocationInfo().getEndColumn() == 1 &&
-												//notMappedNode.getLocationInfo().getStartColumn() == invocation.getLocationInfo().getStartColumn()) {
+									if(IsNeutralNodeForFacilitateExtension(notMappedNode)){
+										listParentNeutralLeaves.add(notMappedNode.toString());
+									}else if(notMappedNode.getLocationInfo().subsumes(invocation.getLocationInfo())) {
 											listParentNotMappedLeavesWithInvokationsToExtractedMethod.add(notMappedNode);
-										//} 
-									}else {
-										for(CodeElementType type: neutralCodeElements) {
-											if(notMappedNode.getLocationInfo().getCodeElementType().equals(type)){
-												listParentNeutralLeaves.add(notMappedNode.toString());
-											}
-										}
 									}
 								}
 							}
 						}
-					}
-						
-			
-
+					}		
 			for(StatementObject  notMappedNode :  listNotMappedLeavesT2) {
-				for(CodeElementType type: neutralCodeElements) {
-					if(notMappedNode.getLocationInfo().getCodeElementType().equals(type)){
-						listChildNeutralLeaves.add(notMappedNode.toString());
-					}
+				if(IsNeutralNodeForFacilitateExtension(notMappedNode)){
+					listChildNeutralLeaves.add(notMappedNode.toString());
 				}
 			}
-
 			int filteredListNotMappedLeavesT2 = listNotMappedLeavesT2.size()-listChildNeutralLeaves.size();
 			countNonMappedLeavesAndInnerNodesT2 =  filteredListNotMappedLeavesT2;
 			
@@ -471,16 +496,45 @@ public class MotivationExtractor {
 			//Source Operation After Extraction
 			if( countNonMappedLeavesAndInnerNodesT2 > 0 || countParentNonMappedLeavesAndInnerNodesT2 > 0) {
 				if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE) &&
-						!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY))
-				return true;
+						!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {
+					return true;
+				}
 			}
 		}
 		return false;
 	}
 	
-	
-	
-	
+	private boolean IsNeutralNodeForFacilitateExtension(AbstractStatement statement){
+		Set<CodeElementType> neutralCodeElements = new HashSet<CodeElementType>();
+		neutralCodeElements.add(CodeElementType.SINGLE_VARIABLE_DECLARATION);
+		neutralCodeElements.add(CodeElementType.VARIABLE_DECLARATION_STATEMENT);
+		neutralCodeElements.add(CodeElementType.VARIABLE_DECLARATION_EXPRESSION);
+		neutralCodeElements.add(CodeElementType.VARIABLE_DECLARATION_INITIALIZER);
+		neutralCodeElements.add(CodeElementType.IF_STATEMENT_CONDITION);
+		neutralCodeElements.add(CodeElementType.RETURN_STATEMENT);
+		neutralCodeElements.add(CodeElementType.BLOCK);
+		neutralCodeElements.add(CodeElementType.THROW_STATEMENT);
+		neutralCodeElements.add(CodeElementType.CATCH_CLAUSE_EXCEPTION_NAME);
+		//Checking Neutral Composite statements
+		if(statement.statementCount() > 1) {
+			CompositeStatementObject compositeObject = (CompositeStatementObject)statement;
+			CodeElementType compositeStatementType = compositeObject.getLocationInfo().getCodeElementType();
+			for(CodeElementType type: neutralCodeElements) {
+				if(type.equals(compositeStatementType)) {
+					return true;
+				}
+			}
+		}else {
+			StatementObject statementObject = (StatementObject)statement;
+			CodeElementType statementType = statementObject.getLocationInfo().getCodeElementType();
+			for(CodeElementType type: neutralCodeElements) {
+				if(type.equals(statementType)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 	private boolean isExtractReusableMethod(Refactoring ref) {		
 		
@@ -607,15 +661,29 @@ public class MotivationExtractor {
 		}
 		int countRemoveDuplicationExtractRefactorings = 0;
 		for(UMLOperation extractOperation : sourceOperationMapWithExtractedOperationAsKey.keySet()){
+			List<ExtractOperationRefactoring> listRepetativeExtractOperations = new ArrayList<ExtractOperationRefactoring>();
 			List<ExtractOperationRefactoring> listSourceOperations = sourceOperationMapWithExtractedOperationAsKey.get(extractOperation);	
 			/*DETECTION RULE: if multiple source operations(The Extract Refactorings that contain them)
 			 *  have the same extractedOperation the extract operations motivations is Remove Duplication*/
 			if(listSourceOperations.size() > 1){
-				for(ExtractOperationRefactoring extractOp : listSourceOperations){
-					setRefactoringMotivation(MotivationType.EM_REMOVE_DUPLICATION, extractOp);
-					countRemoveDuplicationExtractRefactorings++;
+				for (int i = 0; i < listSourceOperations.size(); i++) {
+					for (int j = i+1; j <listSourceOperations.size() ; j++) {
+						if(listSourceOperations.get(i).toString().equals(listSourceOperations.get(j).toString())){
+							listRepetativeExtractOperations.add(listSourceOperations.get(i));
+						}
+					}
 				}
-			}
+				//Removing the repetitive source methods. Example: hazelcast 679d38d
+				if(listRepetativeExtractOperations.size() >= 1) {
+						listSourceOperations.removeAll(listRepetativeExtractOperations);	
+				}
+				if(listSourceOperations.size() > 1) {
+					for(ExtractOperationRefactoring extractOp : listSourceOperations){
+						setRefactoringMotivation(MotivationType.EM_REMOVE_DUPLICATION, extractOp);
+						countRemoveDuplicationExtractRefactorings++;
+					}
+				}
+			}				
 		}
 		if(countRemoveDuplicationExtractRefactorings >= 2) {
 			return true;
