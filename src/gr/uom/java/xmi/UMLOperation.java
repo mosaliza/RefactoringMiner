@@ -414,6 +414,7 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 				this.name.equals(operation.name) &&
 				this.visibility.equals(operation.visibility) &&
 				this.isAbstract == operation.isAbstract &&
+				this.locationInfo.getFilePath().equals(operation.locationInfo.getFilePath()) &&
 				thisEmptyBody == otherEmptyBody &&
 				this.getParameterTypeList().equals(operation.getParameterTypeList());
 		}
@@ -459,6 +460,7 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((getParameterTypeList() == null) ? 0 : getParameterTypeList().hashCode());
 		result = prime * result + ((visibility == null) ? 0 : visibility.hashCode());
+		result = prime * result + ((locationInfo.getFilePath() == null) ? 0 : locationInfo.getFilePath().hashCode());
 		return result;
 	}
 
