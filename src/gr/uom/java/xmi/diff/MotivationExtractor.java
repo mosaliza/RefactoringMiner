@@ -7,14 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.jdt.internal.compiler.ast.Invocation;
-import org.eclipse.jdt.internal.core.MoveResourceElementsOperation;
-import org.hamcrest.core.IsInstanceOf;
+import org.eclipse.jdt.core.dom.Annotation;
 import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
-
-import com.sun.glass.ui.EventLoop.State;
-
 import gr.uom.java.xmi.LocationInfo.CodeElementType;
 import gr.uom.java.xmi.UMLAnonymousClass;
 import gr.uom.java.xmi.UMLClass;
@@ -389,7 +384,15 @@ public class MotivationExtractor {
 			/*DETECTION RULE: Check if source Operation after extraction is a delegate AND
 			* IF the method parameters OR name has changed
 			*/
-			if( listExtractedOpInvokations.size() == 1 && 
+			boolean isDeprecated = false;
+			List<Annotation> operationAnnotations = extractedOperation.getAnnotations();
+			for(Annotation annotation : operationAnnotations) {
+					if(annotation.getTypeName().toString().equals("Deprecated")) {
+						isDeprecated = true;
+						break;
+					}
+				}
+			if( isDeprecated && listExtractedOpInvokations.size() == 1 && 
 					!sourceOpAfterExtraction.equalParameters(extractedOperation) ||
 					!extractedOperation.getName().equals(sourceOpAfterExtraction.getName())){
 				OperationBody sourceOpBodyAfterExtraction = sourceOpAfterExtraction.getBody();
@@ -398,9 +401,7 @@ public class MotivationExtractor {
 					return true;
 				}
 				else{
-				/*TODO: Also Check if the source method after extraction has the @Deprecated annotation
-				 * Temporary Variables should be excluded.
-				 */
+				//TODO:Temporary Variables should be excluded.
 				}
 			}
 		}

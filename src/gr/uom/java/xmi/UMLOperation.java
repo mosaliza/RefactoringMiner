@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.jdt.core.dom.Annotation;
+import org.eclipse.jdt.core.dom.IExtendedModifier;
 import org.refactoringminer.util.AstUtils;
 
 public class UMLOperation implements Comparable<UMLOperation>, Serializable, LocationInfoProvider {
@@ -35,6 +37,7 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 	private boolean testAnnotation;
 	private List<UMLAnonymousClass> anonymousClassList;
 	private List<UMLTypeParameter> typeParameters;
+	private List<Annotation> operationAnnotations;
 	
 	public UMLOperation(String name, LocationInfo locationInfo) {
 		this.locationInfo = locationInfo;
@@ -42,6 +45,7 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
         this.parameters = new ArrayList<UMLParameter>();
         this.anonymousClassList = new ArrayList<UMLAnonymousClass>();
         this.typeParameters = new ArrayList<UMLTypeParameter>();
+        this.operationAnnotations = new ArrayList<Annotation>();
     }
 
 	public List<UMLTypeParameter> getTypeParameters() {
@@ -110,6 +114,10 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 
 	public OperationBody getBody() {
 		return operationBody;
+	}
+	
+	public List<Annotation> getAnnotations() {
+		return operationAnnotations;
 	}
 
 	public boolean hasTestAnnotation() {
@@ -316,6 +324,10 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 				parameterTypeList.add(parameter.getType());
 		}
 		return parameterTypeList;
+	}
+	
+	public void setAnnotations(List<Annotation> annotations) {
+		this.operationAnnotations = annotations;
 	}
 
 	public List<String> getParameterNameList() {
