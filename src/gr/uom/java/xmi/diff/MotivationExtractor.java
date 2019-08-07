@@ -13,6 +13,7 @@ import org.refactoringminer.api.RefactoringType;
 import gr.uom.java.xmi.LocationInfo.CodeElementType;
 import gr.uom.java.xmi.UMLAnonymousClass;
 import gr.uom.java.xmi.UMLClass;
+import gr.uom.java.xmi.UMLGeneralization;
 import gr.uom.java.xmi.UMLOperation;
 import gr.uom.java.xmi.UMLParameter;
 import gr.uom.java.xmi.UMLType;
@@ -384,24 +385,54 @@ public class MotivationExtractor {
 			/*DETECTION RULE: Check if source Operation after extraction is a delegate AND
 			* IF the method parameters OR name has changed
 			*/
-			boolean isDeprecated = false;
-			List<Annotation> operationAnnotations = extractedOperation.getAnnotations();
-			for(Annotation annotation : operationAnnotations) {
+			boolean isDeprecatedInClass = false;
+			boolean isDeprecatedInImplementedInterface = false;
+			List<Annotation> sourceOperationAnnotations = sourceOpAfterExtraction.getAnnotations();
+			for(Annotation annotation : sourceOperationAnnotations) {
 					if(annotation.getTypeName().toString().equals("Deprecated")) {
-						isDeprecated = true;
+						isDeprecatedInClass = true;
 						break;
 					}
 				}
-			if( isDeprecated && listExtractedOpInvokations.size() == 1 && 
-					!sourceOpAfterExtraction.equalParameters(extractedOperation) ||
-					!extractedOperation.getName().equals(sourceOpAfterExtraction.getName())){
-				OperationBody sourceOpBodyAfterExtraction = sourceOpAfterExtraction.getBody();
-				int countStatements = sourceOpBodyAfterExtraction.statementCount();
+		
+			UMLClassBaseDiff umlClassDiff = modelDiff.getUMLClassDiff(sourceOpAfterExtraction.getClassName());
+			if(umlClassDiff != null) {
+				UMLClass nextClass = umlClassDiff.getNextClass();
+				List<UMLType> extractedOperationImplementedInterfaces = nextClass.getImplementedInterfaces();
+				for(UMLType implementedInterface : extractedOperationImplementedInterfaces) {
+					UMLClassBaseDiff interfaceUmlClassDiff = modelDiff.getUMLClassDiff(implementedInterface);
+					if(interfaceUmlClassDiff != null) {
+						UMLClass interfaceClass = interfaceUmlClassDiff.getNextClass();
+						if(interfaceClass != null) {
+							for( UMLOperation operation : interfaceClass.getOperations()){
+								if(operation.equalSignature(sourceOpAfterExtraction)) {
+									for(Annotation annotation : operation.getAnnotations()) {
+										if(annotation.getTypeName().toString().equals("Deprecated")) {
+											isDeprecatedInImplementedInterface = true;
+											break;
+										}
+									}
+								}
+								if(isDeprecatedInImplementedInterface) {
+									break;
+								}
+							}			
+						}
+					}
+				}
+			}
+			boolean isBackwardCompatible = !sourceOpAfterExtraction.equalParameters(extractedOperation) ||
+					!extractedOperation.getName().equals(sourceOpAfterExtraction.getName());
+			if(  listExtractedOpInvokations.size() == 1 && (isDeprecatedInClass || isDeprecatedInImplementedInterface) ){
+				if(isBackwardCompatible) {
+					OperationBody sourceOpBodyAfterExtraction = sourceOpAfterExtraction.getBody();
+					int countStatements = sourceOpBodyAfterExtraction.statementCount();
 					if(countStatements == 1){
-					return true;
+						return true;	
+					}
 				}
 				else{
-				//TODO:Temporary Variables should be excluded.
+					//TODO:Temporary Variables should be excluded.
 				}
 			}
 		}
@@ -553,7 +584,8 @@ public class MotivationExtractor {
 				}
 			/* DETECTION RULE:
 			 * IF Invocations to Extracted method from source method after Extraction is more than one OR 
-			 *  there are other Invocations from other methods to extracted operation*/
+			 *  there are other Invocations from other methods to extracted operation.
+			 *  Invocations inside test methods will be considered as reusable calls.*/
 			if(extractOpRefactoring.getExtractedOperationInvocations().size()>1 || extractOperationInvocationCount > 0) {
 				/*AND if the extraction operation is not detected as duplicated removal before
 				 * (All Extract Operations that tend to remove duplication are also reused.)*/
@@ -571,7 +603,8 @@ public class MotivationExtractor {
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
 			UMLOperation sourceOperationAfterExtration = extractOpRefactoring.getSourceOperationAfterExtraction();
 			//check if other operations in  class calls the extracted method
-			if(!operation.equals(sourceOperationAfterExtration) && !operation.equals(extractedOperation)) {
+			if(!operation.equals(sourceOperationAfterExtration) && !operation.equals(extractedOperation) &&
+					!operation.hasTestAnnotation() && !operation.getName().startsWith("test")) {
 				List<OperationInvocation> invocations = operation.getAllOperationInvocations();
 				for(OperationInvocation invocation : invocations) {
 					if(invocation.matchesOperation(extractedOperation,operation.variableTypeMap(), modelDiff)) {

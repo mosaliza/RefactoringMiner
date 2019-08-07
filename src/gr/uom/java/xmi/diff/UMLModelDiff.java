@@ -146,7 +146,7 @@ public class UMLModelDiff {
       return null;
    }
 
-   private UMLClassBaseDiff getUMLClassDiff(UMLType type) {
+   public UMLClassBaseDiff getUMLClassDiff(UMLType type) {
       for(UMLClassDiff classDiff : commonClassDiffList) {
          if(classDiff.matches(type))
             return classDiff;
