@@ -227,21 +227,36 @@ public class MotivationExtractor {
 					}
 				}
 			}
-			//Find All the Variable Declerations with same Type as return parameter
+			//Find All the Variable Declerations(that are Object Creation) with same Type as return parameter
+			Map<String ,List<ObjectCreation>> abstractExpressionObjectCreationsMap = new HashMap<String,List<ObjectCreation>>();
+			List<ObjectCreation> abstractExpressionObjectCreations = new ArrayList<ObjectCreation>();
+			List<VariableDeclaration> listObjectCreationVariableDeclerationsWithReturnType = new ArrayList<VariableDeclaration>();
 			Map<UMLType,List<String>> variableTypeNameMap = new HashMap<UMLType, List<String>>();
 			for(VariableDeclaration variableDecleration: listVariableDeclerations){
-				if(variableDecleration.getType().equalClassType(returnParameterType)) {
-					if(variableTypeNameMap.containsKey(variableDecleration.getType())) {
-						variableTypeNameMap.get(variableDecleration.getType()).add(variableDecleration.getVariableName());
-					}else {
-						List<String> variableNames  = new ArrayList<String>();
-						variableNames.add(variableDecleration.getVariableName());
-						variableTypeNameMap.put(variableDecleration.getType(), variableNames);						
-					}
- 
+				if(variableDecleration.getInitializer() != null) {
+					AbstractExpression abstractExpression = variableDecleration.getInitializer();
+					abstractExpressionObjectCreationsMap = abstractExpression.getCreationMap();
+					for(String objectCreationString : abstractExpressionObjectCreationsMap.keySet()) {
+						abstractExpressionObjectCreations = abstractExpressionObjectCreationsMap.get(objectCreationString);
+						for(ObjectCreation objectCreation: abstractExpressionObjectCreations) {
+							if(objectCreation.getType().equalClassType(returnParameterType) ||
+									returnParameterType.equalsWithSubType(objectCreation.getType())) {
+								listObjectCreationVariableDeclerationsWithReturnType.add(variableDecleration);
+							}
+						}	
+						for(VariableDeclaration objectCreationVariableDecleration :listObjectCreationVariableDeclerationsWithReturnType){
+							if(variableTypeNameMap.containsKey(variableDecleration.getType())) {
+								variableTypeNameMap.get(objectCreationVariableDecleration.getType()).add(objectCreationVariableDecleration.getVariableName());
+							}else {
+								List<String> variableNames  = new ArrayList<String>();
+								variableNames.add(objectCreationVariableDecleration.getVariableName());
+								variableTypeNameMap.put(objectCreationVariableDecleration.getType(), variableNames);						
+							}
+						}
+					}			
 				}
 			}
-			//Check if return statement returns a variable of Return parameter type
+			//Check if return statement returns a Variable Declerations(that are Object Creation) with Return parameter type
 			for(UMLType type : variableTypeNameMap.keySet()) {
 				List<String> variableNames = variableTypeNameMap.get(type);
 				for(String variableName : variableNames) {
