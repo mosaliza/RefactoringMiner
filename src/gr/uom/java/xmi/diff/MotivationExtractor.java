@@ -457,13 +457,15 @@ public class MotivationExtractor {
 					}
 				}
 				else{
-					//TODO:Temporary Variables should be excluded.
+					//Temporary Variables should be excluded.
+					if(IsUmlOperationStatementsAllTempVariables(sourceOpAfterExtraction)) {
+						return true;
+					}
 				}
 			}
 		}
 		return false;
 	}
-	
 	private boolean isIntroduceAlternativeMethodSignature(Refactoring ref) {
 		if( ref instanceof ExtractOperationRefactoring){
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
@@ -478,17 +480,36 @@ public class MotivationExtractor {
 						return true;
 					}
 					else{
-						//TODO:Temporary Variables should be excluded
-						CompositeStatementObject compositeStatement = sourceOpBodyAfterExtraction.getCompositeStatement();
-						List <AbstractStatement> listStatements = compositeStatement.getStatements();
-						for(AbstractStatement statement : listStatements) {
+						//Temporary Variables should be excluded
+						//Example:crate-c7b6a7
+						if(IsUmlOperationStatementsAllTempVariables(sourceOpAfterExtraction)) {
+							return true;
 						}
 					}
 				}
 			}			
 		return false;
 	}
-	
+	private boolean IsUmlOperationStatementsAllTempVariables(UMLOperation operation) {
+		CompositeStatementObject compositeStatement = operation.getBody().getCompositeStatement();
+		List<AbstractStatement> abstractStatements = compositeStatement.getStatements();
+		Set<CodeElementType> codeElementTypeSet = new HashSet<CodeElementType>();
+		List<AbstractStatement> nonTempAbstractStatements = new ArrayList<AbstractStatement>();
+		codeElementTypeSet.add(CodeElementType.SINGLE_VARIABLE_DECLARATION);
+		codeElementTypeSet.add(CodeElementType.VARIABLE_DECLARATION_EXPRESSION);
+		codeElementTypeSet.add(CodeElementType.VARIABLE_DECLARATION_STATEMENT);
+		for(AbstractStatement statement : abstractStatements) {
+			CodeElementType statementType = statement.getLocationInfo().getCodeElementType();
+			if(!codeElementTypeSet.contains(statementType)) {
+				nonTempAbstractStatements.add(statement);														
+			}
+		}
+		if(nonTempAbstractStatements.size() == 0 ) {
+			return true;
+		}else {
+			return false;
+		}
+	}
 	private boolean isExtractFacilitateExtension(Refactoring ref , List<Refactoring> refList){
 		if( ref instanceof ExtractOperationRefactoring){
 			ExtractOperationRefactoring extractRefactoring = (ExtractOperationRefactoring)ref;
