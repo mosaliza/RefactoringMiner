@@ -228,16 +228,26 @@ public class MotivationExtractor {
 				}
 			}
 			//Find All the Variable Declerations with same Type as return parameter
-			Map<UMLType,String> variableTypeNameMap = new HashMap<UMLType, String>();
+			Map<UMLType,List<String>> variableTypeNameMap = new HashMap<UMLType, List<String>>();
 			for(VariableDeclaration variableDecleration: listVariableDeclerations){
 				if(variableDecleration.getType().equalClassType(returnParameterType)) {
-					variableTypeNameMap.put(variableDecleration.getType(), variableDecleration.getVariableName()); 
+					if(variableTypeNameMap.containsKey(variableDecleration.getType())) {
+						variableTypeNameMap.get(variableDecleration.getType()).add(variableDecleration.getVariableName());
+					}else {
+						List<String> variableNames  = new ArrayList<String>();
+						variableNames.add(variableDecleration.getVariableName());
+						variableTypeNameMap.put(variableDecleration.getType(), variableNames);						
+					}
+ 
 				}
 			}
 			//Check if return statement returns a variable of Return parameter type
 			for(UMLType type : variableTypeNameMap.keySet()) {
-				if( returnStatementVariables.size() == 1 && returnStatementVariables.contains(variableTypeNameMap.get(type))){
-					return true;
+				List<String> variableNames = variableTypeNameMap.get(type);
+				for(String variableName : variableNames) {
+					if( returnStatementVariables.size() == 1 && returnStatementVariables.contains(variableName)){
+						return true;
+					}	
 				}
 			}
 		}
@@ -481,7 +491,7 @@ public class MotivationExtractor {
 			List<CompositeStatementObject> parentListNotMappedInnerNodesT2 = umlBodyMapper.getParentMapper().getNonMappedInnerNodesT2();
 
 			//Removing the T2 nodes (Leaf or Inner) that subsumes calls to Extracted method
-
+			
 					for(CompositeStatementObject  notMappedCompositeNode :  parentListNotMappedInnerNodesT2) {
 						for(AbstractExpression expression: notMappedCompositeNode.getExpressions()) {
 							/*The loop around different Extract refactoring helps omit all the call to different extracted operations
