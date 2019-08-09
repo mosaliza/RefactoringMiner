@@ -1,9 +1,6 @@
 package org.refactoringminer.api;
 
 import java.util.List;
-import java.util.Map;
-
-import gr.uom.java.xmi.diff.MotivationType;
 
 /**
  * Handler object that works in conjunction with {@link org.refactoringminer.api.GitHistoryRefactoringMiner}.
@@ -30,17 +27,7 @@ public abstract class RefactoringHandler {
 	 * @param refactorings List of refactorings detected in the commit.
 	 */
 	public void handle(String commitId, List<Refactoring> refactorings) {}
-	
-	/**
-	 * This method is called after each commit is analyzed.
-	 * You should override this method to do your custom logic with the list of detected refactorings and detected refactoring motivations.
-	 * 
-	 * @param commitId The sha of the analyzed commit.
-	 * @param refactorings List of refactorings detected in the commit.
-	 * @param map of refactoring motivations with refactoring types as key and list  of MotivationTypes as value 
-	 */
-	public void handle(String commitId, List<Refactoring> refactorings , Map<Refactoring , List<MotivationType>> mapRefactoringMotivations) {}
-	
+
 	/**
      * This method is called whenever an exception is thrown during the analysis of the given commit.
      * You should override this method to do your custom logic in the case of exceptions (e.g. skip or rethrow).

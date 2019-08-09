@@ -18,8 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.jdt.core.dom.Annotation;
-import org.eclipse.jdt.core.dom.IExtendedModifier;
 import org.refactoringminer.util.AstUtils;
 
 public class UMLOperation implements Comparable<UMLOperation>, Serializable, LocationInfoProvider {
@@ -37,7 +35,6 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 	private boolean testAnnotation;
 	private List<UMLAnonymousClass> anonymousClassList;
 	private List<UMLTypeParameter> typeParameters;
-	private List<Annotation> operationAnnotations;
 	
 	public UMLOperation(String name, LocationInfo locationInfo) {
 		this.locationInfo = locationInfo;
@@ -45,7 +42,6 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
         this.parameters = new ArrayList<UMLParameter>();
         this.anonymousClassList = new ArrayList<UMLAnonymousClass>();
         this.typeParameters = new ArrayList<UMLTypeParameter>();
-        this.operationAnnotations = new ArrayList<Annotation>();
     }
 
 	public List<UMLTypeParameter> getTypeParameters() {
@@ -114,10 +110,6 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 
 	public OperationBody getBody() {
 		return operationBody;
-	}
-	
-	public List<Annotation> getAnnotations() {
-		return operationAnnotations;
 	}
 
 	public boolean hasTestAnnotation() {
@@ -325,10 +317,6 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 		}
 		return parameterTypeList;
 	}
-	
-	public void setAnnotations(List<Annotation> annotations) {
-		this.operationAnnotations = annotations;
-	}
 
 	public List<String> getParameterNameList() {
 		List<String> parameterNameList = new ArrayList<String>();
@@ -426,7 +414,6 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 				this.name.equals(operation.name) &&
 				this.visibility.equals(operation.visibility) &&
 				this.isAbstract == operation.isAbstract &&
-				this.locationInfo.getFilePath().equals(operation.locationInfo.getFilePath()) &&
 				thisEmptyBody == otherEmptyBody &&
 				this.getParameterTypeList().equals(operation.getParameterTypeList());
 		}
@@ -472,7 +459,6 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((getParameterTypeList() == null) ? 0 : getParameterTypeList().hashCode());
 		result = prime * result + ((visibility == null) ? 0 : visibility.hashCode());
-		result = prime * result + ((locationInfo.getFilePath() == null) ? 0 : locationInfo.getFilePath().hashCode());
 		return result;
 	}
 

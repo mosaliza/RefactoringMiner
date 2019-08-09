@@ -72,14 +72,6 @@ public class UMLModelDiff {
       this.deletedFolderPaths = new LinkedHashSet<String>();
    }
 
-   public List<UMLClass> getAddedClasses() {
-	   return addedClasses;
-   }
-
-   public List<UMLClassDiff> getCommonClassDiffList() {
-	   return commonClassDiffList;
-   }
-
    public void reportAddedClass(UMLClass umlClass) {
 	   if(!addedClasses.contains(umlClass))
 		   this.addedClasses.add(umlClass);
@@ -126,7 +118,7 @@ public class UMLModelDiff {
 	   return false;
    }
 
-   public UMLClassBaseDiff getUMLClassDiff(String className) {
+   private UMLClassBaseDiff getUMLClassDiff(String className) {
       for(UMLClassDiff classDiff : commonClassDiffList) {
          if(classDiff.matches(className))
             return classDiff;
@@ -146,7 +138,7 @@ public class UMLModelDiff {
       return null;
    }
 
-   public UMLClassBaseDiff getUMLClassDiff(UMLType type) {
+   private UMLClassBaseDiff getUMLClassDiff(UMLType type) {
       for(UMLClassDiff classDiff : commonClassDiffList) {
          if(classDiff.matches(type))
             return classDiff;

@@ -1,11 +1,6 @@
 package org.refactoringminer.api;
 
-import java.util.List;
-import java.util.Map;
-
 import org.eclipse.jgit.lib.Repository;
-
-import gr.uom.java.xmi.diff.MotivationType;
 
 /**
  * Detect refactorings in the git history.

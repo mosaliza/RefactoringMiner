@@ -298,14 +298,6 @@ public class UMLModelASTReader {
 			}
 		}
 		
-		List<Annotation> operationAnnotations = new ArrayList<Annotation>();
-		for(IExtendedModifier extendedModifier : extendedModifiers) {
-			if(extendedModifier.isAnnotation()) {
-				operationAnnotations.add((Annotation)extendedModifier);
-				umlOperation.setAnnotations(operationAnnotations);
-			}
-		}
-		
 		List<TypeParameter> typeParameters = methodDeclaration.typeParameters();
 		for(TypeParameter typeParameter : typeParameters) {
 			UMLTypeParameter umlTypeParameter = new UMLTypeParameter(typeParameter.getName().getFullyQualifiedName());
