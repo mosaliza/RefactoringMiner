@@ -1,6 +1,9 @@
 package org.refactoringminer.api;
 
 import java.util.List;
+import java.util.Map;
+
+import gr.uom.java.xmi.diff.MotivationType;
 
 /**
  * Handler object that works in conjunction with {@link org.refactoringminer.api.GitHistoryRefactoringMiner}.
@@ -48,4 +51,10 @@ public abstract class RefactoringHandler {
 	 * @param errorCommitsCount Total number of commits not analyzed due to errors.
 	 */
 	public void onFinish(int refactoringsCount, int commitsCount, int errorCommitsCount) {}
+
+	public void handle(String commitId, List<Refactoring> refactorings,
+			Map<Refactoring, List<MotivationType>> mapRefactoringMotivations) {
+		// TODO Auto-generated method stub
+		
+	}
 }

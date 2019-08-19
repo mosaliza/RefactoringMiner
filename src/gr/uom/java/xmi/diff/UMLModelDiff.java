@@ -118,7 +118,7 @@ public class UMLModelDiff {
 	   return false;
    }
 
-   private UMLClassBaseDiff getUMLClassDiff(String className) {
+   public UMLClassBaseDiff getUMLClassDiff(String className) {
       for(UMLClassDiff classDiff : commonClassDiffList) {
          if(classDiff.matches(className))
             return classDiff;
@@ -138,7 +138,7 @@ public class UMLModelDiff {
       return null;
    }
 
-   private UMLClassBaseDiff getUMLClassDiff(UMLType type) {
+   public UMLClassBaseDiff getUMLClassDiff(UMLType type) {
       for(UMLClassDiff classDiff : commonClassDiffList) {
          if(classDiff.matches(type))
             return classDiff;
@@ -156,6 +156,10 @@ public class UMLModelDiff {
             return classDiff;
       }
       return null;
+   }
+   
+   public List<UMLClassDiff> getCommonClassDiffList(){
+	  return commonClassDiffList; 
    }
 
    private UMLClassBaseDiff getUMLClassDiffWithAttribute(Replacement pattern) {
@@ -333,6 +337,9 @@ public class UMLModelDiff {
             return umlClass;
       }
       return null;
+   }
+   public List<UMLClass> getAddedClasses(){
+	   return addedClasses;
    }
 
    public UMLClass getRemovedClass(String className) {

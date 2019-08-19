@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.Annotation;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
 import gr.uom.java.xmi.LocationInfo.CodeElementType;
@@ -498,6 +499,7 @@ public class MotivationExtractor {
 		codeElementTypeSet.add(CodeElementType.SINGLE_VARIABLE_DECLARATION);
 		codeElementTypeSet.add(CodeElementType.VARIABLE_DECLARATION_EXPRESSION);
 		codeElementTypeSet.add(CodeElementType.VARIABLE_DECLARATION_STATEMENT);
+		codeElementTypeSet.add(CodeElementType.RETURN_STATEMENT);//Considering return statements as Temp
 		for(AbstractStatement statement : abstractStatements) {
 			CodeElementType statementType = statement.getLocationInfo().getCodeElementType();
 			if(!codeElementTypeSet.contains(statementType)) {
@@ -709,7 +711,6 @@ public class MotivationExtractor {
 			 *  the extract operations motivations is Decompose to Improve Readability
 			 */
 			if(list.size() > 1) {
-				//System.out.println("MOTIVAION : DECOMPOSE METHOD FOR READABILITY");
 				for(ExtractOperationRefactoring ref : list) {
 					//Set Motivation for each refactoring with the same source Operation
 					setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
@@ -720,7 +721,75 @@ public class MotivationExtractor {
 		if(countDecomposeMethodToImproveReadability >= 2) {
 			return true;
 		}
+		/*Checking source operation after Extraction calls to the extracted method to see if they improve readability
+		/in case of calls inside expressions or inside return statements we consider the extraction is improving the readability
+		 * Example: mockito:2d036 , jedis:d4b4a , cassandra:9a3fa ,JetBrains/intellij-community/commit/7dd55
+		 */
+		for (Refactoring ref : refList) {
+			if(isExtractedOperationInvokationsToImproveReadability(ref)) {
+				setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
+				return true;
+			}
+		}
 		return false;	
+	}
+	private boolean isExtractedOperationInvokationsToImproveReadability(Refactoring ref) {
+		if(ref instanceof ExtractOperationRefactoring) {
+			ExtractOperationRefactoring extractOperationRef = (ExtractOperationRefactoring)ref;
+			UMLOperation sourceOperationAfterExtraction = extractOperationRef.getSourceOperationAfterExtraction();
+			UMLOperation extratedOperation = extractOperationRef.getExtractedOperation();
+			List<AbstractExpression> listAbstractExpressionsWithCallToExtractedOperation = new ArrayList<AbstractExpression>();
+			List<StatementObject> listReturnStatementswithCallsToExtractedOperation = new ArrayList<StatementObject>();
+			//Check all expressions of the source operation after extraction to see if there is any calls to extracted operation
+			OperationBody sourceOperationBody = sourceOperationAfterExtraction.getBody();
+			CompositeStatementObject compositeStatement =  sourceOperationBody.getCompositeStatement();
+			listAbstractExpressionsWithCallToExtractedOperation = getAllCompositeStatementObjectExpressionsInvokationsToUmlOperation(compositeStatement,
+					extratedOperation);
+			//Check Return statements to see if they have calls to extracted operation
+			List<StatementObject> listStatementObjects =  compositeStatement.getLeaves();
+			for(StatementObject statement : listStatementObjects) {
+				CodeElementType type = statement.getLocationInfo().getCodeElementType();
+				if(type == CodeElementType.RETURN_STATEMENT) {
+					for(OperationInvocation invokation : extractOperationRef.getExtractedOperationInvocations()) {
+						if(statement.getLocationInfo().subsumes(invokation.getLocationInfo())){
+							listReturnStatementswithCallsToExtractedOperation.add(statement);
+							break;
+						}	
+					}
+				}
+			}		
+			if(listAbstractExpressionsWithCallToExtractedOperation.size() > 0 || listReturnStatementswithCallsToExtractedOperation.size()>0) {
+				return true;
+			}
+		}	
+		return false;
+	}
+	
+	private List<AbstractExpression> getAllCompositeStatementObjectExpressionsInvokationsToUmlOperation(CompositeStatementObject compositeStatement ,
+			UMLOperation invokedOperation){
+		List<AbstractExpression> listAbstractExpressions = compositeStatement.getExpressions();
+		List<AbstractExpression> listExpressionsWithCallToExtractedOperation = new ArrayList<AbstractExpression>();
+		Map<String, List<OperationInvocation>> mapMerthodInvokations = new HashMap<String, List<OperationInvocation>>();
+		for(AbstractExpression expression : listAbstractExpressions) {
+			mapMerthodInvokations = expression.getMethodInvocationMap();
+			for(String invokationString : mapMerthodInvokations.keySet()) {
+				List<OperationInvocation> listInvokations = mapMerthodInvokations.get(invokationString);
+				for(OperationInvocation invokation : listInvokations) {
+					if(invokation.matchesOperation(invokedOperation)) {
+						listExpressionsWithCallToExtractedOperation.add(expression);
+					}
+				}
+			}
+		}
+		List<AbstractStatement> listStatements = compositeStatement.getStatements();
+		for(AbstractStatement statement : listStatements) {
+			if(statement instanceof CompositeStatementObject) {
+				CompositeStatementObject composite = (CompositeStatementObject)statement;
+				listExpressionsWithCallToExtractedOperation.addAll(getAllCompositeStatementObjectExpressionsInvokationsToUmlOperation(composite , invokedOperation));
+			}
+		}
+		
+		return listExpressionsWithCallToExtractedOperation;
 	}
 	
 	private boolean isMethodExtractedToRemoveDuplication(List<Refactoring> refList) {
