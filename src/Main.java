@@ -16,8 +16,8 @@ public class Main {
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 
 		Repository repo = gitService.cloneIfNotExists(
-				"tmp1/buck",
-				"https://github.com/facebook/buck.git");
+				"tmp1/checkstyle",
+				"https://github.com/checkstyle/checkstyle.git");
 		/*miner.detectAtCommit("https://github.com/luontola/retrolambda.git",
 				"46b0d84de9c309bca48a99e572e6611693ed5236", new RefactoringHandler() {
 					@Override
@@ -28,7 +28,7 @@ public class Main {
 					}
 				},100);*/
 		
-		miner.detectAtCommit(repo,"89973a5e4f188040c5fcf87fb5a3e9167329d17", new RefactoringHandler() {
+		miner.detectAtCommit(repo,"5a9b7249e3d092a78ac8e7d48aeeb62bf1c44e20", new RefactoringHandler() {
 			@Override 
 			public void handle(String commitData, List<Refactoring> refactorings) {
 				for(Refactoring ref : refactorings) {

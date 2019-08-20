@@ -449,19 +449,23 @@ public class MotivationExtractor {
 			}
 			boolean isBackwardCompatible = !sourceOpAfterExtraction.equalParameters(extractedOperation) ||
 					!extractedOperation.getName().equals(sourceOpAfterExtraction.getName());
-			if(  listExtractedOpInvokations.size() == 1 && (isDeprecatedInClass || isDeprecatedInImplementedInterface) ){
-				if(isBackwardCompatible) {
-					OperationBody sourceOpBodyAfterExtraction = sourceOpAfterExtraction.getBody();
-					int countStatements = sourceOpBodyAfterExtraction.statementCount();
-					if(countStatements == 1){
+			OperationBody sourceOpBodyAfterExtraction = sourceOpAfterExtraction.getBody();
+			int countStatements = sourceOpBodyAfterExtraction.statementCount();
+			
+			if(countStatements == 1){
+				if(isBackwardCompatible && (listExtractedOpInvokations.size() == 1)) {
+					if( isDeprecatedInClass || isDeprecatedInImplementedInterface) {
 						return true;	
+					}else {
+						if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
+							return true;
+						}
 					}
 				}
-				else{
-					//Temporary Variables should be excluded.
-					if(IsUmlOperationStatementsAllTempVariables(sourceOpAfterExtraction)) {
-						return true;
-					}
+			}else{
+				//Temporary Variables should be excluded.
+				if(IsUmlOperationStatementsAllTempVariables(sourceOpAfterExtraction)) {
+					return true;
 				}
 			}
 		}
@@ -620,6 +624,9 @@ public class MotivationExtractor {
 		
 		if(ref instanceof ExtractOperationRefactoring) {
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
+			UMLOperation sourceOperationAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
+			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
+			List<OperationInvocation> sourceOperationAfterExtractionInvokations = sourceOperationAfterExtraction.getAllOperationInvocations();
 			int extractOperationInvocationCount = 0 ;
 			for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
 				if(classDiff != null) {
@@ -630,11 +637,29 @@ public class MotivationExtractor {
 			for(UMLClass addedClass : modelDiff.getAddedClasses()) {
 				extractOperationInvocationCount += extractedOperationInvocationsCountInClass(extractOpRefactoring, addedClass);
 				}
-			/* DETECTION RULE:
+			
+			int extractedOperationCallsInsideSourceOperationAfterExtraction = 0 ;
+			for(OperationInvocation invokation : sourceOperationAfterExtractionInvokations) {
+				if(invokation.matchesOperation(extractedOperation,sourceOperationAfterExtraction.variableTypeMap(), modelDiff)) {
+					extractedOperationCallsInsideSourceOperationAfterExtraction++;
+				}
+			}
+			/*Rule Exception: Extract is not reusable when there is only one call to extracted operation from source after extraction
+			* and Call is outside source operation and outside extractOperationInvocationCount is one.
+			* Example(Nested Extract Refactorings): Checkstyle :5a9b7 , JGroups:f1533
+			*/
+			if((extractOpRefactoring.getExtractedOperationInvocations().size() == 1) 
+					&& (extractedOperationCallsInsideSourceOperationAfterExtraction == 0 )) {
+				if(extractOperationInvocationCount == 1) {
+					return false;
+				}
+			}
+			/* GENERAL DETECTION RULE:
 			 * IF Invocations to Extracted method from source method after Extraction is more than one OR 
 			 *  there are other Invocations from other methods to extracted operation.
-			 *  Invocations inside test methods will be considered as reusable calls.*/
-			if(extractOpRefactoring.getExtractedOperationInvocations().size()>1 || extractOperationInvocationCount > 0) {
+			 *  Invocations inside test methods will be considered as reusable calls. */
+
+			if(extractOpRefactoring.getExtractedOperationInvocations().size()>1 || extractOperationInvocationCount > 0 ) {
 				/*AND if the extraction operation is not detected as duplicated removal before
 				 * (All Extract Operations that tend to remove duplication are also reused.)*/
 				if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
