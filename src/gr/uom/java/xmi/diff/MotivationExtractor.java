@@ -350,10 +350,10 @@ public class MotivationExtractor {
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
 			for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
 				UMLClass nextClass = classDiff.getNextClass();
-				isOperationTestedInClass(nextClass, extractedOperation, operationsTestingExtractedOperation);
+				isOperationTestedInClass(nextClass, extractedOperation, operationsTestingExtractedOperation , extractOpRefactoring);
 			}
 			for(UMLClass addedClass : modelDiff.getAddedClasses()) {
-				isOperationTestedInClass(addedClass, extractedOperation, operationsTestingExtractedOperation);
+				isOperationTestedInClass(addedClass, extractedOperation, operationsTestingExtractedOperation, extractOpRefactoring);
 			}
 		}
 		if(operationsTestingExtractedOperation.size() > 0)
@@ -362,15 +362,18 @@ public class MotivationExtractor {
 	}
 
 	private void isOperationTestedInClass(UMLClass nextClass, UMLOperation extractedOperation,
-			List<UMLOperation> operationsTestingExtractedOperation) {
-		for(UMLOperation operation : nextClass.getOperations()) {
-			if(operation.hasTestAnnotation() || operation.getName().startsWith("test") || nextClass.isTestClass()) {
-				for(OperationInvocation invocation : operation.getAllOperationInvocations()) {
-					if(invocation.matchesOperation(extractedOperation, operation.variableTypeMap(), modelDiff)) {
-						operationsTestingExtractedOperation.add(operation);
+			List<UMLOperation> operationsTestingExtractedOperation , ExtractOperationRefactoring extractOpRefactoring) {
+		String extractedOperationClassName = extractOpRefactoring.getExtractedOperation().getClassName();
+		if(!nextClass.getName().equals(extractedOperationClassName)) {
+			for(UMLOperation operation : nextClass.getOperations()) {
+				if(operation.hasTestAnnotation() || operation.getName().startsWith("test") || nextClass.isTestClass()) {
+					for(OperationInvocation invocation : operation.getAllOperationInvocations()) {
+						if(invocation.matchesOperation(extractedOperation, operation.variableTypeMap(), modelDiff)) {
+							operationsTestingExtractedOperation.add(operation);
+						}
 					}
 				}
-			}
+			}	
 		}
 	}
 
