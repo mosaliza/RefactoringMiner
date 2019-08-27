@@ -406,72 +406,96 @@ public class MotivationExtractor {
 	private boolean isReplaceMethodPreservingBackwardCompatibility(Refactoring ref) {
 		if( ref instanceof ExtractOperationRefactoring){
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
-			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
-			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
-			List<OperationInvocation> listExtractedOpInvokations = extractOpRefactoring.getExtractedOperationInvocations();
-			/*DETECTION RULE: Check if source Operation after extraction is a delegate AND
-			* IF the method parameters OR name has changed
-			*/
-			boolean isDeprecatedInClass = false;
-			boolean isDeprecatedInImplementedInterface = false;
-			List<Annotation> sourceOperationAnnotations = sourceOpAfterExtraction.getAnnotations();
-			for(Annotation annotation : sourceOperationAnnotations) {
-					if(annotation.getTypeName().toString().equals("Deprecated")) {
-						isDeprecatedInClass = true;
-						break;
-					}
-				}
-		
-			UMLClassBaseDiff umlClassDiff = modelDiff.getUMLClassDiff(sourceOpAfterExtraction.getClassName());
-			if(umlClassDiff != null) {
-				UMLClass nextClass = umlClassDiff.getNextClass();
-				List<UMLType> extractedOperationImplementedInterfaces = nextClass.getImplementedInterfaces();
-				for(UMLType implementedInterface : extractedOperationImplementedInterfaces) {
-					UMLClassBaseDiff interfaceUmlClassDiff = modelDiff.getUMLClassDiff(implementedInterface);
-					if(interfaceUmlClassDiff != null) {
-						UMLClass interfaceClass = interfaceUmlClassDiff.getNextClass();
-						if(interfaceClass != null) {
-							for( UMLOperation operation : interfaceClass.getOperations()){
-								if(operation.equalSignature(sourceOpAfterExtraction)) {
-									for(Annotation annotation : operation.getAnnotations()) {
-										if(annotation.getTypeName().toString().equals("Deprecated")) {
-											isDeprecatedInImplementedInterface = true;
-											break;
-										}
-									}
-								}
-								if(isDeprecatedInImplementedInterface) {
-									break;
-								}
-							}			
-						}
-					}
-				}
-			}
-			boolean isBackwardCompatible = !sourceOpAfterExtraction.equalParameters(extractedOperation) ||
-					!extractedOperation.getName().equals(sourceOpAfterExtraction.getName());
+			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();;	
 			OperationBody sourceOpBodyAfterExtraction = sourceOpAfterExtraction.getBody();
 			int countStatements = sourceOpBodyAfterExtraction.statementCount();
-			
 			if(countStatements == 1){
-				if(isBackwardCompatible && (listExtractedOpInvokations.size() == 1)) {
-					if( isDeprecatedInClass || isDeprecatedInImplementedInterface) {
-						return true;	
-					}else {
-						if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
-							return true;
-						}
-					}
+				if(isExtractOperationForBackwardCompatibility(ref)) {
+					return true;
 				}
+
 			}else{
 				//Temporary Variables should be excluded.
-				if(IsUmlOperationStatementsAllTempVariables(sourceOpAfterExtraction)) {
-					return true;
+				if(isUmlOperationStatementsAllTempVariables(sourceOpAfterExtraction)) {
+					if(isExtractOperationForBackwardCompatibility(ref)) {
+						return true;
+					}
 				}
 			}
 		}
 		return false;
 	}
+	private boolean isExtractOperationForBackwardCompatibility(Refactoring ref) {
+		if(ref instanceof ExtractOperationRefactoring) {
+			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
+			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
+			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
+			List<OperationInvocation> listExtractedOpInvokations = extractOpRefactoring.getExtractedOperationInvocations();
+			boolean isBackwardCompatible = !sourceOpAfterExtraction.equalParameters(extractedOperation) ||
+					!extractedOperation.getName().equals(sourceOpAfterExtraction.getName());
+			String extractedOperationAccessModifier = extractedOperation.getVisibility();
+			String sourceOperationAfterExtractionAccessModifier = sourceOpAfterExtraction.getVisibility();
+			boolean isSourceOperationAfterExtractionAndExtractedOperationModifiersPrivate = 
+					(extractedOperationAccessModifier.equals("private") && sourceOperationAfterExtractionAccessModifier.equals("private")) ? true: false;
+			/*DETECTION RULE: Check IF the method parameters OR name has change AND if source Operation after extraction is a delegate AND
+			* If the source operation after Extraction and extracted operation are non privatre
+			*/
+			if(isBackwardCompatible && (listExtractedOpInvokations.size() == 1) /*&& isSourceOperationAfterExtractionAndExtractedOperationModifiersPrivate*/) {
+				if(isUmlOperationWithDeprecatedAnnotation(sourceOpAfterExtraction)) {
+					return true;	
+				}else {
+					if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	private boolean isUmlOperationWithDeprecatedAnnotation(UMLOperation umlOperation) {
+		boolean isDeprecatedInClass = false;
+		boolean isDeprecatedInImplementedInterface = false;
+		//Check the operation annotation in operation Class
+		List<Annotation> sourceOperationAnnotations = umlOperation.getAnnotations();
+		for(Annotation annotation : sourceOperationAnnotations) {
+				if(annotation.getTypeName().toString().equals("Deprecated")) {
+					isDeprecatedInClass = true;
+					break;
+				}
+			}
+		//Check the operation annotation in implemented interface
+		UMLClassBaseDiff umlClassDiff = modelDiff.getUMLClassDiff(umlOperation.getClassName());
+		if(umlClassDiff != null) {
+			UMLClass nextClass = umlClassDiff.getNextClass();
+			List<UMLType> extractedOperationImplementedInterfaces = nextClass.getImplementedInterfaces();
+			for(UMLType implementedInterface : extractedOperationImplementedInterfaces) {
+				UMLClassBaseDiff interfaceUmlClassDiff = modelDiff.getUMLClassDiff(implementedInterface);
+				if(interfaceUmlClassDiff != null) {
+					UMLClass interfaceClass = interfaceUmlClassDiff.getNextClass();
+					if(interfaceClass != null) {
+						for( UMLOperation operation : interfaceClass.getOperations()){
+							if(operation.equalSignature(umlOperation)) {
+								for(Annotation annotation : operation.getAnnotations()) {
+									if(annotation.getTypeName().toString().equals("Deprecated")) {
+										isDeprecatedInImplementedInterface = true;
+										break;
+									}
+								}
+							}
+							if(isDeprecatedInImplementedInterface) {
+								break;
+							}
+						}			
+					}
+				}
+			}
+		}
+		
+		return (isDeprecatedInClass || isDeprecatedInImplementedInterface)? true:false;
+
+	}
+	
+
 	private boolean isIntroduceAlternativeMethodSignature(Refactoring ref) {
 		if( ref instanceof ExtractOperationRefactoring){
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
@@ -488,7 +512,7 @@ public class MotivationExtractor {
 					else{
 						//Temporary Variables should be excluded
 						//Example:crate-c7b6a7
-						if(IsUmlOperationStatementsAllTempVariables(sourceOpAfterExtraction)) {
+						if(isUmlOperationStatementsAllTempVariables(sourceOpAfterExtraction)) {
 							return true;
 						}
 					}
@@ -496,7 +520,7 @@ public class MotivationExtractor {
 			}			
 		return false;
 	}
-	private boolean IsUmlOperationStatementsAllTempVariables(UMLOperation operation) {
+	private boolean isUmlOperationStatementsAllTempVariables(UMLOperation operation) {
 		CompositeStatementObject compositeStatement = operation.getBody().getCompositeStatement();
 		List<AbstractStatement> abstractStatements = compositeStatement.getStatements();
 		Set<CodeElementType> codeElementTypeSet = new HashSet<CodeElementType>();
