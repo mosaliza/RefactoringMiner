@@ -925,34 +925,51 @@ public class MotivationExtractor {
 			ExtractOperationRefactoring extractOperationRef = (ExtractOperationRefactoring)ref;
 			UMLOperation sourceOperationAfterExtraction = extractOperationRef.getSourceOperationAfterExtraction();
 			UMLOperation extratedOperation = extractOperationRef.getExtractedOperation();
-			List<AbstractExpression> listAbstractExpressionsWithCallToExtractedOperation = new ArrayList<AbstractExpression>();
-			List<StatementObject> listReturnStatementswithCallsToExtractedOperation = new ArrayList<StatementObject>();
-			//Check all expressions of the source operation after extraction to see if there is any calls to extracted operation
-			OperationBody sourceOperationBody = sourceOperationAfterExtraction.getBody();
-			CompositeStatementObject compositeStatement =  sourceOperationBody.getCompositeStatement();
-			listAbstractExpressionsWithCallToExtractedOperation = getAllCompositeStatementObjectExpressionsInvokationsToUmlOperation(compositeStatement,
-					extratedOperation);
-			//Check Return statements to see if they have calls to extracted operation
-			List<StatementObject> listStatementObjects =  compositeStatement.getLeaves();
-			for(StatementObject statement : listStatementObjects) {
-				CodeElementType type = statement.getLocationInfo().getCodeElementType();
-				if(type == CodeElementType.RETURN_STATEMENT) {
-					for(OperationInvocation invokation : extractOperationRef.getExtractedOperationInvocations()) {
-						if(statement.getLocationInfo().subsumes(invokation.getLocationInfo())){
-							listReturnStatementswithCallsToExtractedOperation.add(statement);
-							break;
-						}	
-					}
+			List<StatementObject> listReturnStatementswithCallsToExtractedOperation = getStatementsCallingExtractedOperation(
+					extractOperationRef, CodeElementType.RETURN_STATEMENT);
+			List<StatementObject> listVariableDeclarationStatementsWithCallsToExtractedOperation = getStatementsCallingExtractedOperation(
+					extractOperationRef, CodeElementType.VARIABLE_DECLARATION_STATEMENT);
+			List<AbstractExpression> expressionsUsingVariableInitializedWithExtracedOperationInvocation = new ArrayList<AbstractExpression>();
+			CompositeStatementObject sourceOperationAfterExtractionBody = sourceOperationAfterExtraction.getBody().getCompositeStatement();
+			for(StatementObject statement : listVariableDeclarationStatementsWithCallsToExtractedOperation) {
+				for(VariableDeclaration declaration : statement.getVariableDeclarations()) {
+					expressionsUsingVariableInitializedWithExtracedOperationInvocation.addAll(getAllCompositeStatementObjectExpressionsUsingVariable(sourceOperationAfterExtractionBody, declaration.getVariableName()));
 				}
-			}		
-			if(listAbstractExpressionsWithCallToExtractedOperation.size() > 0 || listReturnStatementswithCallsToExtractedOperation.size()>0) {
+			}
+			/*Check all expressions of the source operation after extraction to see if there is any calls to extracted operation
+			 *Check if any expression exists with Variables initialized with invokations to the extracted operation
+			 *Check if any return statements exists with calls to the extracted operation
+			 */
+			if(getAllCompositeStatementObjectExpressionsWithInvokationsToExtractedOperation(sourceOperationAfterExtractionBody, extratedOperation).size() > 0 ||
+					expressionsUsingVariableInitializedWithExtracedOperationInvocation.size() > 0 ||
+					listReturnStatementswithCallsToExtractedOperation.size() > 0) {
 				return true;
 			}
 		}	
 		return false;
 	}
+
+	private List<StatementObject> getStatementsCallingExtractedOperation(ExtractOperationRefactoring extractOperationRef, CodeElementType codeElementType) {
+		List<StatementObject> statementswithCallsToExtractedOperation = new ArrayList<StatementObject>();
+		OperationBody sourceOperationBody = extractOperationRef.getSourceOperationAfterExtraction().getBody();
+		CompositeStatementObject compositeStatement =  sourceOperationBody.getCompositeStatement();
+		//Check statements to see if they have calls to extracted operation
+		List<StatementObject> listStatementObjects =  compositeStatement.getLeaves();
+		for(StatementObject statement : listStatementObjects) {
+			CodeElementType type = statement.getLocationInfo().getCodeElementType();
+			if(type.equals(codeElementType)) {
+				for(OperationInvocation invokation : extractOperationRef.getExtractedOperationInvocations()) {
+					if(statement.getLocationInfo().subsumes(invokation.getLocationInfo())){
+						statementswithCallsToExtractedOperation.add(statement);
+						break;
+					}	
+				}
+			}
+		}
+		return statementswithCallsToExtractedOperation;
+	}
 	
-	private List<AbstractExpression> getAllCompositeStatementObjectExpressionsInvokationsToUmlOperation(CompositeStatementObject compositeStatement ,
+	private List<AbstractExpression> getAllCompositeStatementObjectExpressionsWithInvokationsToExtractedOperation(CompositeStatementObject compositeStatement ,
 			UMLOperation invokedOperation){
 		List<AbstractExpression> listAbstractExpressions = compositeStatement.getExpressions();
 		List<AbstractExpression> listExpressionsWithCallToExtractedOperation = new ArrayList<AbstractExpression>();
@@ -972,11 +989,31 @@ public class MotivationExtractor {
 		for(AbstractStatement statement : listStatements) {
 			if(statement instanceof CompositeStatementObject) {
 				CompositeStatementObject composite = (CompositeStatementObject)statement;
-				listExpressionsWithCallToExtractedOperation.addAll(getAllCompositeStatementObjectExpressionsInvokationsToUmlOperation(composite , invokedOperation));
+				listExpressionsWithCallToExtractedOperation.addAll(getAllCompositeStatementObjectExpressionsWithInvokationsToExtractedOperation(composite , invokedOperation));
 			}
 		}
 		
 		return listExpressionsWithCallToExtractedOperation;
+	}
+
+	private List<AbstractExpression> getAllCompositeStatementObjectExpressionsUsingVariable(CompositeStatementObject compositeStatement ,
+			String variableName){
+		List<AbstractExpression> listAbstractExpressions = compositeStatement.getExpressions();
+		List<AbstractExpression> listExpressionsUsingVariable = new ArrayList<AbstractExpression>();
+		for(AbstractExpression expression : listAbstractExpressions) {
+			if(expression.getVariables().contains(variableName)) {
+				listExpressionsUsingVariable.add(expression);
+			}
+		}
+		List<AbstractStatement> listStatements = compositeStatement.getStatements();
+		for(AbstractStatement statement : listStatements) {
+			if(statement instanceof CompositeStatementObject) {
+				CompositeStatementObject composite = (CompositeStatementObject)statement;
+				listExpressionsUsingVariable.addAll(getAllCompositeStatementObjectExpressionsUsingVariable(composite , variableName));
+			}
+		}
+		
+		return listExpressionsUsingVariable;
 	}
 	
 	private boolean isMethodExtractedToRemoveDuplication(List<Refactoring> refList) {
