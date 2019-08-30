@@ -16,8 +16,8 @@ public class Main {
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 
 		Repository repo = gitService.cloneIfNotExists(
-				"tmp1/intellij-plugins",
-				"https://github.com/JetBrains/intellij-plugins.git");
+				"tmp1/jOOQ",
+				"https://github.com/jOOQ/jOOQ.git");
 		/*miner.detectAtCommit("https://github.com/luontola/retrolambda.git",
 				"46b0d84de9c309bca48a99e572e6611693ed5236", new RefactoringHandler() {
 					@Override
@@ -28,7 +28,7 @@ public class Main {
 					}
 				},100);*/
 		
-		miner.detectAtCommit(repo,"0df7cb00757fe0d4fac8d8b0d5fc46af95feb238", new RefactoringHandler() {
+		miner.detectAtCommit(repo,"227254cf769f3e821ed1b2ef2d88c4ec6b20adea", new RefactoringHandler() {
 			@Override 
 			public void handle(String commitData, List<Refactoring> refactorings) {
 				for(Refactoring ref : refactorings) {
