@@ -24,6 +24,7 @@ import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ConditionalExpression;
+import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.InfixExpression;
@@ -32,6 +33,7 @@ import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.PostfixExpression;
@@ -62,6 +64,7 @@ public class Visitor extends ASTVisitor {
 	private List<AnonymousClassDeclarationObject> anonymousClassDeclarations = new ArrayList<AnonymousClassDeclarationObject>();
 	private List<String> stringLiterals = new ArrayList<String>();
 	private List<String> numberLiterals = new ArrayList<String>();
+	private List<String> nullLiterals = new ArrayList<String>();
 	private List<String> booleanLiterals = new ArrayList<String>();
 	private List<String> typeLiterals = new ArrayList<String>();
 	private Map<String, List<ObjectCreation>> creationMap = new LinkedHashMap<String, List<ObjectCreation>>();
@@ -338,6 +341,15 @@ public class Visitor extends ASTVisitor {
 		if(current.getUserObject() != null) {
 			AnonymousClassDeclarationObject anonymous = (AnonymousClassDeclarationObject)current.getUserObject();
 			anonymous.getNumberLiterals().add(node.toString());
+		}
+		return super.visit(node);
+	}
+
+	public boolean visit(NullLiteral node) {
+		nullLiterals.add(node.toString());
+		if(current.getUserObject() != null) {
+			AnonymousClassDeclarationObject anonymous = (AnonymousClassDeclarationObject)current.getUserObject();
+			anonymous.getNullLiterals().add(node.toString());
 		}
 		return super.visit(node);
 	}
@@ -648,9 +660,30 @@ public class Visitor extends ASTVisitor {
 						}
 					}
 				}
+				EnhancedForStatement enhancedFor = findParentEnhancedForStatement(node);
+				if(enhancedFor != null) {
+					if(enhancedFor.getParameter().getName().getIdentifier().equals(qualifierIdentifier)) {
+						variables.add(node.toString());
+						if(current.getUserObject() != null) {
+							AnonymousClassDeclarationObject anonymous = (AnonymousClassDeclarationObject)current.getUserObject();
+							anonymous.getVariables().add(node.toString());
+						}
+					}
+				}
 			}
 		}
 		return super.visit(node);
+	}
+
+	private EnhancedForStatement findParentEnhancedForStatement(ASTNode node) {
+		ASTNode parent = node.getParent();
+		while(parent != null) {
+			if(parent instanceof EnhancedForStatement) {
+				return (EnhancedForStatement)parent;
+			}
+			parent = parent.getParent();
+		}
+		return null;
 	}
 
 	private MethodDeclaration findParentMethodDeclaration(ASTNode node) {
@@ -708,6 +741,10 @@ public class Visitor extends ASTVisitor {
 
 	public List<String> getNumberLiterals() {
 		return numberLiterals;
+	}
+
+	public List<String> getNullLiterals() {
+		return nullLiterals;
 	}
 
 	public List<String> getBooleanLiterals() {

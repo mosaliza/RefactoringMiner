@@ -37,6 +37,7 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 	private List<UMLAnonymousClass> anonymousClassList;
 	private List<UMLTypeParameter> typeParameters;
 	private List<Annotation> operationAnnotations;
+	private UMLJavadoc javadoc;
 	
 	public UMLOperation(String name, LocationInfo locationInfo) {
 		this.locationInfo = locationInfo;
@@ -128,6 +129,14 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 		this.testAnnotation = testAnnotation;
 	}
 
+	public UMLJavadoc getJavadoc() {
+		return javadoc;
+	}
+
+	public void setJavadoc(UMLJavadoc javadoc) {
+		this.javadoc = javadoc;
+	}
+
 	public List<OperationInvocation> getAllOperationInvocations() {
 		if(operationBody != null)
 			return operationBody.getAllOperationInvocations();
@@ -215,6 +224,17 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 		UMLParameter otherReturnParameter = operation.getReturnParameter();
 		if(thisReturnParameter != null && otherReturnParameter != null)
 			return thisReturnParameter.equals(otherReturnParameter);
+		else if(thisReturnParameter == null && otherReturnParameter == null)
+			return true;
+		else
+			return false;
+	}
+
+	public boolean equalQualifiedReturnParameter(UMLOperation operation) {
+		UMLParameter thisReturnParameter = this.getReturnParameter();
+		UMLParameter otherReturnParameter = operation.getReturnParameter();
+		if(thisReturnParameter != null && otherReturnParameter != null)
+			return thisReturnParameter.equalsQualified(otherReturnParameter);
 		else if(thisReturnParameter == null && otherReturnParameter == null)
 			return true;
 		else
@@ -501,6 +521,35 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 		if(returnParameter != null) {
 			sb.append(" : ");
 			sb.append(returnParameter.toString());
+		}
+		return sb.toString();
+	}
+
+	public String toQualifiedString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(visibility);
+		sb.append(" ");
+		if(isAbstract) {
+			sb.append("abstract");
+			sb.append(" ");
+		}
+		sb.append(name);
+		UMLParameter returnParameter = getReturnParameter();
+		List<UMLParameter> parameters = new ArrayList<UMLParameter>(this.parameters);
+		parameters.remove(returnParameter);
+		sb.append("(");
+		for(int i=0; i<parameters.size(); i++) {
+			UMLParameter parameter = parameters.get(i);
+			if(parameter.getKind().equals("in")) {
+				sb.append(parameter.toQualifiedString());
+				if(i < parameters.size()-1)
+					sb.append(", ");
+			}
+		}
+		sb.append(")");
+		if(returnParameter != null) {
+			sb.append(" : ");
+			sb.append(returnParameter.toQualifiedString());
 		}
 		return sb.toString();
 	}

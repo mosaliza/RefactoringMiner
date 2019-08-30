@@ -159,9 +159,9 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 			if(attributeWithTheSameName == null) {
     			this.removedAttributes.add(attribute);
     		}
-			else if(!attribute.equals(attributeWithTheSameName) && !attributeDiffListContainsAttribute(attribute, attributeWithTheSameName)) {
+			else if((!attribute.equals(attributeWithTheSameName) || !attribute.equalsQualified(attributeWithTheSameName)) && !attributeDiffListContainsAttribute(attribute, attributeWithTheSameName)) {
 				UMLAttributeDiff attributeDiff = new UMLAttributeDiff(attribute, attributeWithTheSameName);
-				if(attributeDiff.isTypeChanged()) {
+				if(attributeDiff.isTypeChanged() || attributeDiff.isQualifiedTypeChanged()) {
 					ChangeAttributeTypeRefactoring ref = new ChangeAttributeTypeRefactoring(attribute.getVariableDeclaration(), attributeWithTheSameName.getVariableDeclaration(), originalClass.getName(), nextClass.getName(),
 							VariableReferenceExtractor.findReferences(attribute.getVariableDeclaration(), attributeWithTheSameName.getVariableDeclaration(), operationBodyMapperList));
 					refactorings.add(ref);
@@ -174,9 +174,9 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 			if(attributeWithTheSameName == null) {
     			this.addedAttributes.add(attribute);
     		}
-			else if(!attribute.equals(attributeWithTheSameName) && !attributeDiffListContainsAttribute(attributeWithTheSameName, attribute)) {
+			else if((!attribute.equals(attributeWithTheSameName) || !attribute.equalsQualified(attributeWithTheSameName)) && !attributeDiffListContainsAttribute(attributeWithTheSameName, attribute)) {
 				UMLAttributeDiff attributeDiff = new UMLAttributeDiff(attributeWithTheSameName, attribute);
-				if(attributeDiff.isTypeChanged()) {
+				if(attributeDiff.isTypeChanged() || attributeDiff.isQualifiedTypeChanged()) {
 					ChangeAttributeTypeRefactoring ref = new ChangeAttributeTypeRefactoring(attributeWithTheSameName.getVariableDeclaration(), attribute.getVariableDeclaration(), originalClass.getName(), nextClass.getName(),
 							VariableReferenceExtractor.findReferences(attributeWithTheSameName.getVariableDeclaration(), attribute.getVariableDeclaration(), operationBodyMapperList));
 					refactorings.add(ref);
@@ -471,6 +471,8 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 	public List<Refactoring> getRefactorings() {
 		List<Refactoring> refactorings = new ArrayList<Refactoring>(this.refactorings);
 		for(UMLOperationBodyMapper mapper : operationBodyMapperList) {
+			UMLOperationDiff operationSignatureDiff = new UMLOperationDiff(mapper.getOperation1(), mapper.getOperation2(), mapper.getMappings());
+			refactorings.addAll(operationSignatureDiff.getRefactorings());
 			processMapperRefactorings(mapper, refactorings);
 		}
 		refactorings.addAll(inferAttributeMergesAndSplits(renameMap, refactorings));
@@ -551,7 +553,7 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 									getOriginalClassName(), getNextClassName(), set);
 							if(!refactorings.contains(ref)) {
 								refactorings.add(ref);
-								if(!a1.getVariableDeclaration().getType().equals(a2.getVariableDeclaration().getType())) {
+								if(!a1.getVariableDeclaration().getType().equals(a2.getVariableDeclaration().getType()) || !a1.getVariableDeclaration().getType().equalsQualified(a2.getVariableDeclaration().getType())) {
 									ChangeAttributeTypeRefactoring refactoring = new ChangeAttributeTypeRefactoring(a1.getVariableDeclaration(), a2.getVariableDeclaration(),
 											getOriginalClassName(), getNextClassName(),
 											VariableReferenceExtractor.findReferences(a1.getVariableDeclaration(), a2.getVariableDeclaration(), operationBodyMapperList));
@@ -578,7 +580,8 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 								candidate.getOperationBefore(), candidate.getOperationAfter(), candidate.getAttributeReferences());
 						if(!refactorings.contains(ref)) {
 							refactorings.add(ref);
-							if(!candidate.getOriginalVariableDeclaration().getType().equals(a2.getVariableDeclaration().getType())) {
+							if(!candidate.getOriginalVariableDeclaration().getType().equals(a2.getVariableDeclaration().getType()) ||
+									!candidate.getOriginalVariableDeclaration().getType().equalsQualified(a2.getVariableDeclaration().getType())) {
 								ChangeVariableTypeRefactoring refactoring = new ChangeVariableTypeRefactoring(candidate.getOriginalVariableDeclaration(), a2.getVariableDeclaration(),
 										candidate.getOperationBefore(), candidate.getOperationAfter(), candidate.getAttributeReferences());
 								refactorings.add(refactoring);

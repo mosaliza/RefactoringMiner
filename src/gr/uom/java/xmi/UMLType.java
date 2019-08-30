@@ -104,6 +104,10 @@ public class UMLType implements Serializable, LocationInfoProvider {
 				(this.typeArguments.startsWith("<? ") && type.typeArguments.equals("<?>"))) {
 			return true;
 		}
+		if((this.typeArguments.equals("<Object>") && type.typeArguments.contains("<Object>")) ||
+				(type.typeArguments.equals("<Object>") && this.typeArguments.contains("<Object>"))) {
+			return true;
+		}
 		if(this.typeArgumentDecomposition.size() != type.typeArgumentDecomposition.size()) {
 			return false;
 		}
@@ -165,6 +169,16 @@ public class UMLType implements Serializable, LocationInfoProvider {
         return sb.toString();
     }
 
+    public String toQualifiedString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(classType);
+        if(typeArguments != null)
+            sb.append(typeArguments);
+        for(int i=0; i<arrayDimension; i++)
+        	sb.append("[]");
+        return sb.toString();
+    }
+
 	public static String getTypeName(Type type, int extraDimensions) {
 		ITypeBinding binding = type.resolveBinding();
 		if (binding != null) {
@@ -192,7 +206,7 @@ public class UMLType implements Serializable, LocationInfoProvider {
     	if(numberOfDots == 0 || Character.isUpperCase(name.charAt(0))) {
     		return name;
     	}
-    	if(numberOfDots > 2 && indexOfFirstUpperCaseCharacterFollowedByDot != -1) {
+    	if(numberOfDots > 1 && indexOfFirstUpperCaseCharacterFollowedByDot != -1) {
     		return name.substring(indexOfFirstUpperCaseCharacterFollowedByDot);
     	}
     	return name;

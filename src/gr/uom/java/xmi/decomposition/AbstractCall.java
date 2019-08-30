@@ -59,6 +59,16 @@ public abstract class AbstractCall implements LocationInfoProvider {
 		return sb.toString();
 	}
 
+	public boolean expressionIsNullOrThis() {
+		if(expression == null) {
+			return true;
+		}
+		else if(expression.equals("this")) {
+			return true;
+		}
+		return false;
+	}
+
 	public boolean identicalExpression(AbstractCall call, Set<Replacement> replacements) {
 		return identicalExpression(call) ||
 		identicalExpressionAfterTypeReplacements(call, replacements);
@@ -77,7 +87,7 @@ public abstract class AbstractCall implements LocationInfoProvider {
 			String expression1AfterReplacements = new String(expression1);
 			for(Replacement replacement : replacements) {
 				if(replacement.getType().equals(ReplacementType.TYPE)) {
-					expression1AfterReplacements = ReplacementUtil.performReplacement(expression1AfterReplacements, replacement.getBefore(), replacement.getAfter());
+					expression1AfterReplacements = ReplacementUtil.performReplacement(expression1AfterReplacements, expression2, replacement.getBefore(), replacement.getAfter());
 				}
 			}
 			if(expression1AfterReplacements.equals(expression2)) {
@@ -262,7 +272,7 @@ public abstract class AbstractCall implements LocationInfoProvider {
 				equalArguments(call);
 	}
 
-	private Set<String> argumentIntersection(AbstractCall call) {
+	public Set<String> argumentIntersection(AbstractCall call) {
 		List<String> args1 = preprocessArguments(getArguments());
 		List<String> args2 = preprocessArguments(call.getArguments());
 		Set<String> argumentIntersection = new LinkedHashSet<String>(args1);

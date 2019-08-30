@@ -15,6 +15,7 @@ public class UMLAttribute implements Comparable<UMLAttribute>, Serializable, Loc
 	private boolean isFinal;
 	private boolean isStatic;
 	private VariableDeclaration variableDeclaration;
+	private UMLJavadoc javadoc;
 
 	public UMLAttribute(String name, UMLType type, LocationInfo locationInfo) {
 		this.locationInfo = locationInfo;
@@ -78,12 +79,20 @@ public class UMLAttribute implements Comparable<UMLAttribute>, Serializable, Loc
 		this.variableDeclaration = variableDeclaration;
 	}
 
+	public UMLJavadoc getJavadoc() {
+		return javadoc;
+	}
+
+	public void setJavadoc(UMLJavadoc javadoc) {
+		this.javadoc = javadoc;
+	}
+
 	public boolean equalsIgnoringChangedType(UMLAttribute attribute) {
 		if(this.isStatic != attribute.isStatic)
 			return false;
 		if(this.isFinal != attribute.isFinal)
 			return false;
-		if(this.name.equals(attribute.name) && this.type.equals(attribute.type))
+		if(this.name.equals(attribute.name) && this.type.equals(attribute.type) && this.type.equalsQualified(attribute.type))
 			return true;
 		if(!this.type.equals(attribute.type))
 			return this.name.equals(attribute.name);
@@ -115,6 +124,12 @@ public class UMLAttribute implements Comparable<UMLAttribute>, Serializable, Loc
     	return false;
 	}
 
+	public boolean equalsQualified(UMLAttribute umlAttribute) {
+		return this.name.equals(umlAttribute.name) &&
+				this.visibility.equals(umlAttribute.visibility) &&
+				this.type.equalsQualified(umlAttribute.type);
+	}
+
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(visibility);
@@ -122,6 +137,16 @@ public class UMLAttribute implements Comparable<UMLAttribute>, Serializable, Loc
 		sb.append(name);
 		sb.append(" : ");
 		sb.append(type);
+		return sb.toString();
+	}
+
+	public String toQualifiedString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(visibility);
+		sb.append(" ");
+		sb.append(name);
+		sb.append(" : ");
+		sb.append(type.toQualifiedString());
 		return sb.toString();
 	}
 
