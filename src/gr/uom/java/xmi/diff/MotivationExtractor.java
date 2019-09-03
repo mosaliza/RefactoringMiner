@@ -16,8 +16,10 @@ import gr.uom.java.xmi.LocationInfo.CodeElementType;
 import gr.uom.java.xmi.UMLAnonymousClass;
 import gr.uom.java.xmi.UMLClass;
 import gr.uom.java.xmi.UMLGeneralization;
+import gr.uom.java.xmi.UMLJavadoc;
 import gr.uom.java.xmi.UMLOperation;
 import gr.uom.java.xmi.UMLParameter;
+import gr.uom.java.xmi.UMLTagElement;
 import gr.uom.java.xmi.UMLType;
 import gr.uom.java.xmi.decomposition.AbstractExpression;
 import gr.uom.java.xmi.decomposition.AbstractStatement;
@@ -293,24 +295,29 @@ public class MotivationExtractor {
 	private boolean IsExtractedToEnableOverriding(Refactoring ref) {
 		List<UMLOperation> operationsOverridingeExtractedOperations = new ArrayList<UMLOperation>();
 		if(ref instanceof ExtractOperationRefactoring){
-		ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
-		UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
-		UMLClassBaseDiff extractedOperationClassDiff = modelDiff.getUMLClassDiff(extractedOperation.getClassName());
-		if(extractedOperationClassDiff != null) {
-			UMLClass extractedOperationNextClass = extractedOperationClassDiff.getNextClass();
-			for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
-				UMLClass nextClass = classDiff.getNextClass();
-				isOperationOverridenInClass(extractedOperation, extractedOperationNextClass, nextClass,
-						operationsOverridingeExtractedOperations);
+			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
+			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
+			UMLClassBaseDiff extractedOperationClassDiff = modelDiff.getUMLClassDiff(extractedOperation.getClassName());
+			if(extractedOperationClassDiff != null) {
+				UMLClass extractedOperationNextClass = extractedOperationClassDiff.getNextClass();
+				for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
+					UMLClass nextClass = classDiff.getNextClass();
+					isOperationOverridenInClass(extractedOperation, extractedOperationNextClass, nextClass,
+							operationsOverridingeExtractedOperations);
+				}
+				for(UMLClass addedClass : modelDiff.getAddedClasses()) {
+					isOperationOverridenInClass(extractedOperation, extractedOperationNextClass, addedClass,
+							operationsOverridingeExtractedOperations);	
+				}
 			}
-			for(UMLClass addedClass : modelDiff.getAddedClasses()) {
-				isOperationOverridenInClass(extractedOperation, extractedOperationNextClass, addedClass,
-						operationsOverridingeExtractedOperations);	
+			UMLJavadoc javaDoc = extractedOperation.getJavadoc();
+			boolean javaDocContainsOverridingKeyword = false;
+			if(javaDoc != null && (javaDoc.contains("overriding") ||javaDoc.contains("override")||javaDoc.contains("subclass"))) {
+				javaDocContainsOverridingKeyword = true;
 			}
-		}
-		if(operationsOverridingeExtractedOperations.size() > 0)
-			return true;
-
+			if((operationsOverridingeExtractedOperations.size()>0) || javaDocContainsOverridingKeyword) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -429,7 +436,7 @@ public class MotivationExtractor {
 			String sourceOperationAfterExtractionAccessModifier = sourceOpAfterExtraction.getVisibility();
 			boolean isSourceOperationAfterExtractionAndExtractedOperationModifiersPrivate = 
 					(extractedOperationAccessModifier.equals("private") && sourceOperationAfterExtractionAccessModifier.equals("private")) ? true: false;
-			/*DETECTION RULE: Check IF the method parameters OR name has change AND if source Operation after extraction is a delegate AND
+			/*DETECTION RULE: Check IF the method parameters OR name has changed AND if source Operation after extraction is a delegate AND
 			* If the source operation after Extraction and extracted operation are non privatre
 			*/
 			if(isBackwardCompatible && (listExtractedOpInvokations.size() == 1) /*&& isSourceOperationAfterExtractionAndExtractedOperationModifiersPrivate*/) {
@@ -489,36 +496,53 @@ public class MotivationExtractor {
 	
 
 	private boolean isIntroduceAlternativeMethodSignature(Refactoring ref) {
+		
 		if( ref instanceof ExtractOperationRefactoring){
+			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
+			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();;	
+			OperationBody sourceOpBodyAfterExtraction = sourceOpAfterExtraction.getBody();
+			int countStatements = sourceOpBodyAfterExtraction.statementCount();
+			if(countStatements == 1){
+				if(isExtractOperationToIntroduceAlternativeMethod(ref)) {
+					return true;
+				}
+
+			}else{
+				//Temporary Variables should be excluded.
+				if(isUmlOperationStatementsAllTempVariables(sourceOpAfterExtraction)) {
+					if(isExtractOperationToIntroduceAlternativeMethod(ref)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	private boolean isExtractOperationToIntroduceAlternativeMethod(Refactoring ref){
+		
+		if(ref instanceof ExtractOperationRefactoring) {
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
 			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
-			//OperationInvocation Invocation = sourceOpAfterExtraction.isDelegate();
 			List<OperationInvocation> listExtractedOpInvokations = extractOpRefactoring.getExtractedOperationInvocations();
-				if( listExtractedOpInvokations.size() == 1 && !sourceOpAfterExtraction.equalParameters(extractedOperation)){
-					OperationBody sourceOpBodyAfterExtraction = sourceOpAfterExtraction.getBody();
-					int countStatements = sourceOpBodyAfterExtraction.statementCount();
- 					if(countStatements == 1){
-						return true;
-					}
-					else{
-						//Temporary Variables should be excluded
-						//Example:crate-c7b6a7
-						if(isUmlOperationStatementsAllTempVariables(sourceOpAfterExtraction)) {
-							return true;
-						}
-					}
-				}
-			}			
+			boolean isToIntroduceAlternativeMethod = (!sourceOpAfterExtraction.equalParameters(extractedOperation))?true:false;
+			/*DETECTION RULE: Check IF the method parameters has changed AND if source Operation after extraction is a delegate 
+			*/
+			if(isToIntroduceAlternativeMethod && (listExtractedOpInvokations.size() == 1)) {
+				return true;
+			}
+		}
 		return false;
 	}
+	
 	private boolean isUmlOperationStatementsAllTempVariables(UMLOperation operation) {
 		CompositeStatementObject compositeStatement = operation.getBody().getCompositeStatement();
 		List<AbstractStatement> abstractStatements = compositeStatement.getStatements();
 		Set<CodeElementType> codeElementTypeSet = new HashSet<CodeElementType>();
 		List<AbstractStatement> nonTempAbstractStatements = new ArrayList<AbstractStatement>();
-		codeElementTypeSet.add(CodeElementType.SINGLE_VARIABLE_DECLARATION);
-		codeElementTypeSet.add(CodeElementType.VARIABLE_DECLARATION_EXPRESSION);
+		//codeElementTypeSet.add(CodeElementType.SINGLE_VARIABLE_DECLARATION);
+		//codeElementTypeSet.add(CodeElementType.VARIABLE_DECLARATION_EXPRESSION);
 		codeElementTypeSet.add(CodeElementType.VARIABLE_DECLARATION_STATEMENT);
 		codeElementTypeSet.add(CodeElementType.RETURN_STATEMENT);//Considering return statements as Temp
 		for(AbstractStatement statement : abstractStatements) {

@@ -16,8 +16,8 @@ public class Main {
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 
 		Repository repo = gitService.cloneIfNotExists(
-				"tmp1/jOOQ",
-				"https://github.com/jOOQ/jOOQ.git");
+				"tmp1/spring-framework",
+				"https://github.com/spring-projects/spring-framework.git");
 		/*miner.detectAtCommit("https://github.com/luontola/retrolambda.git",
 				"46b0d84de9c309bca48a99e572e6611693ed5236", new RefactoringHandler() {
 					@Override
@@ -28,7 +28,7 @@ public class Main {
 					}
 				},100);*/
 		
-		miner.detectAtCommit(repo,"227254cf769f3e821ed1b2ef2d88c4ec6b20adea", new RefactoringHandler() {
+		miner.detectAtCommit(repo,"ece12f9d370108549fffac105e4bcb7faeaaf124", new RefactoringHandler() {
 			@Override 
 			public void handle(String commitData, List<Refactoring> refactorings) {
 				for(Refactoring ref : refactorings) {
