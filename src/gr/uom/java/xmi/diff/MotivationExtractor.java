@@ -291,7 +291,6 @@ public class MotivationExtractor {
 		return false;
 	}
 	
-
 	private boolean IsExtractedToEnableOverriding(Refactoring ref) {
 		List<UMLOperation> operationsOverridingeExtractedOperations = new ArrayList<UMLOperation>();
 		if(ref instanceof ExtractOperationRefactoring){
@@ -310,18 +309,17 @@ public class MotivationExtractor {
 							operationsOverridingeExtractedOperations);	
 				}
 			}
-			UMLJavadoc javaDoc = extractedOperation.getJavadoc();
-			boolean javaDocContainsOverridingKeyword = false;
-			if(javaDoc != null && (javaDoc.contains("overriding") ||javaDoc.contains("override")||javaDoc.contains("subclass"))) {
-				javaDocContainsOverridingKeyword = true;
-			}
-			if((operationsOverridingeExtractedOperations.size()>0) || javaDocContainsOverridingKeyword) {
+			/* DETECTION RULE:
+			 * 1-Check if any subclasses is overriding the extracted operation OR
+			 * 2-Check the UML operation comments to see if it contains any keywords about overriding.
+			 */
+			if((operationsOverridingeExtractedOperations.size()>0) || isUmlOperationCommentUsingOverridingKeywords(extractedOperation)) {
 				return true;
 			}
 		}
 		return false;
 	}
-
+	
 	private void isOperationOverridenInClass(UMLOperation extractedOperation, UMLClass extractedOperationNextClass,
 			UMLClass nextClass, List<UMLOperation> operationsOverridingeExtractedOperations) {
 		List<UMLAnonymousClass> listAnonymousUmlClasses = nextClass.getAnonymousClassList();
@@ -338,7 +336,25 @@ public class MotivationExtractor {
 			}
 		}
 	}
-
+	
+	private boolean isUmlOperationCommentUsingOverridingKeywords(UMLOperation operation){
+		UMLJavadoc javaDoc = operation.getJavadoc();
+		if(javaDoc != null) {
+			for(UMLTagElement tagElement : javaDoc.getTags()) {
+				//Only process general purpose unnamed tags 
+				 if(tagElement.getTagName() == null){
+					 for(String fragment : tagElement.getFragments()) {
+						 if (fragment.toLowerCase().contains("override") || fragment.toLowerCase().contains("overriding")||
+								 fragment.toLowerCase().contains("overriden") || fragment.toLowerCase().contains("subclass")) { 
+							 return true;
+						 }
+					 }
+				 }
+			}
+		}
+		return false;
+	}
+	
 	private boolean IsExtractedToImproveTestability(Refactoring ref) {
 		List<UMLOperation> operationsTestingExtractedOperation = new ArrayList<UMLOperation>();
 		if(ref instanceof ExtractOperationRefactoring) {
@@ -541,8 +557,6 @@ public class MotivationExtractor {
 		List<AbstractStatement> abstractStatements = compositeStatement.getStatements();
 		Set<CodeElementType> codeElementTypeSet = new HashSet<CodeElementType>();
 		List<AbstractStatement> nonTempAbstractStatements = new ArrayList<AbstractStatement>();
-		//codeElementTypeSet.add(CodeElementType.SINGLE_VARIABLE_DECLARATION);
-		//codeElementTypeSet.add(CodeElementType.VARIABLE_DECLARATION_EXPRESSION);
 		codeElementTypeSet.add(CodeElementType.VARIABLE_DECLARATION_STATEMENT);
 		codeElementTypeSet.add(CodeElementType.RETURN_STATEMENT);//Considering return statements as Temp
 		for(AbstractStatement statement : abstractStatements) {
