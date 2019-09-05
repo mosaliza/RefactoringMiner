@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.text.html.parser.TagElement;
+
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.refactoringminer.api.Refactoring;
@@ -428,7 +430,6 @@ public class MotivationExtractor {
 				if(isExtractOperationForBackwardCompatibility(ref)) {
 					return true;
 				}
-
 			}else{
 				//Temporary Variables should be excluded.
 				if(isUmlOperationStatementsAllTempVariables(sourceOpAfterExtraction)) {
@@ -452,15 +453,32 @@ public class MotivationExtractor {
 			String sourceOperationAfterExtractionAccessModifier = sourceOpAfterExtraction.getVisibility();
 			boolean isSourceOperationAfterExtractionAndExtractedOperationModifiersPrivate = 
 					(extractedOperationAccessModifier.equals("private") && sourceOperationAfterExtractionAccessModifier.equals("private")) ? true: false;
-			/*DETECTION RULE: Check IF the method parameters OR name has changed AND if source Operation after extraction is a delegate AND
-			* If the source operation after Extraction and extracted operation are non privatre
-			*/
+			/*DETECTION RULE: Check IF the method parameters OR name has changed AND if source Operation after extraction is a delegate
+			 * AND also check if it contains @deprecated in annotations or JavaDoc 
+			 */
 			if(isBackwardCompatible && (listExtractedOpInvokations.size() == 1) /*&& isSourceOperationAfterExtractionAndExtractedOperationModifiersPrivate*/) {
-				if(isUmlOperationWithDeprecatedAnnotation(sourceOpAfterExtraction)) {
+				if(isUmlOperationWithDeprecatedAnnotation(sourceOpAfterExtraction) || isUmlOperationJavaDocContainsTagName(sourceOpAfterExtraction, "@deprecated")) {
+					if(isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
+						removeRefactoringMotivation(MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE, ref);
+					}
 					return true;	
 				}else {
+					// In this case introducing an alternative method has priority over backward compatibility if it is previously detected
 					if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
 						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	private boolean isUmlOperationJavaDocContainsTagName(UMLOperation operation, String tagName) {
+		UMLJavadoc javaDoc = operation.getJavadoc();
+		if(javaDoc != null) {
+			for(UMLTagElement tagElements : javaDoc.getTags()) {
+				if(tagElements.getTagName() != null) {
+					if(tagElements.getTagName().toLowerCase().equals("@deprecated")) {
+						return true;	
 					}
 				}
 			}
@@ -1114,6 +1132,16 @@ public class MotivationExtractor {
 			listMotivations.add(motivationType);
 			mapRefactoringMotivations.put(ref, listMotivations);
 		}
+	}
+	private boolean removeRefactoringMotivation(MotivationType motivationType, Refactoring ref) {
+		if (mapRefactoringMotivations.containsKey(ref)){
+			if(!mapRefactoringMotivations.get(ref).isEmpty() && mapRefactoringMotivations.get(ref).contains(motivationType)){
+				if(mapRefactoringMotivations.get(ref).remove(motivationType)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 	public void classifyRefactoringsByType(List<Refactoring> refactorings) {
