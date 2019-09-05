@@ -134,19 +134,19 @@ public class MotivationExtractor {
 			if(isReplaceMethodPreservingBackwardCompatibility(ref)){
 				setRefactoringMotivation(MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY, ref);
 			}
-			if(IsExtractedToImproveTestability(ref)) {
+			if(isExtractedToImproveTestability(ref)) {
 				setRefactoringMotivation(MotivationType.EM_IMPROVE_TESTABILITY, ref);
 			}
-			if(IsExtractedtoEnableRecursion(ref)) {
+			if(isExtractedtoEnableRecursion(ref)) {
 				setRefactoringMotivation(MotivationType.EM_ENABLE_RECURSION, ref);
 			}
-			if(IsExtractedToEnableOverriding(ref)) {
+			if(isExtractedToEnableOverriding(ref)) {
 				setRefactoringMotivation(MotivationType.EM_ENABLE_OVERRIDING, ref);
 			}
-			if(IsExtractedToIntroduceFactoryMethod(ref)) {
+			if(isExtractedToIntroduceFactoryMethod(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
 			}
-			if(IsExtractedtoIntroduceAsyncOperation(ref)) {
+			if(isExtractedtoIntroduceAsyncOperation(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ASYNC_OPERATION, ref);
 			}
 			
@@ -194,7 +194,7 @@ public class MotivationExtractor {
 		}
 	}
 			
-	private boolean IsExtractedToIntroduceFactoryMethod(Refactoring ref) {
+	private boolean isExtractedToIntroduceFactoryMethod(Refactoring ref) {
 		if(ref instanceof ExtractOperationRefactoring) {
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring) ref;
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
@@ -264,7 +264,7 @@ public class MotivationExtractor {
 		return false;
 	}
 
-	private boolean IsExtractedtoIntroduceAsyncOperation(Refactoring ref) {
+	private boolean isExtractedtoIntroduceAsyncOperation(Refactoring ref) {
 
 		if(ref instanceof ExtractOperationRefactoring){
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
@@ -293,7 +293,7 @@ public class MotivationExtractor {
 		return false;
 	}
 	
-	private boolean IsExtractedToEnableOverriding(Refactoring ref) {
+	private boolean isExtractedToEnableOverriding(Refactoring ref) {
 		List<UMLOperation> operationsOverridingeExtractedOperations = new ArrayList<UMLOperation>();
 		if(ref instanceof ExtractOperationRefactoring){
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
@@ -357,7 +357,7 @@ public class MotivationExtractor {
 		return false;
 	}
 	
-	private boolean IsExtractedToImproveTestability(Refactoring ref) {
+	private boolean isExtractedToImproveTestability(Refactoring ref) {
 		List<UMLOperation> operationsTestingExtractedOperation = new ArrayList<UMLOperation>();
 		if(ref instanceof ExtractOperationRefactoring) {
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
@@ -391,31 +391,32 @@ public class MotivationExtractor {
 		}
 	}
 
-	private boolean IsExtractedtoEnableRecursion(Refactoring ref) {
+	private boolean isExtractedtoEnableRecursion(Refactoring ref) {
 		if(ref instanceof ExtractOperationRefactoring) {
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring) ref;
+			UMLOperation sourceOperationBeforeExtraction = extractOpRefactoring.getSourceOperationBeforeExtraction();
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
-			UMLClassBaseDiff classDiff = modelDiff.getUMLClassDiff(extractedOperation.getClassName());
-			int countExtractedOperationRecursiveInvocations = 0;
-			if(classDiff != null) {
-				UMLClass classAfterRefactoring = classDiff.getNextClass();
-				for(UMLOperation operation : classAfterRefactoring.getOperations()) {
-					if(operation.equals(extractedOperation)) {
-						List<OperationInvocation> listInvokations = operation.getAllOperationInvocations();
-						for( OperationInvocation invocation : listInvokations) {
-							boolean noExpression = invocation.getExpression() == null;
-							boolean thisExpression = invocation.getExpression() != null && invocation.getExpression().equals("this");
-							boolean noOrThisExpresion = noExpression || thisExpression;
-							if(invocation.matchesOperation(extractedOperation, operation.variableTypeMap(),modelDiff) && noOrThisExpresion){
-								countExtractedOperationRecursiveInvocations++;
-							}
-						}
-					}
+			if(!isUmlOperationRecursive(sourceOperationBeforeExtraction)) {
+				if(isUmlOperationRecursive(extractedOperation)) {
+					return true;
 				}
 			}
-			if(countExtractedOperationRecursiveInvocations > 0) {
-				return true;
+		}
+		return false;
+	}
+	private boolean isUmlOperationRecursive(UMLOperation operation){
+		List<OperationInvocation> listInvokations = operation.getAllOperationInvocations();
+		List<OperationInvocation> recursiveInvokations = new ArrayList<OperationInvocation>();
+		for( OperationInvocation invocation : listInvokations) {
+			boolean noExpression = invocation.getExpression() == null;
+			boolean thisExpression = invocation.getExpression() != null && invocation.getExpression().equals("this");
+			boolean noOrThisExpresion = noExpression || thisExpression;
+			if(invocation.matchesOperation(operation, operation.variableTypeMap(),modelDiff) && noOrThisExpresion){
+				recursiveInvokations.add(invocation);
 			}
+		}
+		if(recursiveInvokations.size()>0) {
+			return true;
 		}
 		return false;
 	}
@@ -635,7 +636,7 @@ public class MotivationExtractor {
 				if(isCompositeNodeExpressionContainingInvokationsToExtractedMethods(notMappedCompositeNode , refList)) {
 					listParentT2CompositesWithInvokationsToExtractedMethodInExpression.add(notMappedCompositeNode);
 				}
-				if(IsNeutralNodeForFacilitateExtension(notMappedCompositeNode , refList , sourceOperationAfterExtrction)) {
+				if(isNeutralNodeForFacilitateExtension(notMappedCompositeNode , refList , sourceOperationAfterExtrction)) {
 					listParentNeutralInnerNodes.add(notMappedCompositeNode);
 				}	
 				if(isParentT2InnerNodeinT1InnerNodes(notMappedCompositeNode.toString(), parentListNotMappedInnerNodesT1)) {
@@ -651,7 +652,7 @@ public class MotivationExtractor {
 				if(isLeafNodeContainingInvokationsToExtractedMethods(notMappedNode, refList)) {
 					listParentNotMappedLeavesWithInvokationsToExtractedMethod.add(notMappedNode);
 				}
-				if(IsNeutralNodeForFacilitateExtension(notMappedNode , refList , sourceOperationAfterExtrction)) {
+				if(isNeutralNodeForFacilitateExtension(notMappedNode , refList , sourceOperationAfterExtrction)) {
 					listParentNeutralLeaves.add(notMappedNode);
 				}
 				if(isParentT2LeafNodeinT1leafNodes(notMappedNode.toString(), parentListNotMappedleafNodesT1)) {
@@ -668,7 +669,7 @@ public class MotivationExtractor {
 				if(isCompositeNodeExpressionContainingInvokationsToExtractedMethods(notMappedCompositeNode , refList)) {
 					listChildT2CompositesWithInvokationsToExtractedMethodInExpression.add(notMappedCompositeNode);
 				}
-				if(IsNeutralNodeForFacilitateExtension(notMappedCompositeNode ,refList, extractedOperation)) {
+				if(isNeutralNodeForFacilitateExtension(notMappedCompositeNode ,refList, extractedOperation)) {
 					listChildNeutralInnerNodes.add(notMappedCompositeNode);
 				}
 				if(isChildT2InnerNodeinT1InnerNodes(notMappedCompositeNode.toString(), listNotMappedInnerNodesT1)) {
@@ -683,7 +684,7 @@ public class MotivationExtractor {
 				if(isLeafNodeContainingInvokationsToExtractedMethods(notMappedNode, refList)) {
 					listChildNotMappedLeavesWithInvokationsToExtractedMethod.add(notMappedNode);
 				}
-				if(IsNeutralNodeForFacilitateExtension(notMappedNode, refList, extractedOperation)){
+				if(isNeutralNodeForFacilitateExtension(notMappedNode, refList, extractedOperation)){
 					listChildNeutralLeaves.add(notMappedNode);
 				}
 				if(isChildT2LeafNodeinT1leafNodes(notMappedNode.toString(), listNotMappedleafNodesT1)) {
@@ -779,7 +780,7 @@ public class MotivationExtractor {
 		return false;
 	}
 	
-	private boolean IsNeutralNodeForFacilitateExtension(AbstractStatement statement , List<Refactoring> refList , UMLOperation statementOperation){
+	private boolean isNeutralNodeForFacilitateExtension(AbstractStatement statement , List<Refactoring> refList , UMLOperation statementOperation){
 		Set<CodeElementType> neutralCodeElements = new HashSet<CodeElementType>();
 		neutralCodeElements.add(CodeElementType.VARIABLE_DECLARATION_STATEMENT);
 		neutralCodeElements.add(CodeElementType.RETURN_STATEMENT);
