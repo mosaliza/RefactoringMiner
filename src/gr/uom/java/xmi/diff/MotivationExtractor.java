@@ -1079,11 +1079,11 @@ public class MotivationExtractor {
 				}
 			}			
 		}
-		int countRemoveDuplicationExtractRefactorings = 0;
+		List<ExtractOperationRefactoring> allRemoveDuplicationExtractRefactorings = new ArrayList<ExtractOperationRefactoring>();
 		for(UMLOperation extractOperation : sourceOperationMapWithExtractedOperationAsKey.keySet()){
 			List<ExtractOperationRefactoring> listRepetativeExtractOperations = new ArrayList<ExtractOperationRefactoring>();
-			List<ExtractOperationRefactoring> listSourceOperations = sourceOperationMapWithExtractedOperationAsKey.get(extractOperation);	
-			/*DETECTION RULE: if multiple source operations(The Extract Refactorings that contain them)
+			List<ExtractOperationRefactoring> listSourceOperations = sourceOperationMapWithExtractedOperationAsKey.get(extractOperation);
+			/*DETECTION RULE: if multiple source operations(Or the Extract Refactorings that contain them)
 			 *  have the same extractedOperation the extract operations motivations is Remove Duplication*/
 			if(listSourceOperations.size() > 1){
 				for (int i = 0; i < listSourceOperations.size(); i++) {
@@ -1093,19 +1093,15 @@ public class MotivationExtractor {
 						}
 					}
 				}
-				//Removing the repetitive source methods. Example: hazelcast 679d38d
-				if(listRepetativeExtractOperations.size() >= 1) {
-						listSourceOperations.removeAll(listRepetativeExtractOperations);	
-				}
 				if(listSourceOperations.size() > 1) {
 					for(ExtractOperationRefactoring extractOp : listSourceOperations){
 						setRefactoringMotivation(MotivationType.EM_REMOVE_DUPLICATION, extractOp);
-						countRemoveDuplicationExtractRefactorings++;
+						allRemoveDuplicationExtractRefactorings.add(extractOp);
 					}
 				}
 			}				
 		}
-		if(countRemoveDuplicationExtractRefactorings >= 2) {
+		if(allRemoveDuplicationExtractRefactorings.size() >= 2) {
 			return true;
 		}
 		return false;
