@@ -867,11 +867,14 @@ public class MotivationExtractor {
 			 * IF Invocations to Extracted method from source method after Extraction is more than one OR 
 			 *  there are other Invocations from other methods to extracted operation.
 			 *  Invocations inside test methods will be considered as reusable calls. */
-
 			if(extractOpRefactoring.getExtractedOperationInvocations().size()>1 || extractOperationInvocationCount > 0 ) {
-				/*AND if the extraction operation is not detected as duplicated removal before
-				 * (All Extract Operations that tend to remove duplication are also reused.)*/
-				if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
+				
+				if(extractOperationInvocationCount == 0) {
+					//This if condition is  valid when remove duplication is done from one source Operation
+					if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
+						return true;
+					}
+				}else {
 					return true;
 				}
 			}		
@@ -956,7 +959,7 @@ public class MotivationExtractor {
 			return true;
 		}
 		/*Checking source operation after Extraction calls to the extracted method to see if they improve readability
-		/in case of calls inside expressions or inside return statements we consider the extraction is improving the readability
+		 *in case of calls inside expressions or inside return statements we consider the extraction is improving the readability
 		 * Example: mockito:2d036 , jedis:d4b4a , cassandra:9a3fa ,JetBrains/intellij-community/commit/7dd55
 		 */
 		for (Refactoring ref : refList) {
