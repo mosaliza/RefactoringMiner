@@ -118,7 +118,6 @@ public class MotivationExtractor {
 	}
 
 	private void detectExtractOperationMotivation(List<Refactoring> listRef) {		
-		
 		//Motivation Detection algorithms that depends on other refactorings of the same type
 		isDecomposeMethodToImroveReadability(listRef);
 		isMethodExtractedToRemoveDuplication(listRef);
@@ -1147,6 +1146,9 @@ public class MotivationExtractor {
 	public void classifyRefactoringsByType(List<Refactoring> refactorings) {
 		for(Refactoring refactoring : refactorings) {
 			RefactoringType type = refactoring.getRefactoringType();
+			if(type.equals(RefactoringType.EXTRACT_AND_MOVE_OPERATION)) {
+				type = RefactoringType.EXTRACT_OPERATION;
+			}
 			if(mapClassifiedRefactorings.containsKey(type)){
 				mapClassifiedRefactorings.get(type).add(refactoring);
 			}
