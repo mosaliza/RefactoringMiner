@@ -267,7 +267,7 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 				}
 			}
 		}
-		return this.name.equals(operation.name) && (equalParameterTypes || compatibleParameterTypes) && equalReturnParameter(operation);
+		return this.name.equals(operation.name) && equalTypeParameters(operation) && (equalParameterTypes || compatibleParameterTypes) && equalReturnParameter(operation);
 	}
 
 	public boolean equalSignatureIgnoringOperationName(UMLOperation operation) {
@@ -275,7 +275,8 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 				this.isAbstract == operation.isAbstract &&
 				this.isFinal == operation.isFinal &&
 				this.isStatic == operation.isStatic &&
-				this.parameters.equals(operation.parameters);
+				this.parameters.equals(operation.parameters) &&
+				equalTypeParameters(operation);
 	}
 
 	public boolean equalSignatureIgnoringChangedTypes(UMLOperation operation) {
@@ -288,6 +289,8 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 		if(this.isFinal != operation.isFinal)
 			return false;*/
 		if(this.parameters.size() != operation.parameters.size())
+			return false;
+		if(!equalTypeParameters(operation))
 			return false;
 		int i=0;
 		for(UMLParameter thisParameter : this.parameters) {
@@ -418,7 +421,8 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 				this.isAbstract == operation.isAbstract &&
 				thisEmptyBody == otherEmptyBody &&
 				equalReturnParameter(operation) &&
-				this.getParameterTypeList().equals(operation.getParameterTypeList());
+				this.getParameterTypeList().equals(operation.getParameterTypeList()) &&
+				equalTypeParameters(operation);
 	}
 
 	public boolean equalsIgnoringNameCase(UMLOperation operation) {
@@ -430,7 +434,8 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 				this.isAbstract == operation.isAbstract &&
 				thisEmptyBody == otherEmptyBody &&
 				equalReturnParameter(operation) &&
-				this.getParameterTypeList().equals(operation.getParameterTypeList());
+				this.getParameterTypeList().equals(operation.getParameterTypeList()) &&
+				equalTypeParameters(operation);
 	}
 
 	public boolean equals(Object o) {
@@ -448,7 +453,8 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 				this.isAbstract == operation.isAbstract &&
 				this.locationInfo.getFilePath().equals(operation.locationInfo.getFilePath()) &&
 				thisEmptyBody == otherEmptyBody &&
-				this.getParameterTypeList().equals(operation.getParameterTypeList());
+				this.getParameterTypeList().equals(operation.getParameterTypeList()) &&
+				equalTypeParameters(operation);
 		}
 		return false;
 	}
@@ -457,7 +463,8 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 		if(this.className.equals(operation.className) &&
 				this.name.equals(operation.name) &&
 				this.visibility.equals(operation.visibility) &&
-				this.isAbstract == operation.isAbstract) {
+				this.isAbstract == operation.isAbstract &&
+				equalTypeParameters(operation)) {
 			UMLParameter thisReturnParameter = this.getReturnParameter();
 			UMLParameter otherReturnParameter = operation.getReturnParameter();
 			if(thisReturnParameter != null && otherReturnParameter != null) {
@@ -493,6 +500,7 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 		result = prime * result + ((getParameterTypeList() == null) ? 0 : getParameterTypeList().hashCode());
 		result = prime * result + ((visibility == null) ? 0 : visibility.hashCode());
 		result = prime * result + ((locationInfo.getFilePath() == null) ? 0 : locationInfo.getFilePath().hashCode());
+		result = prime * result + ((typeParameters == null) ? 0 : typeParameters.hashCode());
 		return result;
 	}
 
@@ -592,7 +600,11 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 	}
 
 	public boolean equalParameterTypes(UMLOperation operation) {
-		return this.equalReturnParameter(operation) && this.getParameterTypeList().equals(operation.getParameterTypeList());
+		return this.equalReturnParameter(operation) && this.getParameterTypeList().equals(operation.getParameterTypeList()) && equalTypeParameters(operation);
+	}
+
+	private boolean equalTypeParameters(UMLOperation operation) {
+		return this.typeParameters.equals(operation.typeParameters);
 	}
 
 	public boolean equalParameterNames(UMLOperation operation) {
