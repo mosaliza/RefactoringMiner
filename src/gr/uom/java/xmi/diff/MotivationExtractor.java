@@ -889,11 +889,11 @@ public class MotivationExtractor {
 			if(considerCallsFromTestMethodsAsReuse) {
 				if(!operation.equals(sourceOperationAfterExtration) && !operation.equals(extractedOperation)) {
 					countExtraInvocations += computeReusedInvokationsToExtractedMethod(operation, extractOpRefactoring, refList);
-				}else {
-					if(!operation.equals(sourceOperationAfterExtration) && !operation.equals(extractedOperation)
-							&& !operation.hasTestAnnotation() && !operation.getName().startsWith("test")) {
-						countExtraInvocations += computeReusedInvokationsToExtractedMethod(operation, extractOpRefactoring, refList);
-					}
+				}
+			}else {
+				if(!operation.equals(sourceOperationAfterExtration) && !operation.equals(extractedOperation) 
+						&& !operation.hasTestAnnotation() && !operation.getName().startsWith("test")) {
+					countExtraInvocations += computeReusedInvokationsToExtractedMethod(operation, extractOpRefactoring, refList);
 				}
 			}
 		}
@@ -953,17 +953,19 @@ public class MotivationExtractor {
 	private List<UMLOperation> getAllEqualOperations(UMLOperation umlOperation) {
 		List<UMLOperation> listEqualOperations = new ArrayList<UMLOperation>();
 		UMLClassBaseDiff umlClassDiff = modelDiff.getUMLClassDiff(umlOperation.getClassName());
-		UMLClass umlClass = umlClassDiff.getNextClass();
-		for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
-			if(classDiff != null) {
-				UMLClass nextCommonClass = classDiff.getNextClass();
-				if(nextCommonClass.matchOperation(umlOperation) != null && !nextCommonClass.equals(umlClass)) {
+		if(umlClassDiff != null) {
+			UMLClass umlClass = umlClassDiff.getNextClass();
+			for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
+				if(classDiff != null) {
+					UMLClass nextCommonClass = classDiff.getNextClass();
+					if(nextCommonClass.matchOperation(umlOperation) != null && !nextCommonClass.equals(umlClass)) {
 						listEqualOperations.add(umlOperation);	
+					}
 				}
-			}
-			for(UMLClass addedClass : modelDiff.getAddedClasses() ) {
+				for(UMLClass addedClass : modelDiff.getAddedClasses() ) {
 					if(addedClass.matchOperation(umlOperation) != null && !addedClass.equals(umlClass)) {
 						listEqualOperations.add(umlOperation);
+					}
 				}
 			}
 		}

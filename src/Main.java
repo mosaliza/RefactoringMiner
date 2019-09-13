@@ -16,8 +16,8 @@ public class Main {
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 
 		Repository repo = gitService.cloneIfNotExists(
-				"tmp1/jbpm",
-				"https://github.com/kiegroup/jbpm.git");
+				"tmp1/neo4j",
+				"https://github.com/neo4j/neo4j/commit/");
 		/*miner.detectAtCommit("https://github.com/luontola/retrolambda.git",
 				"46b0d84de9c309bca48a99e572e6611693ed5236", new RefactoringHandler() {
 					@Override
@@ -28,7 +28,7 @@ public class Main {
 					}
 				},100);*/
 		
-		miner.detectAtCommit(repo,"83cfa21578e63956bca0715eefee2860c3b6d39a", new RefactoringHandler() {
+		miner.detectAtCommit(repo,"d3533c1a0716ca114d294b3ea183504c9725698f", new RefactoringHandler() {
 			@Override 
 			public void handle(String commitData, List<Refactoring> refactorings) {
 				for(Refactoring ref : refactorings) {
