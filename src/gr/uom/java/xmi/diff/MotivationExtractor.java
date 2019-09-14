@@ -838,97 +838,115 @@ public class MotivationExtractor {
 			UMLOperation sourceOperationAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
 			List<OperationInvocation> sourceOperationAfterExtractionInvokations = sourceOperationAfterExtraction.getAllOperationInvocations();
-			int extractOperationInvocationCount = 0 ;
+			List<OperationInvocation> extraExtractedOperationInvokationsInClasses = new ArrayList<OperationInvocation>() ;
+
 			for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
 				if(classDiff != null) {
 					UMLClass nextClass = classDiff.getNextClass();
-					extractOperationInvocationCount += extractedOperationInvocationsCountInClass(extractOpRefactoring, nextClass, refList);
+					extraExtractedOperationInvokationsInClasses.addAll(extractedOperationInvocationsCountInClass(extractOpRefactoring, nextClass, refList));
+				}
+			}
+			for(UMLClass addedClass : modelDiff.getAddedClasses()) {
+				extraExtractedOperationInvokationsInClasses.addAll(extractedOperationInvocationsCountInClass(extractOpRefactoring, addedClass , refList));
+			}
+
+
+			//In case when there are no other operations in other classes matches extracted operation.
+			List<UMLOperation> listMatchedOperationsWithExtractedOperationInOtherClasses = getAllMatchedOperationsInOtherClasses(extractedOperation);
+			if(listMatchedOperationsWithExtractedOperationInOtherClasses.size() == 0) {
+				
+				/*Rule Exception : Extract is not reusable when there is only one call to extracted operation from source after extraction
+				 * and Call is outside source operation and outside extractOperationInvocationCount is one.
+				 * Example(Nested Extract Refactorings): Checkstyle :5a9b7 , JGroups:f1533
+				 */
+				int extractedOperationCallsInsideSourceOperationAfterExtraction = 0 ;
+				for(OperationInvocation invokation : sourceOperationAfterExtractionInvokations) {
+					if(invokation.matchesOperation(extractedOperation,sourceOperationAfterExtraction.variableTypeMap(), modelDiff)) {
+						extractedOperationCallsInsideSourceOperationAfterExtraction++;
 					}
 				}
-			for(UMLClass addedClass : modelDiff.getAddedClasses()) {
-				extractOperationInvocationCount += extractedOperationInvocationsCountInClass(extractOpRefactoring, addedClass , refList);
+				if(((extractOpRefactoring.getExtractedOperationInvocations().size() == 1) || (extractOpRefactoring.getExtractedOperationInvocations().size() == 0)) 
+						&& (extractedOperationCallsInsideSourceOperationAfterExtraction == 0 )) {
+					if(extraExtractedOperationInvokationsInClasses.size() == 1) {
+						return false;
+					}
 				}
-			
-			int extractedOperationCallsInsideSourceOperationAfterExtraction = 0 ;
-			for(OperationInvocation invokation : sourceOperationAfterExtractionInvokations) {
-				if(invokation.matchesOperation(extractedOperation,sourceOperationAfterExtraction.variableTypeMap(), modelDiff)) {
-					extractedOperationCallsInsideSourceOperationAfterExtraction++;
-				}
-			}
-			/*Rule Exception : Extract is not reusable when there is only one call to extracted operation from source after extraction
-			* and Call is outside source operation and outside extractOperationInvocationCount is one.
-			* Example(Nested Extract Refactorings): Checkstyle :5a9b7 , JGroups:f1533
-			*/
-			if(((extractOpRefactoring.getExtractedOperationInvocations().size() == 1) || (extractOpRefactoring.getExtractedOperationInvocations().size() == 0)) 
-					&& (extractedOperationCallsInsideSourceOperationAfterExtraction == 0 )) {
-				if(extractOperationInvocationCount == 1) {
-					return false;
-				}
-			}
-					
-			/* GENERAL DETECTION RULE:
-			 * IF Invocations to Extracted method from source method after Extraction is more than one OR 
-			 *  there are other Invocations from other methods to extracted operation.
-			 *  Invocations inside test methods will not be considered as reusable calls. */
-			if(extractOpRefactoring.getExtractedOperationInvocations().size()>1 || extractOperationInvocationCount > 0 ) {
+				/* GENERAL DETECTION RULE:
+				 * IF Invocations to Extracted method from source method after Extraction is more than one OR 
+				 *  there are other Invocations from other methods to extracted operation.
+				 *  Invocations inside test methods will not be considered as reusable calls. */
+				if(extractOpRefactoring.getExtractedOperationInvocations().size()>1 || extraExtractedOperationInvokationsInClasses.size() > 0 ) {
 					return true;
-			}		
+				}
+			}else {
+				/*TODO: When there are Equal Operations with the same name as extracted operation in other classes.
+				 * e.g. intellij-community:10f769a exists, A UMLOperation with same name as extracted method exists 
+				 * in com.intellij.execution.junit.JUnit4Framework class
+				 */
+				int i= 0;
+				i++;
+				return false;
+			}
 		}
 		return false;	
 	}
 
-	private int extractedOperationInvocationsCountInClass(ExtractOperationRefactoring extractOpRefactoring, UMLClass nextClass , List<Refactoring> refList) {
-		int countExtraInvocations = 0;
+	private List<OperationInvocation> extractedOperationInvocationsCountInClass(ExtractOperationRefactoring extractOpRefactoring, UMLClass nextClass , List<Refactoring> refList) {
+		List<OperationInvocation> allExtraOperationInvokations = new ArrayList<OperationInvocation>();
 		for(UMLOperation operation : nextClass.getOperations()) {
-			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
-			UMLOperation sourceOperationAfterExtration = extractOpRefactoring.getSourceOperationAfterExtraction();
-			/*In the cases when extracted operation is  extracted from a test method (is part of the test code), 
-			extra calls from test methods to extracted operation are considered as reuse. */
-			boolean considerCallsFromTestMethodsAsReuse = (sourceOperationAfterExtration.hasTestAnnotation() || sourceOperationAfterExtration.getName().startsWith("test")) ? true: false;
-			//check if other operations in  class calls the extracted method
-			if(considerCallsFromTestMethodsAsReuse) {
-				if(!operation.equals(sourceOperationAfterExtration) && !operation.equals(extractedOperation)) {
-					countExtraInvocations += computeReusedInvokationsToExtractedMethod(operation, extractOpRefactoring, refList);
-				}
-			}else {
-				if(!operation.equals(sourceOperationAfterExtration) && !operation.equals(extractedOperation) 
-						&& !operation.hasTestAnnotation() && !operation.getName().startsWith("test")) {
-					countExtraInvocations += computeReusedInvokationsToExtractedMethod(operation, extractOpRefactoring, refList);
-				}
+			allExtraOperationInvokations.addAll(computeAllReusedInvokationsToExtractedMethod(operation,extractOpRefactoring,nextClass,refList));
+			}
+		return allExtraOperationInvokations;
+		
+	}
+	
+	private List<OperationInvocation> computeAllReusedInvokationsToExtractedMethod(UMLOperation operation, ExtractOperationRefactoring extractOpRefactoring, 
+			UMLClass nextClass , List<Refactoring> refList){
+		List<OperationInvocation> extraOperationInvokations = new ArrayList<OperationInvocation>();
+		UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
+		UMLOperation sourceOperationAfterExtration = extractOpRefactoring.getSourceOperationAfterExtraction();
+		boolean considerCallsFromTestMethodsAsReuse = (sourceOperationAfterExtration.hasTestAnnotation() || sourceOperationAfterExtration.getName().startsWith("test")) ? true: false;
+		/*In the cases when extracted operation is  extracted from a test method (is part of the test code), 
+		extra calls from test methods to extracted operation are considered as reuse. */
+		if(considerCallsFromTestMethodsAsReuse) {
+			if(!operation.equals(sourceOperationAfterExtration) && !operation.equals(extractedOperation)) {
+				extraOperationInvokations.addAll(computeReusedInvokationsToExtractedMethod(operation, extractOpRefactoring, refList));
+			}
+		}else {
+			if(!operation.equals(sourceOperationAfterExtration) && !operation.equals(extractedOperation) 
+					&& !operation.hasTestAnnotation() && !operation.getName().startsWith("test")) {
+				extraOperationInvokations.addAll(computeReusedInvokationsToExtractedMethod(operation, extractOpRefactoring, refList));
 			}
 		}
-		return countExtraInvocations;
+		return extraOperationInvokations;
 	}
 
-	private int  countOperationAInvokationsInOperationB(UMLOperation operationA, UMLOperation operationB) {
-		int countInvocations = 0;
+	private List<OperationInvocation>  countOperationAInvokationsInOperationB(UMLOperation operationA, UMLOperation operationB) {
+		 List<OperationInvocation> operationAInvokationsInOperationB = new ArrayList<OperationInvocation>();
 		 List<OperationInvocation> invocations = operationB.getAllOperationInvocations();
 		 for(OperationInvocation invocation : invocations) {
 			 if(invocation.matchesOperation(operationA,operationB.variableTypeMap(), modelDiff)) {
-				 countInvocations++;	
+				 operationAInvokationsInOperationB.add(invocation);	
 			 }
 		 }
-		 return countInvocations;
+		 return operationAInvokationsInOperationB;
 	}
 	
-	private int computeReusedInvokationsToExtractedMethod(UMLOperation operation , ExtractOperationRefactoring extractOpRefactoring , 
+	private List<OperationInvocation> computeReusedInvokationsToExtractedMethod(UMLOperation operation , ExtractOperationRefactoring extractOpRefactoring , 
 			List<Refactoring> refList ){
-		int extraInvocations = 0;
+		List<OperationInvocation> extraInvokations = new ArrayList<OperationInvocation>();
 		UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
-		List<UMLOperation> listEqualOperations = getAllEqualOperations(extractedOperation);
-		//In case when there are no other methods with equal names as extracted operation.
-		if(listEqualOperations.size() == 0) {
-			if(isMotivationDetected(extractOpRefactoring, MotivationType.EM_REMOVE_DUPLICATION) && refList.size() > 1) {
-				/*When we check extra calls to detect Reuse if there has been a Remove Duplication motivation from multiple
-				 *  source methods we ignore extra invokations from "same remove duplication" "source operations after extraction"  Extract method's. */
-				if(!isOperationEqualToSourceOperationAfterExtractionOfSameRemoveDuplicationGroupExtractRefactorings(operation, refList , extractOpRefactoring)) {
-					extraInvocations += countOperationAInvokationsInOperationB(extractedOperation,operation);
-				}
-			}else {
-				extraInvocations += countOperationAInvokationsInOperationB(extractedOperation,operation);		 
-			} 
-		}
-		return extraInvocations;
+		if(isMotivationDetected(extractOpRefactoring, MotivationType.EM_REMOVE_DUPLICATION) && refList.size() > 1) {
+			/*When we check extra calls to detect Reuse if there has been a Remove Duplication motivation from multiple
+			 *  source methods we ignore extra invokations from "same remove duplication" "source operations after extraction"  Extract method's. */
+			if(!isOperationEqualToSourceOperationAfterExtractionOfSameRemoveDuplicationGroupExtractRefactorings(operation, refList , extractOpRefactoring)) {
+				extraInvokations.addAll(countOperationAInvokationsInOperationB(extractedOperation,operation));
+			}
+		}else {
+			extraInvokations.addAll(countOperationAInvokationsInOperationB(extractedOperation,operation));		 
+		} 
+
+		return extraInvokations;
 	}
 	
 	private boolean isOperationEqualToSourceOperationAfterExtractionOfSameRemoveDuplicationGroupExtractRefactorings(UMLOperation operation, List<Refactoring> refList 
@@ -950,7 +968,7 @@ public class MotivationExtractor {
 		return false;
 	}
 	
-	private List<UMLOperation> getAllEqualOperations(UMLOperation umlOperation) {
+	private List<UMLOperation> getAllMatchedOperationsInOtherClasses(UMLOperation umlOperation) {
 		List<UMLOperation> listEqualOperations = new ArrayList<UMLOperation>();
 		UMLClassBaseDiff umlClassDiff = modelDiff.getUMLClassDiff(umlOperation.getClassName());
 		if(umlClassDiff != null) {
@@ -959,12 +977,12 @@ public class MotivationExtractor {
 				if(classDiff != null) {
 					UMLClass nextCommonClass = classDiff.getNextClass();
 					if(nextCommonClass.matchOperation(umlOperation) != null && !nextCommonClass.equals(umlClass)) {
-						listEqualOperations.add(umlOperation);	
+						listEqualOperations.add(nextCommonClass.matchOperation(umlOperation));	
 					}
 				}
 				for(UMLClass addedClass : modelDiff.getAddedClasses() ) {
 					if(addedClass.matchOperation(umlOperation) != null && !addedClass.equals(umlClass)) {
-						listEqualOperations.add(umlOperation);
+						listEqualOperations.add(addedClass.matchOperation(umlOperation));
 					}
 				}
 			}
