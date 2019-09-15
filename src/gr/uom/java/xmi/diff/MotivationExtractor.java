@@ -1,11 +1,13 @@
 package gr.uom.java.xmi.diff;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.swing.text.html.parser.TagElement;
 
@@ -16,6 +18,7 @@ import org.refactoringminer.api.RefactoringType;
 
 import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.sun.javafx.collections.MapAdapterChange;
+import com.sun.webkit.graphics.Ref;
 
 import gr.uom.java.xmi.LocationInfo.CodeElementType;
 import gr.uom.java.xmi.UMLAnonymousClass;
@@ -126,7 +129,7 @@ public class MotivationExtractor {
 		isMethodExtractedToRemoveDuplication(listRef);
 		
 		//Motivation Detection algorithms that can detect the motivation independently for each refactoring
-		for(Refactoring ref : listRef){
+		for(Refactoring ref : listRef) {
 			if(isExtractReusableMethod(ref , listRef)) {
 				setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
 			}
@@ -832,7 +835,6 @@ public class MotivationExtractor {
 		}
 
 	private boolean isExtractReusableMethod(Refactoring ref ,List<Refactoring> refList) {		
-
 		if(ref instanceof ExtractOperationRefactoring) {
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
@@ -854,22 +856,33 @@ public class MotivationExtractor {
 					return true;
 				}
 			}else {
-				/*TODO: When there are matching Operations with the same name as extracted operation in other classes.
-				 * e.g. intellij-community:10f769a exists, A UMLOperation with same name as extracted method exists 
-				 * in com.intellij.execution.junit.JUnit4Framework class
-				 */
-				Map<UMLOperation, List<OperationInvocation>> mapExtraExtractedOperationInvokationsInOtherClassesWhenMatchingOperationExists 
-				= getExtraInvocationsToExtractedMethodWhenMatchingOperationExists(extractedOperation , mapExtraExtractedOperationInvokationsInClasses);
-				// When Invocation in other classes to extracted operation exists e.g: alluxio:ed966510
-				if(mapExtraExtractedOperationInvokationsInOtherClassesWhenMatchingOperationExists.size() > 0) {
-					return true;
-				}else {
-					//When Invocation to extracted method in other classes does not exist but in extracted method class there are extra calls to extracted method.
-					for(UMLOperation operation : mapExtraExtractedOperationInvokationsInClasses.keySet()) {
-						for (OperationInvocation invokation: mapExtraExtractedOperationInvokationsInClasses.get(operation)) {
-							if(invokation.getExpression() == null || invokation.getExpression().equals("this")) {
-								if(operation.getClassName().equals(extractedOperation.getClassName())){
-									return true;
+			
+				Map<String, List<ExtractOperationRefactoring>> groupedByToString =
+						refList.stream() // For each refactoring
+						// Cast to ExtractOperationRefactoring
+						.map(x->(ExtractOperationRefactoring)x)
+						// Group by the toString() value
+						.collect(Collectors.groupingBy(x->x.toString()));
+				
+				//Checking for cases where all extract operations are unique
+				if(groupedByToString.entrySet().stream().allMatch(x-> x.getValue().size() == 1)) {
+					/*When there are matching Operations with the same name as extracted operation in other classes.
+					 * e.g. intellij-community:10f769a exists, A UMLOperation with same name as extracted method exists 
+					 * in com.intellij.execution.junit.JUnit4Framework class
+					 */
+					Map<UMLOperation, List<OperationInvocation>> mapExtraExtractedOperationInvokationsInOtherClassesWhenMatchingOperationExists 
+					= getExtraInvocationsToExtractedMethodWhenMatchingOperationExists(extractedOperation , mapExtraExtractedOperationInvokationsInClasses);
+					// When Invocation in other classes to extracted operation exists e.g: alluxio:ed966510
+					if(mapExtraExtractedOperationInvokationsInOtherClassesWhenMatchingOperationExists.size() > 0) {
+						return true;
+					}else {
+						//When Invocation to extracted method in other classes does not exist but in extracted method class there are extra calls to extracted method.
+						for(UMLOperation operation : mapExtraExtractedOperationInvokationsInClasses.keySet()) {
+							for (OperationInvocation invokation: mapExtraExtractedOperationInvokationsInClasses.get(operation)) {
+								if(invokation.getExpression() == null || invokation.getExpression().equals("this")) {
+									if(operation.getClassName().equals(extractedOperation.getClassName())){
+										return true;
+									}
 								}
 							}
 						}
@@ -1281,4 +1294,6 @@ public class MotivationExtractor {
 	private void printDetectedRefactoringMotivations() {
 		// TODO Auto-generated method stub	
 	}
+	
+	
 }
