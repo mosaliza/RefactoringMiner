@@ -1,12 +1,12 @@
-syntax = "proto3";
+syntax = "proto2";
 
-package Models;
+package ResultProtos;
 option java_package = "org.ResultProtos";
 
 message Result{
 
    required string commit = 1;
-   repeated MotivationStatus = 2;
+   repeated MotivationStatus motivationStatus = 2;
    
    message MotivationStatus {
      required string status = 1;
@@ -19,10 +19,3 @@ message Result{
    }
    
 }
-
-//protoc --proto_path = "C:\Users\Sadegh Aalizadeh\Documents\GitHub\RefactoringMiner\src-test\ResultProtos\" --java_out="C:\Users\Sadegh Aalizadeh\Documents\GitHub\RefactoringMiner\src-test\RefactoringMiner\src-test" "C:\Users\Sadegh Aalizadeh\Documents\GitHub\RefactoringMiner\src-test\ResultProtos\*"
-
-//protoc --proto_path="C:\Users\Sadegh Aalizadeh\Documents\GitHub\RefactoringMiner\src-test\ResultProtos\" --java_out="C:\Users\Sadegh Aalizadeh\Documents\GitHub\RefactoringMiner\src-test\"  "C:\Users\Sadegh Aalizadeh\Documents\GitHub\RefactoringMiner\src-test\ResultProtos\Results.proto"
-
-
-// C:\Users\Sadegh Aalizadeh\Documents\GitHub
