@@ -655,7 +655,9 @@ public class MotivationExtractor {
 			for(StatementObject  notMappedNode :  parentListNotMappedLeavesT2) {
 	
 				if(isLeafNodeContainingInvokationsToExtractedMethods(notMappedNode, refList)) {
+					if(!isLeafNodeFacilitatingExtension(notMappedNode)) {
 					listParentNotMappedLeavesWithInvokationsToExtractedMethod.add(notMappedNode);
+					}
 				}
 				if(isNeutralNodeForFacilitateExtension(notMappedNode , refList , sourceOperationAfterExtrction)) {
 					listParentNeutralLeaves.add(notMappedNode);
@@ -687,7 +689,9 @@ public class MotivationExtractor {
 			
 			for(StatementObject  notMappedNode :  listNotMappedLeavesT2) {
 				if(isLeafNodeContainingInvokationsToExtractedMethods(notMappedNode, refList)) {
-					listChildNotMappedLeavesWithInvokationsToExtractedMethod.add(notMappedNode);
+					if(!isLeafNodeFacilitatingExtension(notMappedNode)) {
+						listChildNotMappedLeavesWithInvokationsToExtractedMethod.add(notMappedNode);
+					}
 				}
 				if(isNeutralNodeForFacilitateExtension(notMappedNode, refList, extractedOperation)){
 					listChildNeutralLeaves.add(notMappedNode);
@@ -712,14 +716,18 @@ public class MotivationExtractor {
 			 //DETECTION RULE: Detect if Some statements(InnerNode or Leave) added either ExtractedOperation or
 			//Source Operation After Extraction
 			if( countChildNonMappedLeavesAndInnerNodesT2 > 0 || countParentNonMappedLeavesAndInnerNodesT2 > 0) {
-				if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE) &&
-						!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {
+				//if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE) && !isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {
 					return true;
-				}
+				//}
 			}
 		}
 		return false;
 	}
+	private boolean isLeafNodeFacilitatingExtension(StatementObject notMappedNode){
+		return notMappedNode.getMethodInvocationMap().size() > 1;
+	}
+	
+	
 	private boolean isLeafNodeContainingInvokationsToExtractedMethods(StatementObject notMappedNode,List<Refactoring> refList) {
 		for(Refactoring refactoring : refList) {
 			if(refactoring instanceof ExtractOperationRefactoring) {
@@ -743,7 +751,9 @@ public class MotivationExtractor {
 					ExtractOperationRefactoring extractOperationRefactoring = (ExtractOperationRefactoring)refactoring;
 					for(OperationInvocation invocation : extractOperationRefactoring.getExtractedOperationInvocations()) {
 						if(expression.getLocationInfo().subsumes(invocation.getLocationInfo())) {
-							return true;								
+							if(expression.getMethodInvocationMap().size() == 1) {
+								return true;									
+							}
 						}			
 					}
 				}
