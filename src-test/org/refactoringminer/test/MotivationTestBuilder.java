@@ -1,5 +1,8 @@
 package org.refactoringminer.test;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 
 
@@ -98,15 +101,20 @@ public class MotivationTestBuilder {
 			this.map.put(cloneUrl, projectMatcher);
 		}
 		return projectMatcher;
-	}
-
+	}	
 	public void assertExpectations() throws Exception {
 		c = new Counter();
 		cMap = new HashMap<MotivationType, Counter>();
 		commitsCount = 0;
 		errorCommitsCount = 0;
 		GitService gitService = new GitServiceImpl();
-
+		
+		
+		GitHistoryRefactoringMinerImpl refactoringDetectorImpl = (GitHistoryRefactoringMinerImpl)refactoringDetector;
+		StringBuilder JSON = new StringBuilder();
+		JSON.append("{").append("\n");
+		JSON.append("\"").append("commits").append("\"").append(": ");
+		JSON.append("[");
 		for (ProjectMatcher m : map.values()) {
 			String folder = tempDir + "/"
 					+ m.cloneUrl.substring(m.cloneUrl.lastIndexOf('/') + 1, m.cloneUrl.lastIndexOf('.'));
@@ -117,13 +125,25 @@ public class MotivationTestBuilder {
 					for (String commitId : m.getCommits()) {
 						refactoringDetector.detectAtCommit(rep, commitId, m);
 						//refactoringDetector.detectAtCommit(m.cloneUrl, commitId, m, 100);
-					}
+					}	
+					
 				} else {
 					// Iterate over each commit
 					//refactoringDetector.detectAll(rep, m.branch, m);
 				}
 			}
 		}
+		refactoringDetectorImpl.getStringJSON().deleteCharAt(refactoringDetectorImpl.getStringJSON().toString().length()-1);
+		refactoringDetectorImpl.getStringJSON().append("]");
+		refactoringDetectorImpl.getStringJSON().append("}");
+		refactoringDetectorImpl.getStringJSON().append("\n");
+		JSON.append(refactoringDetectorImpl.getStringJSON());
+		try (FileOutputStream oS = new FileOutputStream(new File("Refactorings.json"))) {
+			oS.write(JSON.toString().getBytes());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 		System.out.println(String.format("Commits: %d  Errors: %d", commitsCount, errorCommitsCount));
 
 		String mainResultMessage = buildResultMessage(c);
@@ -200,6 +220,9 @@ public class MotivationTestBuilder {
 	public class ProjectMatcher extends RefactoringHandler {
 
 		private final String cloneUrl;
+		public String getCloneUrl() {
+			return cloneUrl;
+		}
 		private final String branch;
 		private Map<String, CommitMatcher> expected = new HashMap<>();
 		private boolean ignoreNonSpecifiedCommits = true;

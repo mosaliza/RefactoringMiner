@@ -1,5 +1,5 @@
 package org.refactoringminer.rm1;
-
+import java.io.FileInputStream;
 import gr.uom.java.xmi.UMLModel;
 import gr.uom.java.xmi.UMLModelASTReader;
 import gr.uom.java.xmi.diff.MotivationExtractor;
@@ -64,6 +64,7 @@ import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringHandler;
 import org.refactoringminer.api.RefactoringMinerTimedOutException;
 import org.refactoringminer.api.RefactoringType;
+import org.refactoringminer.test.MotivationTestBuilder.ProjectMatcher;
 import org.refactoringminer.util.GitServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +75,15 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 	private Set<RefactoringType> refactoringTypesToConsider = null;
 	private GitHub gitHub;
 	
+	private StringBuilder stringJSON = new StringBuilder();
+	public StringBuilder getStringJSON() {
+		return stringJSON;
+	}
+
+	public void setStringJSON(StringBuilder stringJSON) {
+		this.stringJSON = stringJSON;
+	}
+
 	public GitHistoryRefactoringMinerImpl() {
 		this.setRefactoringTypesToConsider(
 			RefactoringType.RENAME_CLASS,
@@ -188,6 +198,11 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 				MotivationExtractor motivationExtractor = new MotivationExtractor(modelDiff, refactoringsAtRevision);
 				motivationExtractor.detectAllRefactoringMotivations();
 				mapRefactoringMotivations = motivationExtractor.getMapRefactoringMotivations();
+				
+				ProjectMatcher projectMatcher = (ProjectMatcher)handler;
+				String cloneUrl = projectMatcher.getCloneUrl();
+				stringJSON.append(writeToJSON(cloneUrl, commitId, refactoringsAtRevision));	
+				
 				refactoringsAtRevision = filter(refactoringsAtRevision);
 			} else {
 				//logger.info(String.format("Ignored revision %s with no changes in java files", commitId));
@@ -257,6 +272,9 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 				MotivationExtractor motivationExtractor = new MotivationExtractor(modelDiff, refactoringsAtRevision);
 				motivationExtractor.detectAllRefactoringMotivations();
 				mapRefactoringMotivations = motivationExtractor.getMapRefactoringMotivations();
+				
+				stringJSON.append(writeToJSON(cloneURL ,currentCommitId , refactoringsAtRevision));	
+								
 				refactoringsAtRevision = filter(refactoringsAtRevision);
 			}
 			else {
@@ -271,6 +289,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 
 		return refactoringsAtRevision;
 	}
+	
 
 	private Set<String> repositoryDirectories(File folder) {
 		final String systemFileSeparator = Matcher.quoteReplacement(File.separator);
@@ -575,6 +594,8 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 			MotivationExtractor motivationExtractor = new MotivationExtractor(modelDiff, refactoringsAtRevision);
 			motivationExtractor.detectAllRefactoringMotivations();
 			mapRefactoringMotivations = motivationExtractor.getMapRefactoringMotivations();
+			//Never reaches here
+			stringJSON.append(writeToJSON(gitURL ,currentCommitId , refactoringsAtRevision));				
 			refactoringsAtRevision = filter(refactoringsAtRevision);
 		}
 		catch(RefactoringMinerTimedOutException e) {
@@ -756,5 +777,35 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 		for(GHPullRequestCommitDetail commit : commits) {
 			detectAtCommit(cloneURL, commit.getSha(), handler, timeout);
 		}
+	}
+	
+
+	public  String writeToJSON(String gitURL, String currentCommitId, List<Refactoring> refactoringsAtRevision) {
+		StringBuilder sb = new StringBuilder();
+		//sb.append("{").append("\n");
+		//sb.append("\"").append("commits").append("\"").append(": ");
+		//sb.append("[");
+		sb.append("{");
+		sb.append("\t").append("\"").append("repository").append("\"").append(": ").append("\"").append(gitURL).append("\"").append(",").append("\n");
+		sb.append("\t").append("\"").append("sha1").append("\"").append(": ").append("\"").append(currentCommitId).append("\"").append(",").append("\n");
+		String url = "https://github.com/" + gitURL.substring(19, gitURL.indexOf(".git")) + "/commit/" + currentCommitId;
+		sb.append("\t").append("\"").append("url").append("\"").append(": ").append("\"").append(url).append("\"").append(",").append("\n");
+		sb.append("\t").append("\"").append("refactorings").append("\"").append(": ");
+		sb.append("[");
+		int counter = 0;
+		for(Refactoring refactoring : refactoringsAtRevision) {
+			sb.append(refactoring.toJSON());
+			if(counter < refactoringsAtRevision.size()-1) {
+				sb.append(",");
+			}
+			sb.append("\n");
+			counter++;
+		}
+		sb.append("]");//End of refactoring Array
+		sb.append("}");//End of commit
+		sb.append(",");//Comma between commits
+		//sb.append("]").append("\n");
+		//sb.append("}");
+		return sb.toString();
 	}
 }
