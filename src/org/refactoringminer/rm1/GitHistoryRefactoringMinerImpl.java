@@ -478,6 +478,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 		} finally {
 			walk.close();
 			walk.dispose();
+
 		}
 	}
 

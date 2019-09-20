@@ -16,8 +16,8 @@ public class Main {
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 
 		Repository repo = gitService.cloneIfNotExists(
-				"tmp1/android_frameworks_base",
-				"https://github.com/CyanogenMod/android_frameworks_base.git");
+				"tmp1/cassandra",
+				"https://github.com/apache/cassandra.git");
 		/*miner.detectAtCommit("https://github.com/luontola/retrolambda.git",
 				"46b0d84de9c309bca48a99e572e6611693ed5236", new RefactoringHandler() {
 					@Override
@@ -28,7 +28,7 @@ public class Main {
 					}
 				},100);*/
 		
-		miner.detectAtCommit(repo,"4587c32ab8a1c8e2169e4f93491a8c927216a6ab", new RefactoringHandler() {
+		miner.detectAtCommit(repo,"9a3fa887cfa03c082f249d1d4003d87c14ba5d24", new RefactoringHandler() {
 			@Override 
 			public void handle(String commitData, List<Refactoring> refactorings) {
 				for(Refactoring ref : refactorings) {

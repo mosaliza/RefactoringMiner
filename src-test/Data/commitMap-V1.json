@@ -189,7 +189,8 @@
 	"description": "Inline Method private verifyReceiverSubscribes() : void inlined to public shouldNotTimeoutSubscriptionOnKeepAlive() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Improve readability",
+                "status": "match1"
 	} ]
 },
 {
@@ -197,7 +198,8 @@
 	"description": "Inline Method private verifyPublicationClosed(times VerificationMode) : void inlined to public shouldErrorOnRemoveChannelOnUnknownStreamId() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Improve readability",
+                "status": "match1"
 	} ]
 },
 {
@@ -237,6 +239,8 @@
 	"description": "Inline Method private verifyExceptionLogged() : void inlined to public shouldErrorOnAddSubscriptionWithInvalidUri() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
+	                "label": "IM: Improve readability",
+					"status": "match1"
 
 	} ]
 },
@@ -261,7 +265,8 @@
 	"description": "Inline Method private verifyNeverSucceeds() : void inlined to public shouldErrorOnAddSubscriptionWithInvalidUri() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Improve readability",
+                "status": "match1"
 	} ]
 },
 {
@@ -269,7 +274,8 @@
 	"description": "Inline Method private verifySenderNotifiedOfNewPublication() : void inlined to public shouldBeAbleToAddSinglePublication() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Improve readability",
+                "status": "match1"
 	} ]
 },
 {
@@ -312,7 +318,8 @@
 	"description": "Extract Method protected reset(animateTransition boolean) : void extracted from public reset() : void in class com.android.keyguard.KeyguardAbsKeyInputView",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/CyanogenMod/android_frameworks_base.git",
@@ -353,7 +360,8 @@
 	"description": "Extract Method public killProcessGroup(uid int, pid int) : void extracted from package removeLruProcessLocked(app ProcessRecord) : void in class com.android.server.am.ActivityManagerService",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 },
 {
@@ -361,7 +369,8 @@
 	"description": "Extract Method public killProcessGroup(uid int, pid int) : void extracted from package startProcessLocked(processName String, info ApplicationInfo, knownToBeDead boolean, intentFlags int, hostingType String, hostingName ComponentName, allowWhileBooting boolean, isolated boolean, isolatedUid int, keepIfLarge boolean, abiOverride String, entryPoint String, entryPointArgs String[], crashHandler Runnable) : ProcessRecord in class com.android.server.am.ActivityManagerService",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 },
 {
@@ -369,7 +378,8 @@
 	"description": "Extract Method public killProcessGroup(uid int, pid int) : void extracted from package appDiedLocked(app ProcessRecord, pid int, thread IApplicationThread, fromBinderDied boolean) : void in class com.android.server.am.ActivityManagerService",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 },
 {
@@ -377,7 +387,8 @@
 	"description": "Extract Method public killProcessGroup(uid int, pid int) : void extracted from private crashApplication(r ProcessRecord, crashInfo ApplicationErrorReport.CrashInfo) : void in class com.android.server.am.ActivityManagerService",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/gradle/gradle.git",
@@ -531,7 +542,8 @@
 	"description": "Extract Method public createGogsWebhook(kubernetes KubernetesClient, log Log, gogsUser String, gogsPwd String, repoName String, webhookUrl String, webhookSecret String) : boolean extracted from public execute() : void in class io.fabric8.maven.CreateGogsWebhook",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/fabric8io/fabric8.git",
@@ -542,7 +554,8 @@
 	"description": "Pull Up Attribute private DEFAULT_CONFIG_FILE_NAME : String from class io.fabric8.maven.ApplyMojo to private DEFAULT_CONFIG_FILE_NAME : String from class io.fabric8.maven.AbstractFabric8Mojo",
 	"motivations": [ 
 	{ 
-
+                "label": "UA: Move up common attributes",
+                "status": "match1"
 	} ]
 },
 {
@@ -550,7 +563,8 @@
 	"description": "Pull Up Attribute private combineDependencies : boolean from class io.fabric8.maven.JsonMojo to protected combineDependencies : boolean from class io.fabric8.maven.AbstractFabric8Mojo",
 	"motivations": [ 
 	{ 
-
+                "label": "UA: Move up common attributes",
+                "status": "match1"
 	} ]
 },
 {
@@ -558,7 +572,8 @@
 	"description": "Pull Up Method private getDependencies() : Set<File> from class io.fabric8.maven.ApplyMojo to package getDependencies() : Set<File> from class io.fabric8.maven.AbstractFabric8Mojo",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 },
 {
@@ -566,7 +581,8 @@
 	"description": "Pull Up Method protected isKubernetesJsonArtifact(classifier String, type String) : boolean from class io.fabric8.maven.JsonMojo to package isKubernetesJsonArtifact(classifier String, type String) : boolean from class io.fabric8.maven.AbstractFabric8Mojo",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 },
 {
@@ -574,7 +590,8 @@
 	"description": "Pull Up Method private hasKubernetesJson(f File) : boolean from class io.fabric8.maven.ApplyMojo to package hasKubernetesJson(f File) : boolean from class io.fabric8.maven.AbstractFabric8Mojo",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/joel-costigliola/assertj-core.git",
@@ -585,7 +602,8 @@
 	"description": "Extract Superclass org.assertj.core.api.StrictAssertions from classes [org.assertj.core.api.Assertions]",
 	"motivations": [ 
 	{ 
-
+                "label": "ES: Decompose class",
+                "status": "match1"
 	} ]
 },
 {
@@ -1501,7 +1519,8 @@
 	"description": "Pull Up Method public pre(item ImportTask, data ImportData) : void from class org.geoserver.importer.transform.VectorTransformChain to public pre(item ImportTask, data ImportData) : void from class org.geoserver.importer.transform.TransformChain",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 },
 {
@@ -1509,7 +1528,8 @@
 	"description": "Pull Up Method public post(task ImportTask, data ImportData) : void from class org.geoserver.importer.transform.VectorTransformChain to public post(task ImportTask, data ImportData) : void from class org.geoserver.importer.transform.TransformChain",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 },
 {
@@ -2113,7 +2133,6 @@
 	"description": "Extract Method public displayInputFragment(showOpenDialog boolean) : void extracted from private handleActions(savedInstanceState Bundle, intent Intent) : void in class org.sufficientlysecure.keychain.ui.DecryptFilesActivity",
 	"motivations": [ 
 	{ 
-
 	} ]
 },
 {
@@ -2121,7 +2140,8 @@
 	"description": "Extract Method protected cryptoOperation(cryptoInput CryptoInputParcel, showProgress boolean) : void extracted from protected cryptoOperation(cryptoInput CryptoInputParcel) : void in class org.sufficientlysecure.keychain.ui.base.CryptoOperationFragment",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/baasbox/baasbox.git",
@@ -2132,7 +2152,8 @@
 	"description": "Extract Method public execMultiLineCommands(db ODatabaseRecordTx, log boolean, stopOnException boolean, commands String...) : void extracted from public execMultiLineCommands(db ODatabaseRecordTx, log boolean, commands String...) : void in class com.baasbox.db.DbHelper",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/phishman3579/java-algorithms-implementation.git",
@@ -2143,7 +2164,8 @@
 	"description": "Extract Method private putOutTheGarbage() : void extracted from public main(args String[]) : void in class com.jwetherell.algorithms.sorts.timing.SortsTiming",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -2151,7 +2173,8 @@
 	"description": "Extract Method private putOutTheGarbage() : void extracted from public main(args String[]) : void in class com.jwetherell.algorithms.sorts.timing.SortsTiming",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -2159,7 +2182,8 @@
 	"description": "Extract Method private putOutTheGarbage() : void extracted from public main(args String[]) : void in class com.jwetherell.algorithms.sorts.timing.SortsTiming",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -2167,7 +2191,8 @@
 	"description": "Extract Method private putOutTheGarbage() : void extracted from public main(args String[]) : void in class com.jwetherell.algorithms.sorts.timing.SortsTiming",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -2175,7 +2200,8 @@
 	"description": "Extract Method private putOutTheGarbage() : void extracted from public main(args String[]) : void in class com.jwetherell.algorithms.sorts.timing.SortsTiming",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -2183,7 +2209,8 @@
 	"description": "Extract Method private putOutTheGarbage() : void extracted from public main(args String[]) : void in class com.jwetherell.algorithms.sorts.timing.SortsTiming",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -2191,7 +2218,8 @@
 	"description": "Extract Method private putOutTheGarbage() : void extracted from public main(args String[]) : void in class com.jwetherell.algorithms.sorts.timing.SortsTiming",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -2199,7 +2227,8 @@
 	"description": "Extract Method private putOutTheGarbage() : void extracted from public main(args String[]) : void in class com.jwetherell.algorithms.sorts.timing.SortsTiming",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -2207,7 +2236,8 @@
 	"description": "Extract Method private putOutTheGarbage() : void extracted from public main(args String[]) : void in class com.jwetherell.algorithms.sorts.timing.SortsTiming",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -2215,7 +2245,8 @@
 	"description": "Extract Method private putOutTheGarbage() : void extracted from public main(args String[]) : void in class com.jwetherell.algorithms.sorts.timing.SortsTiming",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -2223,7 +2254,8 @@
 	"description": "Extract Method private putOutTheGarbage() : void extracted from public main(args String[]) : void in class com.jwetherell.algorithms.sorts.timing.SortsTiming",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -2231,7 +2263,8 @@
 	"description": "Extract Method private putOutTheGarbage() : void extracted from public main(args String[]) : void in class com.jwetherell.algorithms.sorts.timing.SortsTiming",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/abarisain/dmix.git",
@@ -2269,7 +2302,8 @@
 	"description": "Extract Method public weaveTestMixins(classNode ClassNode, values ListExpression, applicationClassNode ClassNode) : void extracted from public weaveTestMixins(classNode ClassNode, values ListExpression) : void in class org.grails.compiler.injection.test.TestMixinTransformation",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 },
 {
@@ -2277,7 +2311,8 @@
 	"description": "Extract Method public weaveMixinsIntoClass(classNode ClassNode, values ListExpression, applicationClassNode ClassNode) : void extracted from public weaveMixinsIntoClass(classNode ClassNode, values ListExpression) : void in class org.grails.compiler.injection.test.TestMixinTransformation",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/cwensel/cascading.git",
@@ -2628,7 +2663,8 @@
 	"description": "Extract Method protected onRemoteStatusChanged(oldStatus InstanceInfo.InstanceStatus, newStatus InstanceInfo.InstanceStatus) : void extracted from private updateInstanceRemoteStatus() : void in class com.netflix.discovery.DiscoveryClient",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Enable overriding",
+                "status": "match1"
 	} ]
 },
 {
@@ -2647,7 +2683,8 @@
 	"description": "Extract Method public fillUpRegistryOfServer(serverIdx int, count int, instanceTemplate InstanceInfo) : void extracted from public fillUpRegistry(count int, instanceTemplate InstanceInfo) : void in class com.netflix.eureka2.integration.EurekaDeploymentClients",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce alternative method signature",
+                "status": "match1"
 	} ]
 },
 {
@@ -2666,7 +2703,8 @@
 	"description": "Extract Method private evaluateTemplate(check Check, subscription Subscription, alerts List<Alert>, templateContent String) : String extracted from public createBody(check Check, subscription Subscription, alerts List<Alert>) : String in class com.seyren.core.util.velocity.VelocityEmailHelper",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/wicketstuff/core.git",
@@ -2677,7 +2715,8 @@
 	"description": "Extract Method private testRenderedTab() : void extracted from public renderSimpleTab() : void in class org.wicketstuff.foundation.tab.FoundationTabTest",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/spring-projects/spring-integration.git",
@@ -2825,7 +2864,8 @@
 	"description": "Pull Up Method protected wrap(values List<ParameterDescription>) : ParameterList from class net.bytebuddy.description.method.ParameterList.ForLoadedExecutable to protected wrap(values List<ParameterDescription>) : ParameterList from class net.bytebuddy.description.method.ParameterList.AbstractBase",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 },
 {
@@ -2833,7 +2873,8 @@
 	"description": "Pull Up Method protected wrap(values List<ParameterDescription>) : ParameterList from class net.bytebuddy.description.method.ParameterList.ForLoadedExecutable.OfLegacyVmMethod to protected wrap(values List<ParameterDescription>) : ParameterList from class net.bytebuddy.description.method.ParameterList.AbstractBase",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 },
 {
@@ -2841,7 +2882,8 @@
 	"description": "Pull Up Method protected wrap(values List<ParameterDescription>) : ParameterList from class net.bytebuddy.description.method.ParameterList.ForLoadedExecutable.OfLegacyVmConstructor to protected wrap(values List<ParameterDescription>) : ParameterList from class net.bytebuddy.description.method.ParameterList.AbstractBase",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 },
 {
@@ -2849,7 +2891,8 @@
 	"description": "Pull Up Method protected wrap(values List<ParameterDescription>) : ParameterList from class net.bytebuddy.description.method.ParameterList.Explicit to protected wrap(values List<ParameterDescription>) : ParameterList from class net.bytebuddy.description.method.ParameterList.AbstractBase",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/liferay/liferay-plugins.git",
@@ -2860,7 +2903,8 @@
 	"description": "Extract Method protected updateSyncDLObject(syncDLObject SyncDLObject) : void extracted from public onAfterUpdate(resourcePermission ResourcePermission) : void in class com.liferay.sync.hook.listeners.ResourcePermissionModelListener",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Enable recursion",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/jenkinsci/workflow-plugin.git",
@@ -3285,16 +3329,24 @@
 	"type": "Extract Method",
 	"description": "Extract Method public getDescendants(t ParseTree) : List<ParseTree> extracted from public descendants(t ParseTree) : List<ParseTree> in class org.antlr.v4.runtime.tree.Trees",
 	"motivations": [ 
-	{ 
-
-	} ]
+            {
+                "label": "EM: Replace method keeping backward compatibility",
+                "status": "match2"
+            },
+            {
+                "label": "EM: Extract reusable method",
+                "status": "match2"
+            } ]
 },
 {
 	"type": "Extract Method",
 	"description": "Extract Method public getAmbuityParserInterpreter(g Grammar, originalParser Parser, tokens TokenStream) : ParserInterpreter extracted from public getAllPossibleParseTrees(g Grammar, originalParser Parser, tokens TokenStream, decision int, alts BitSet, startIndex int, stopIndex int, startRuleIndex int) : List<ParserRuleContext> in class org.antlr.v4.tool.GrammarParserInterpreter",
 	"motivations": [ 
 	{ 
-
+            {
+                "label": "EM: Extract reusable method",
+                "status": "match2"
+            }
 	} ]
 },
 {
@@ -3337,7 +3389,8 @@
 	"description": "Extract Method private createEnvironmentPreparedEvent(propName String, propValue String) : SpringApplicationEvent extracted from public differentEventTypes() : void in class org.springframework.boot.actuate.system.ApplicationPidFileWriterTests",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -3360,9 +3413,14 @@
 	"type": "Extract Method",
 	"description": "Extract Method private createPreparedEvent(propName String, propValue String) : SpringApplicationEvent extracted from public overridePidFileWithSpring() : void in class org.springframework.boot.actuate.system.ApplicationPidFileWriterTests",
 	"motivations": [ 
-	{ 
-
-	} ]
+            {
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
+            },
+            {
+                "label": "EM: Extract reusable method",
+                "status": "match2"
+            } ]
 },
 {
 	"type": "Move Method",
@@ -3380,7 +3438,8 @@
 	"description": "Extract Method private getFullKey(path String, key String) : String extracted from private flatten(properties Properties, input Map<String,Object>, path String) : void in class org.springframework.boot.cloudfoundry.VcapApplicationListener",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -3601,17 +3660,20 @@
 	"type": "Change Return Type",
 	"description": "Change Return Type String[] to Set<String> in method private getPackagesToScan(metadata AnnotationMetadata) : Set<String> in class org.springframework.boot.orm.jpa.EntityScanRegistrar",
 	"motivations": [ 
-	{ 
-
-	} ]
+	]
 },
 {
 	"type": "Extract Method",
 	"description": "Extract Method private addEntityScanBeanPostProcessor(registry BeanDefinitionRegistry, packagesToScan Set<String>) : void extracted from public registerBeanDefinitions(importingClassMetadata AnnotationMetadata, registry BeanDefinitionRegistry) : void in class org.springframework.boot.orm.jpa.EntityScanRegistrar",
 	"motivations": [ 
-	{ 
-
-	} ]
+			{ 
+                "label": "EM: Decompose method to improve readability",
+                "status": "match1"
+			},
+            {
+                "label": "EM: Facilitate extension",
+                "status": "match1"
+            } ]
 }
 ]},{	"repository": "https://github.com/spring-projects/spring-boot.git",
 	"sha1": "b47634176fa48ad925f79886c6aaca225cb9af64",
@@ -3621,7 +3683,8 @@
 	"description": "Extract Method private findAll(predicate Predicate<String>) : Iterable<Metric<?>> extracted from public findAll(prefix String) : Iterable<Metric<?>> in class org.springframework.boot.actuate.metrics.buffer.BufferMetricReader",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Remove duplication",
+                "status": "match2"
 	} ]
 },
 {
@@ -3629,7 +3692,8 @@
 	"description": "Extract Method private findAll(predicate Predicate<String>) : Iterable<Metric<?>> extracted from public findAll() : Iterable<Metric<?>> in class org.springframework.boot.actuate.metrics.buffer.BufferMetricReader",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Remove duplication",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/brettwooldridge/HikariCP.git",
@@ -3640,7 +3704,8 @@
 	"description": "Move Class com.zaxxer.hikari.util.MillisecondClockSource moved to com.zaxxer.hikari.util.ClockSource.MillisecondClockSource",
 	"motivations": [ 
 	{ 
-
+                "label": "MC: Convert to inner class",
+                "status": "match2"
 	} ]
 },
 {
@@ -3648,7 +3713,8 @@
 	"description": "Move Class com.zaxxer.hikari.util.NanosecondClockSource moved to com.zaxxer.hikari.util.ClockSource.NanosecondClockSource",
 	"motivations": [ 
 	{ 
-
+                "label": "MC: Convert to inner class",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/neo4j/neo4j.git",
@@ -3851,7 +3917,8 @@
 	"description": "Inline Method public releaseAllShared() : void inlined to public releaseAll() : void in class org.neo4j.kernel.impl.locking.community.CommunityLockClient",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Eliminate unnecessary method",
+                "status": "match1"
 	} ]
 },
 {
@@ -3859,7 +3926,8 @@
 	"description": "Inline Method public releaseAllExclusive() : void inlined to public releaseAll() : void in class org.neo4j.kernel.impl.locking.community.CommunityLockClient",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Eliminate unnecessary method",
+                "status": "match1"
 	} ]
 },
 {
@@ -6549,7 +6617,8 @@
 	"description": "Extract Method protected query(query Query) : PrimitiveLongIterator extracted from public lookup(value Object) : PrimitiveLongIterator in class org.neo4j.kernel.api.impl.index.LuceneIndexAccessorReader",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Remove duplication",
+                "status": "match2"
 	} ]
 },
 {
@@ -6557,7 +6626,8 @@
 	"description": "Extract Method protected query(query Query) : PrimitiveLongIterator extracted from public scan() : PrimitiveLongIterator in class org.neo4j.kernel.api.impl.index.LuceneIndexAccessorReader",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Remove duplication",
+                "status": "match2"
 	} ]
 },
 {
@@ -6565,7 +6635,8 @@
 	"description": "Extract Superclass org.neo4j.kernel.api.impl.index.AbstractLuceneIndexAccessorReaderTest from classes [org.neo4j.kernel.api.impl.index.LuceneIndexAccessorReaderTest, org.neo4j.kernel.api.impl.index.LuceneUniqueIndexAccessorReaderTest]",
 	"motivations": [ 
 	{ 
-
+                "label": "ES: Extract common state/behavior",
+                "status": "match2"
 	} ]
 },
 {
@@ -7365,7 +7436,8 @@
 	"description": "Extract Method public getNewConnectionThreshold(distance HostDistance) : int extracted from public getMaxSimultaneousRequestsPerConnectionThreshold(distance HostDistance) : int in class com.datastax.driver.core.PoolingOptions",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Replace method keeping backward compatibility",
+                "status": "match2"
 	} ]
 },
 {
@@ -7373,7 +7445,8 @@
 	"description": "Extract Method public setNewConnectionThreshold(distance HostDistance, newValue int) : PoolingOptions extracted from public setMaxSimultaneousRequestsPerConnectionThreshold(distance HostDistance, newMaxSimultaneousRequests int) : PoolingOptions in class com.datastax.driver.core.PoolingOptions",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Replace method keeping backward compatibility",
+                "status": "match2"
 	} ]
 },
 {
@@ -7389,7 +7462,8 @@
 	"description": "Extract Method public getMaxRequestsPerConnection(distance HostDistance) : int extracted from public getMaxSimultaneousRequestsPerHostThreshold(distance HostDistance) : int in class com.datastax.driver.core.PoolingOptions",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Replace method keeping backward compatibility",
+                "status": "match2"
 	} ]
 },
 {
@@ -7397,7 +7471,8 @@
 	"description": "Extract Method public setMaxRequestsPerConnection(distance HostDistance, newMaxRequests int) : PoolingOptions extracted from public setMaxSimultaneousRequestsPerHostThreshold(distance HostDistance, newMaxRequests int) : PoolingOptions in class com.datastax.driver.core.PoolingOptions",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Replace method keeping backward compatibility",
+                "status": "match2"
 	} ]
 },
 {
@@ -7432,7 +7507,8 @@
 	"description": "Extract Method public values(names List<String>, values List<Object>) : Insert extracted from public values(names String[], values Object[]) : Insert in class com.datastax.driver.core.querybuilder.Insert",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/jfinal/jfinal.git",
@@ -8419,7 +8495,8 @@
 	"description": "Extract Method private validateIntegerValue(value String, min int, max int, errorKey String, errorMessage String) : void extracted from protected validateInteger(field String, min int, max int, errorKey String, errorMessage String) : void in class com.jfinal.validate.Validator",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -8427,7 +8504,8 @@
 	"description": "Extract Method private validateLongValue(value String, min long, max long, errorKey String, errorMessage String) : void extracted from protected validateLong(field String, min long, max long, errorKey String, errorMessage String) : void in class com.jfinal.validate.Validator",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -8435,7 +8513,8 @@
 	"description": "Extract Method private validateLongValue(value String, errorKey String, errorMessage String) : void extracted from protected validateLong(field String, errorKey String, errorMessage String) : void in class com.jfinal.validate.Validator",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -8858,7 +8937,8 @@
 	"description": "Move Class com.hazelcast.spi.ServiceInfo moved to com.hazelcast.spi.impl.servicemanager.ServiceInfo",
 	"motivations": [ 
 	{ 
-
+                "label": "MC: Remove from public API",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/querydsl/querydsl.git",
@@ -8869,7 +8949,8 @@
 	"description": "Extract Superclass com.querydsl.sql.types.AbstractJSR310DateTimeTypeTest from classes [com.querydsl.sql.types.JSR310InstantTypeTest, com.querydsl.sql.types.JSR310LocalDateTimeTypeTest, com.querydsl.sql.types.JSR310LocalDateTypeTest, com.querydsl.sql.types.JSR310LocalTimeTypeTest, com.querydsl.sql.types.JSR310OffsetDateTimeTypeTest, com.querydsl.sql.types.JSR310OffsetTimeTypeTest, com.querydsl.sql.types.JSR310ZonedDateTimeTypeTest]",
 	"motivations": [ 
 	{ 
-
+                "label": "ES: Extract common state/behavior",
+                "status": "match2"
 	} ]
 },
 {
@@ -8936,7 +9017,8 @@
 	"description": "Extract Method private allMockedTypes(features MockFeatures<T>) : Class<?>[] extracted from public generateMockClass(features MockFeatures<T>) : Class<? extends T> in class org.mockito.internal.creation.bytebuddy.MockBytecodeGenerator",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/mrniko/redisson.git",
@@ -8947,7 +9029,8 @@
 	"description": "Extract Method public createClient(host String, port int, timeout int) : RedisClient extracted from public createClient(host String, port int) : RedisClient in class org.redisson.connection.MasterSlaveConnectionManager",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/belaban/JGroups.git",
@@ -8974,7 +9057,8 @@
 	"description": "Extract Method public isInMembersList(sender IpAddress) : boolean extracted from public authenticate(token AuthToken, msg Message) : boolean in class org.jgroups.auth.FixedMembershipToken",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Improve testability",
+                "status": "match2"
 	} ]
 },
 {
@@ -9154,7 +9238,8 @@
 	"description": "Pull Up Attribute protected transition : boolean from class net.kuujo.copycat.raft.state.ActiveState to protected transition : boolean from class net.kuujo.copycat.raft.state.PassiveState",
 	"motivations": [ 
 	{ 
-
+                "label": "UA: Move up common attributes",
+                "status": "match2"
 	} ]
 },
 {
@@ -9162,7 +9247,8 @@
 	"description": "Pull Up Method private handleAppend(request AppendRequest) : AppendResponse from class net.kuujo.copycat.raft.state.ActiveState to private handleAppend(request AppendRequest) : AppendResponse from class net.kuujo.copycat.raft.state.PassiveState",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 },
 {
@@ -9170,7 +9256,8 @@
 	"description": "Pull Up Method private doCheckPreviousEntry(request AppendRequest) : AppendResponse from class net.kuujo.copycat.raft.state.ActiveState to private doCheckPreviousEntry(request AppendRequest) : AppendResponse from class net.kuujo.copycat.raft.state.PassiveState",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 },
 {
@@ -9178,7 +9265,8 @@
 	"description": "Pull Up Method private doAppendEntries(request AppendRequest) : AppendResponse from class net.kuujo.copycat.raft.state.ActiveState to private doAppendEntries(request AppendRequest) : AppendResponse from class net.kuujo.copycat.raft.state.PassiveState",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 },
 {
@@ -9186,7 +9274,8 @@
 	"description": "Pull Up Method private applyCommits(commitIndex long) : CompletableFuture<Void> from class net.kuujo.copycat.raft.state.ActiveState to private applyCommits(commitIndex long) : CompletableFuture<Void> from class net.kuujo.copycat.raft.state.PassiveState",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 },
 {
@@ -9194,7 +9283,8 @@
 	"description": "Pull Up Method private applyIndex(globalIndex long) : void from class net.kuujo.copycat.raft.state.ActiveState to private applyIndex(globalIndex long) : void from class net.kuujo.copycat.raft.state.PassiveState",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/facebook/buck.git",
@@ -9235,7 +9325,8 @@
 	"description": "Extract Method public getDevices() : List<IDevice> extracted from public adbCall(adbCallable AdbCallable) : boolean in class com.facebook.buck.android.AdbHelper",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Improve testability",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/facebook/buck.git",
@@ -10354,7 +10445,8 @@
 	"description": "Extract Method private doAppendNode(node SNode) : void extracted from public appendNode(node SNode) : void in class jetbrains.mps.text.impl.TextGenSupport",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match2"
 	} ]
 },
 {
@@ -10395,7 +10487,8 @@
 	"description": "Move Attribute private logger : Logger from class org.glyptodon.guacamole.auth.jdbc.user.UserContextService to private logger : Logger from class org.glyptodon.guacamole.auth.jdbc.user.UserService",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Move attribute to appropriate class",
+                "status": "match2"
 	} ]
 },
 {
@@ -10403,7 +10496,8 @@
 	"description": "Move Attribute private NEW_PASSWORD_PARAMETER : String from class org.glyptodon.guacamole.auth.jdbc.user.UserContextService to private NEW_PASSWORD_PARAMETER : String from class org.glyptodon.guacamole.auth.jdbc.user.UserService",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Move attribute to appropriate class",
+                "status": "match2"
 	} ]
 },
 {
@@ -10411,7 +10505,8 @@
 	"description": "Move Attribute private NEW_PASSWORD : Field from class org.glyptodon.guacamole.auth.jdbc.user.UserContextService to private NEW_PASSWORD : Field from class org.glyptodon.guacamole.auth.jdbc.user.UserService",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Move attribute to appropriate class",
+                "status": "match2"
 	} ]
 },
 {
@@ -10419,7 +10514,8 @@
 	"description": "Move Attribute private CONFIRM_NEW_PASSWORD_PARAMETER : String from class org.glyptodon.guacamole.auth.jdbc.user.UserContextService to private CONFIRM_NEW_PASSWORD_PARAMETER : String from class org.glyptodon.guacamole.auth.jdbc.user.UserService",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Move attribute to appropriate class",
+                "status": "match2"
 	} ]
 },
 {
@@ -10427,7 +10523,8 @@
 	"description": "Move Attribute private CONFIRM_NEW_PASSWORD : Field from class org.glyptodon.guacamole.auth.jdbc.user.UserContextService to private CONFIRM_NEW_PASSWORD : Field from class org.glyptodon.guacamole.auth.jdbc.user.UserService",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Move attribute to appropriate class",
+                "status": "match2"
 	} ]
 },
 {
@@ -10435,7 +10532,8 @@
 	"description": "Move Attribute private EXPIRED_PASSWORD : CredentialsInfo from class org.glyptodon.guacamole.auth.jdbc.user.UserContextService to private EXPIRED_PASSWORD : CredentialsInfo from class org.glyptodon.guacamole.auth.jdbc.user.UserService",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Move attribute to appropriate class",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/square/javapoet.git",
@@ -10641,7 +10739,8 @@
 	"description": "Move Class org.elasticsearch.index.merge.policy.ElasticsearchMergePolicy moved to org.elasticsearch.index.shard.ElasticsearchMergePolicy",
 	"motivations": [ 
 	{ 
-
+                "label": "MC: Move class to appropriate container",
+                "status": "match1"
 	} ]
 },
 {
@@ -10649,7 +10748,8 @@
 	"description": "Move Class org.elasticsearch.index.merge.policy.FilterDocValuesProducer moved to org.elasticsearch.index.shard.FilterDocValuesProducer",
 	"motivations": [ 
 	{ 
-
+                "label": "MC: Move class to appropriate container",
+                "status": "match1"
 	} ]
 },
 {
@@ -10657,7 +10757,8 @@
 	"description": "Move Class org.elasticsearch.index.merge.policy.VersionFieldUpgrader moved to org.elasticsearch.index.shard.VersionFieldUpgrader",
 	"motivations": [ 
 	{ 
-
+                "label": "MC: Move class to appropriate container",
+                "status": "match1"
 	} ]
 },
 {
@@ -10665,7 +10766,8 @@
 	"description": "Move Class org.elasticsearch.index.merge.policy.VersionFieldUpgraderTest moved to org.elasticsearch.index.shard.VersionFieldUpgraderTest",
 	"motivations": [ 
 	{ 
-
+                "label": "MC: Move class to appropriate container",
+                "status": "match1"
 	} ]
 },
 {
@@ -10748,7 +10850,8 @@
 	"description": "Move Attribute private sendResponseTimer : Timer from class com.rackspacecloud.blueflood.inputs.handlers.HttpMetricsIngestionHandler to private sendResponseTimer : Timer from class com.rackspacecloud.blueflood.http.DefaultHandler",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -10756,7 +10859,8 @@
 	"description": "Move Method public sendResponse(channel ChannelHandlerContext, request HttpRequest, messageBody String, status HttpResponseStatus) : void from class com.rackspacecloud.blueflood.inputs.handlers.HttpMetricsIngestionHandler to public sendResponse(channel ChannelHandlerContext, request HttpRequest, messageBody String, status HttpResponseStatus) : void from class com.rackspacecloud.blueflood.http.DefaultHandler",
 	"motivations": [ 
 	{ 
-
+                "label": "MM: Remove duplication",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/jersey/jersey.git",
@@ -10885,7 +10989,8 @@
 	"description": "Extract Method protected setupMockMvc() : void extracted from public setUp() : void in class org.springframework.data.rest.webmvc.AbstractWebIntegrationTests",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Enable overriding",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/apache/camel.git",
@@ -11075,7 +11180,8 @@
 	"description": "Push Down Attribute protected evaluatingActionQueue : AtomicBoolean from class org.drools.core.impl.StatefulKnowledgeSessionImpl to private evaluatingActionQueue : AtomicBoolean from class org.drools.reteoo.common.ReteWorkingMemory",
 	"motivations": [ 
 	{ 
-
+                "label": "DA: Isolate dependencies",
+                "status": "match1"
 	} ]
 },
 {
@@ -11083,7 +11189,8 @@
 	"description": "Move Method public notifyHalt() : void from class org.drools.core.common.DefaultAgenda to public notifyHalt() : void from class org.drools.core.phreak.SynchronizedBypassPropagationList",
 	"motivations": [ 
 	{ 
-
+                "label": "MM: Isolate dependencies",
+                "status": "match1"
 	} ]
 },
 {
@@ -11091,7 +11198,8 @@
 	"description": "Move Method public notifyHalt() : void from class org.drools.reteoo.common.ReteAgenda to public notifyHalt() : void from class org.drools.core.phreak.SynchronizedBypassPropagationList",
 	"motivations": [ 
 	{ 
-
+                "label": "MM: Isolate dependencies",
+                "status": "match1"
 	} ]
 },
 {
@@ -12009,7 +12117,8 @@
 	"description": "Pull Up Attribute private downstreamNodes : List<String> from class io.crate.planner.node.dql.CollectNode to private downstreamNodes : List<String> from class io.crate.planner.node.dql.AbstractDQLPlanNode",
 	"motivations": [ 
 	{ 
-
+                "label": "UA: Move up common attributes",
+                "status": "match1"
 	} ]
 },
 {
@@ -12049,7 +12158,8 @@
 	"description": "Move Attribute private leftMergeNode : MergeNode from class io.crate.planner.node.dql.join.NestedLoop to private leftMergeNode : MergeNode from class io.crate.planner.node.dql.join.NestedLoopNode",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Move attribute to appropriate class",
+                "status": "match2"
 	} ]
 },
 {
@@ -12057,7 +12167,8 @@
 	"description": "Move Attribute private rightMergeNode : MergeNode from class io.crate.planner.node.dql.join.NestedLoop to private rightMergeNode : MergeNode from class io.crate.planner.node.dql.join.NestedLoopNode",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Move attribute to appropriate class",
+                "status": "match2"
 	} ]
 },
 {
@@ -12065,7 +12176,8 @@
 	"description": "Pull Up Attribute private downstreamExecutionNodeId : int from class io.crate.planner.node.dql.CollectNode to private downstreamExecutionNodeId : int from class io.crate.planner.node.dql.AbstractDQLPlanNode",
 	"motivations": [ 
 	{ 
-
+                "label": "UA: Move up common attributes",
+                "status": "match1"
 	} ]
 },
 {
@@ -12097,7 +12209,8 @@
 	"description": "Pull Up Method public downstreamNodes(downStreamNodes List<String>) : void from class io.crate.planner.node.dql.CollectNode to public downstreamNodes(downStreamNodes List<String>) : void from class io.crate.planner.node.dql.AbstractDQLPlanNode",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 },
 {
@@ -12113,7 +12226,8 @@
 	"description": "Pull Up Method public downstreamNodes(nodes Set<String>) : void from class io.crate.planner.node.dql.MergeNode to public downstreamNodes(downStreamNodes Set<String>) : void from class io.crate.planner.node.dql.AbstractDQLPlanNode",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 },
 {
@@ -12287,7 +12401,8 @@
 	"description": "Extract Method public plan(relation AnalyzedRelation, consumerContext ConsumerContext) : PlannedAnalyzedRelation extracted from public plan(rootRelation AnalyzedRelation, plannerContext Planner.Context) : Plan in class io.crate.planner.consumer.ConsumingPlanner",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce alternative method signature",
+                "status": "match1"
 	} ]
 },
 {
@@ -12793,7 +12908,8 @@
 	"description": "Extract Method private post(responseStatus HttpResponseStatus, lastContentFuture ChannelFuture) : void extracted from private post(responseStatus HttpResponseStatus) : void in class ratpack.server.internal.DefaultResponseTransmitter",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/apache/cassandra.git",
@@ -12815,7 +12931,8 @@
 	"description": "Move Class org.apache.cassandra.hadoop.AbstractColumnFamilyInputFormat.SplitCallable moved to org.apache.cassandra.hadoop.cql3.CqlInputFormat.SplitCallable",
 	"motivations": [ 
 	{ 
-
+                "label": "MC: Remove inner classes from deprecated container",
+                "status": "match2"
 	} ]
 },
 {
@@ -12823,7 +12940,8 @@
 	"description": "Move Class org.apache.cassandra.hadoop.BulkRecordWriter.NullOutputHandler moved to org.apache.cassandra.hadoop.cql3.CqlBulkRecordWriter.NullOutputHandler",
 	"motivations": [ 
 	{ 
-
+                "label": "MC: Remove inner classes from deprecated container",
+                "status": "match2"
 	} ]
 },
 {
@@ -13128,24 +13246,36 @@
 	"description": "Extract Method private getSpecifiedTokens(metadata TokenMetadata, initialTokens Collection<String>) : Collection<Token> extracted from public getBootstrapTokens(metadata TokenMetadata) : Collection<Token> in class org.apache.cassandra.dht.BootStrapper",
 	"motivations": [ 
 	{ 
-
-	} ]
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
+	}	]
 },
 {
 	"type": "Extract Method",
 	"description": "Extract Method public getRandomToken(r Random) : LongToken extracted from public getRandomToken() : LongToken in class org.apache.cassandra.dht.Murmur3Partitioner",
 	"motivations": [ 
 	{ 
-
-	} ]
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
+	}'
+	{ 
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
+	},
+	{
+			"label": "EM: Improve testability",
+			"status": "match1"
+	}
+	]
 },
 {
 	"type": "Extract Method",
 	"description": "Extract Method private generateFakeEndpoints(tmd TokenMetadata, numOldNodes int, numVNodes int) : void extracted from private generateFakeEndpoints(numOldNodes int) : void in class org.apache.cassandra.dht.BootStrapperTest",
 	"motivations": [ 
-	{ 
-
-	} ]
+			{ 
+						"label": "EM: Introduce alternative method signature",
+						"status": "match2"
+			}	]
 },
 {
 	"type": "Extract Variable",
@@ -13707,17 +13837,20 @@
 	"type": "Extract Method",
 	"description": "Extract Method private foldExprShortcut(desc ExprNodeDesc, constants Map<ColumnInfo,ExprNodeDesc>, cppCtx ConstantPropagateProcCtx, op Operator<? extends Serializable>, tag int, propagate boolean) : ExprNodeDesc extracted from private foldExpr(desc ExprNodeDesc, constants Map<ColumnInfo,ExprNodeDesc>, cppCtx ConstantPropagateProcCtx, op Operator<? extends Serializable>, tag int, propagate boolean) : ExprNodeDesc in class org.apache.hadoop.hive.ql.optimizer.ConstantPropagateProcFactory",
 	"motivations": [ 
-	{ 
-
-	} ]
+	]
 },
 {
 	"type": "Extract Method",
 	"description": "Extract Method private foldExprFull(desc ExprNodeDesc, constants Map<ColumnInfo,ExprNodeDesc>, cppCtx ConstantPropagateProcCtx, op Operator<? extends Serializable>, tag int, propagate boolean) : ExprNodeDesc extracted from private foldExpr(desc ExprNodeDesc, constants Map<ColumnInfo,ExprNodeDesc>, cppCtx ConstantPropagateProcCtx, op Operator<? extends Serializable>, tag int, propagate boolean) : ExprNodeDesc in class org.apache.hadoop.hive.ql.optimizer.ConstantPropagateProcFactory",
 	"motivations": [ 
-	{ 
-
-	} ]
+            {
+                "label": "EM: Decompose method to improve readability",
+                "status": "add"
+            },
+            {
+                "label": "EM: Facilitate extension",
+                "status": "match1"
+            } ]
 }
 ]},{	"repository": "https://github.com/apache/hive.git",
 	"sha1": "d69e5cb21c04d9eede314aaa9ad059fc603fb025",
@@ -13789,7 +13922,8 @@
 	"description": "Extract Method private parseFormalParameterList(inTypeExpression boolean) : FormalParameterListTree extracted from private parseFormalParameterList() : FormalParameterListTree in class com.google.javascript.jscomp.parsing.parser.Parser",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 },
 {
@@ -13883,7 +14017,8 @@
 	"description": "Inline Method private getRawTypeFromJSType(t JSType) : RawNominalType inlined to private visitOtherPropertyDeclaration(getProp Node) : void in class com.google.javascript.jscomp.GlobalTypeInfo.ProcessScope",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Eliminate unnecessary method",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/go-lang-plugin-org/go-lang-idea-plugin.git",
@@ -13894,7 +14029,8 @@
 	"description": "Extract Method protected doSomething(virtualFile VirtualFile, module Module, project Project, title String, withProgress boolean) : boolean extracted from protected doSomething(virtualFile VirtualFile, module Module, project Project, title String) : boolean in class com.goide.actions.fmt.GoExternalToolsAction",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/spring-projects/spring-framework.git",
@@ -13921,7 +14057,8 @@
 	"description": "Extract Method private assertMissingTextAttribute(attributes Map<String,Object>) : void extracted from public synthesizeAnnotationFromMapWithMissingAttributeValue() : void in class org.springframework.core.annotation.AnnotationUtilsTests",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Remove duplication",
+                "status": "match2"
 	} ]
 },
 {
@@ -13929,7 +14066,8 @@
 	"description": "Extract Method private assertMissingTextAttribute(attributes Map<String,Object>) : void extracted from public synthesizeAnnotationFromMapWithNullAttributeValue() : void in class org.springframework.core.annotation.AnnotationUtilsTests",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Remove duplication",
+                "status": "match2"
 	} ]
 },
 {
@@ -14277,7 +14415,8 @@
 	"description": "Move Attribute public ERROR_TEXTFONT_NULL_PFONT : String from class processing.core.PConstants to protected ERROR_TEXTFONT_NULL_PFONT : String from class processing.core.PGraphics",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Move attribute to appropriate class",
+                "status": "match2"
 	} ]
 },
 {
@@ -14285,7 +14424,8 @@
 	"description": "Move Attribute public ERROR_BACKGROUND_IMAGE_SIZE : String from class processing.core.PConstants to protected ERROR_BACKGROUND_IMAGE_SIZE : String from class processing.core.PGraphics",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Move attribute to appropriate class",
+                "status": "match2"
 	} ]
 },
 {
@@ -14293,7 +14433,8 @@
 	"description": "Move Attribute public ERROR_BACKGROUND_IMAGE_FORMAT : String from class processing.core.PConstants to protected ERROR_BACKGROUND_IMAGE_FORMAT : String from class processing.core.PGraphics",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Move attribute to appropriate class",
+                "status": "match2"
 	} ]
 },
 {
@@ -14301,7 +14442,8 @@
 	"description": "Move Attribute public ERROR_PUSHMATRIX_OVERFLOW : String from class processing.core.PConstants to protected ERROR_PUSHMATRIX_OVERFLOW : String from class processing.core.PGraphics",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Move attribute to appropriate class",
+                "status": "match2"
 	} ]
 },
 {
@@ -14309,7 +14451,8 @@
 	"description": "Move Attribute public ERROR_PUSHMATRIX_UNDERFLOW : String from class processing.core.PConstants to protected ERROR_PUSHMATRIX_UNDERFLOW : String from class processing.core.PGraphics",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Move attribute to appropriate class",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/spring-projects/spring-roo.git",
@@ -14385,7 +14528,8 @@
 	"description": "Extract Method private processField(ast DetailAST, parentType int) : void extracted from private processIDENT(ast DetailAST) : void in class com.puppycrawl.tools.checkstyle.checks.coding.RequireThisCheck",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/k9mail/k-9.git",
@@ -14404,16 +14548,22 @@
 	"description": "Extract Method private buildNotificationNavigationStack(context Context, account Account, message LocalMessage, newMessages int, unreadCount int, allRefs ArrayList<MessageReference>) : TaskStackBuilder extracted from private notifyAccountWithDataLocked(context Context, account Account, message LocalMessage, data NotificationData) : void in class com.fsck.k9.controller.MessagingController",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
 	"type": "Extract Method",
 	"description": "Extract Method private setNotificationContent(context Context, message Message, sender CharSequence, subject CharSequence, builder NotificationCompat.Builder, accountDescr String) : NotificationCompat.Builder extracted from private notifyAccountWithDataLocked(context Context, account Account, message LocalMessage, data NotificationData) : void in class com.fsck.k9.controller.MessagingController",
 	"motivations": [ 
-	{ 
-
-	} ]
+            {
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
+            },
+            {
+                "label": "EM: Extract reusable method",
+                "status": "match1"
+            } ]
 },
 {
 	"type": "Rename Variable",
@@ -14471,7 +14621,8 @@
 	"description": "Extract Method private handleSendFailure(account Account, localStore Store, localFolder Folder, message Message, exception Exception, permanentFailure boolean) : void extracted from public sendPendingMessagesSynchronous(account Account) : void in class com.fsck.k9.controller.MessagingController",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -14544,7 +14695,8 @@
 	"description": "Extract Method private reserveSpace(size long) : void extracted from public addBlockMeta(block BlockMeta) : Optional<BlockMeta> in class tachyon.worker.block.meta.StorageDir",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match2"
 	} ]
 },
 {
@@ -14611,7 +14763,8 @@
 	"description": "Push Down Attribute protected mBlockSize : long from class tachyon.worker.block.meta.BlockMetaBase to private mBlockSize : long from class tachyon.worker.block.meta.BlockMeta",
 	"motivations": [ 
 	{ 
-
+                "label": "DA: Specialized implementation",
+                "status": "add"
 	} ]
 },
 {
@@ -14630,7 +14783,8 @@
 	"description": "Extract Superclass tachyon.worker.block.meta.BlockMetaBase from classes [tachyon.worker.block.meta.BlockMeta, tachyon.worker.block.meta.TempBlockMeta]",
 	"motivations": [ 
 	{ 
-
+                "label": "ES: Extract common state/behavior",
+                "status": "match2"
 	} ]
 },
 {
@@ -14991,7 +15145,8 @@
 	"description": "Extract Method public contains(other SourceRange) : boolean extracted from public inclusiveContains(other SourceRange) : boolean in class melnorme.lang.tooling.ast.SourceRange",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Replace method keeping backward compatibility",
+                "status": "match2"
 	} ]
 },
 {
@@ -14999,7 +15154,8 @@
 	"description": "Extract Method public contains(otherOffset int) : boolean extracted from public inclusiveContains(otherOffset int) : boolean in class melnorme.lang.tooling.ast.SourceRange",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Replace method keeping backward compatibility",
+                "status": "match2"
 	} ]
 },
 {
@@ -15096,7 +15252,9 @@
 	"description": "Extract Interface org.sonar.api.utils.ProjectTempFolder from classes [org.sonar.api.utils.internal.DefaultTempFolder, org.sonar.api.utils.internal.JUnitTempFolder]",
 	"motivations": [ 
 	{ 
-
+            {
+                "label": "EI: Enable dependency injection",
+                "status": "add"
 	} ]
 }
 ]},{	"repository": "https://github.com/SonarSource/sonarqube.git",
@@ -15123,7 +15281,8 @@
 	"description": "Move Attribute private userWriter : UserJsonWriter from class org.sonar.server.issue.ws.IssueJsonWriter to private userWriter : UserJsonWriter from class org.sonar.server.issue.InternalRubyIssueService",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Move attribute to appropriate class",
+                "status": "match1"
 	} ]
 },
 {
@@ -15153,7 +15312,8 @@
 	"description": "Extract Method private createNonOfficeElements(cons GridBagConstraints, portPanel JPanel) : void extracted from public show(rules List<Rule>) : void in class org.languagetool.gui.ConfigurationDialog",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -15161,7 +15321,8 @@
 	"description": "Extract Method private getTreeModel(rootNode DefaultMutableTreeNode) : DefaultTreeModel extracted from public show(rules List<Rule>) : void in class org.languagetool.gui.ConfigurationDialog",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -15169,7 +15330,8 @@
 	"description": "Extract Method private getMouseAdapter() : MouseAdapter extracted from public show(rules List<Rule>) : void in class org.languagetool.gui.ConfigurationDialog",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -15177,7 +15339,8 @@
 	"description": "Extract Method private getTreeButtonPanel() : JPanel extracted from public show(rules List<Rule>) : void in class org.languagetool.gui.ConfigurationDialog",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -15185,7 +15348,8 @@
 	"description": "Extract Method private getMotherTonguePanel(cons GridBagConstraints) : JPanel extracted from public show(rules List<Rule>) : void in class org.languagetool.gui.ConfigurationDialog",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/languagetool-org/languagetool.git",
@@ -15212,7 +15376,8 @@
 	"description": "Move Attribute public VIDMINKY_MAP : Map<String,String> from class org.languagetool.tagging.uk.UkrainianTagger to public VIDMINKY_MAP : Map<String,String> from class org.languagetool.tagging.uk.PosTagHelper",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -15607,7 +15772,8 @@
 	"description": "Inline Method package verifySuspend(current Fiber, exc boolean) : Fiber inlined to package verifySuspend(current Fiber) : Fiber in class co.paralleluniverse.fibers.Fiber",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Eliminate unnecessary method",
+                "status": "match2"
 	} ]
 },
 {
@@ -15615,7 +15781,8 @@
 	"description": "Inline Method public checkInstrumentation(exc boolean) : boolean inlined to public checkInstrumentation() : boolean in class co.paralleluniverse.fibers.Fiber",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Eliminate unnecessary method",
+                "status": "match2"
 	} ]
 },
 {
@@ -15647,7 +15814,8 @@
 	"description": "Inline Method public pushMethod(entry int, numSlots int, method String, sourceLine int) : void inlined to public pushMethod(entry int, numSlots int) : void in class co.paralleluniverse.fibers.Stack",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Eliminate unnecessary method",
+                "status": "match2"
 	} ]
 },
 {
@@ -15655,7 +15823,8 @@
 	"description": "Inline Method public popMethod(catchAll boolean) : void inlined to public popMethod() : void in class co.paralleluniverse.fibers.Stack",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Eliminate unnecessary method",
+                "status": "match2"
 	} ]
 },
 {
@@ -15682,7 +15851,8 @@
 	"description": "Extract Method protected failedSubscribe(s Subscriber<? super T>, t Throwable) : void extracted from public subscribe(s Subscriber<? super T>) : void in class co.paralleluniverse.strands.channels.reactivestreams.ChannelPublisher",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Enable overriding",
+                "status": "match2"
 	} ]
 },
 {
@@ -15771,7 +15941,8 @@
 	"description": "Move Class com.intellij.util.ui.components.JBPanel moved to com.intellij.ui.components.JBPanel",
 	"motivations": [ 
 	{ 
-
+                "label": "MC: Backward compatibility",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/JetBrains/intellij-community.git",
@@ -15808,9 +15979,14 @@
 	"type": "Extract Method",
 	"description": "Extract Method private setNewName(newText String) : PsiElement extracted from public handleElementRename(newElementName String) : PsiElement in class org.jetbrains.plugins.javaFX.fxml.refs.FxmlReferencesContributor.MyJavaClassReferenceProvider.JavaClassReferenceWrapper",
 	"motivations": [ 
-	{ 
-
-	} ]
+		{
+			"label": "EM: Extract reusable method",
+			"status": "match1"
+		},
+		{
+			"label": "EM: Facilitate extension",
+			"status": "match1"
+		} ]
 },
 {
 	"type": "Extract Method",
@@ -15828,7 +16004,8 @@
 	"description": "Move Class com.intellij.psi.codeStyle.autodetect.NewLineBlocksIterator moved to com.intellij.psi.formatter.common.NewLineBlocksIterator",
 	"motivations": [ 
 	{ 
-
+                "label": "MC: Move class to appropriate container",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/JetBrains/intellij-community.git",
@@ -15839,7 +16016,8 @@
 	"description": "Extract Method public canonicalizePath(url String, baseUrl Url, baseUrlIsFile boolean) : String extracted from protected canonicalizeUrl(url String, baseUrl Url, trimFileScheme boolean, sourceIndex int, baseUrlIsFile boolean) : Url in class org.jetbrains.debugger.sourcemap.SourceResolver",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "add"
 	} ]
 }
 ]},{	"repository": "https://github.com/JetBrains/intellij-community.git",
@@ -15934,7 +16112,8 @@
 	"description": "Extract Method private canBinaryExpressionBeUnboxed(lhs PsiExpression, rhs PsiExpression) : boolean extracted from private canBeUnboxed(expression PsiExpression) : boolean in class com.siyeh.ig.migration.UnnecessaryBoxingInspection.UnnecessaryBoxingVisitor",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -15942,7 +16121,8 @@
 	"description": "Extract Method private canBinaryExpressionBeUnboxed(lhs PsiExpression, rhs PsiExpression) : boolean extracted from private canBeUnboxed(expression PsiExpression) : boolean in class com.siyeh.ig.migration.UnnecessaryBoxingInspection.UnnecessaryBoxingVisitor",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/JetBrains/intellij-community.git",
@@ -16053,7 +16233,8 @@
 	"description": "Move Method public averageAmongMedians(time long[], part int) : long from class com.intellij.testFramework.PlatformTestUtil to public averageAmongMedians(time long[], part int) : long from class com.intellij.util.ArrayUtil",
 	"motivations": [ 
 	{ 
-
+                "label": "MM: Move method to appropriate class",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/orientechnologies/orientdb.git",
@@ -16063,9 +16244,14 @@
 	"type": "Extract Method",
 	"description": "Extract Method protected rewriteLinksInDocument(document ODocument, rewrite OIndex<OIdentifiable>) : void extracted from private rewriteLinksInDocument(document ODocument) : void in class com.orientechnologies.orient.core.db.tool.ODatabaseImport",
 	"motivations": [ 
-	{ 
-
-	} ]
+            {
+                "label": "EM: Introduce alternative method signature",
+                "status": "match1"
+            },
+            {
+                "label": "EM: Improve testability",
+                "status": "match2"
+            } ]
 }
 ]},{	"repository": "https://github.com/orientechnologies/orientdb.git",
 	"sha1": "0a1ff849ec7709be8553383fe9c2c7301980dde0",
@@ -16202,7 +16388,8 @@
 	"description": "Extract Method private createCellSignalTable(database SQLiteDatabase) : void extracted from public onCreate(database SQLiteDatabase) : void in class com.SecUpwN.AIMSICD.adapters.AIMSICDDbAdapter.DbHelper",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -16210,7 +16397,8 @@
 	"description": "Extract Method private createSilentSmsTable(database SQLiteDatabase) : void extracted from public onCreate(database SQLiteDatabase) : void in class com.SecUpwN.AIMSICD.adapters.AIMSICDDbAdapter.DbHelper",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -16218,7 +16406,8 @@
 	"description": "Extract Method private createLocationTable(database SQLiteDatabase) : void extracted from public onCreate(database SQLiteDatabase) : void in class com.SecUpwN.AIMSICD.adapters.AIMSICDDbAdapter.DbHelper",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -16226,7 +16415,8 @@
 	"description": "Extract Method private createCellTable(database SQLiteDatabase) : void extracted from public onCreate(database SQLiteDatabase) : void in class com.SecUpwN.AIMSICD.adapters.AIMSICDDbAdapter.DbHelper",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -16234,7 +16424,8 @@
 	"description": "Extract Method private createOpenCellIDTable(database SQLiteDatabase) : void extracted from public onCreate(database SQLiteDatabase) : void in class com.SecUpwN.AIMSICD.adapters.AIMSICDDbAdapter.DbHelper",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -16242,7 +16433,8 @@
 	"description": "Extract Method private createDefaultMCCTable(database SQLiteDatabase) : void extracted from public onCreate(database SQLiteDatabase) : void in class com.SecUpwN.AIMSICD.adapters.AIMSICDDbAdapter.DbHelper",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -16250,7 +16442,8 @@
 	"description": "Extract Method private createEventLogTable(database SQLiteDatabase) : void extracted from public onCreate(database SQLiteDatabase) : void in class com.SecUpwN.AIMSICD.adapters.AIMSICDDbAdapter.DbHelper",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/VoltDB/voltdb.git",
@@ -16457,7 +16650,8 @@
 	"description": "Extract Method private performBasicMappingTest() : void extracted from public testBasicMapping() : void in class org.mongodb.morphia.TestMapping",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/zeromq/jeromq.git",
@@ -16479,7 +16673,8 @@
 	"description": "Move Class com.mongodb.JsonPoweredTestHelper moved to util.JsonPoweredTestHelper",
 	"motivations": [ 
 	{ 
-
+                "label": "MC: Move class to appropriate container",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/openhab/openhab.git",
@@ -16560,7 +16755,8 @@
 	"description": "Pull Up Attribute protected column : Integer from class org.broadleafcommerce.openadmin.dto.BasicFieldMetadata to private column : Integer from class org.broadleafcommerce.openadmin.dto.FieldMetadata",
 	"motivations": [ 
 	{ 
-
+                "label": "UA: Move up common attributes",
+                "status": "match2"
 	} ]
 },
 {
@@ -16568,7 +16764,8 @@
 	"description": "Pull Up Method public getColumn() : Integer from class org.broadleafcommerce.openadmin.dto.BasicFieldMetadata to public getColumn() : Integer from class org.broadleafcommerce.openadmin.dto.FieldMetadata",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 },
 {
@@ -16576,7 +16773,8 @@
 	"description": "Pull Up Method public setColumn(column Integer) : void from class org.broadleafcommerce.openadmin.dto.BasicFieldMetadata to public setColumn(column Integer) : void from class org.broadleafcommerce.openadmin.dto.FieldMetadata",
 	"motivations": [ 
 	{ 
-
+                "label": "UM: Move up common methods",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/novoda/android-demos.git",
@@ -16622,7 +16820,8 @@
 	"description": "Extract Method private trackLastVisibleTab(position int) : void extracted from protected onResume() : void in class org.wordpress.android.ui.main.WPMainActivity",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/wordpress-mobile/WordPress-Android.git",
