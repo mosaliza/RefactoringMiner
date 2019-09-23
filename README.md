@@ -129,6 +129,7 @@ RefactoringMiner has been used in the following studies:
 19. Anthony Peruma, Mohamed Wiem Mkaouer, Michael J. Decker, and Christian D. Newman, "Contextualizing Rename Decisions using
 Refactorings and Commit Messages," *19th IEEE International Working Conference on Source Code Analysis and Manipulation* (SCAM 2019), Cleveland, OH, USA, September 30-October 1, 2019.
 20. Willian Oizumi, Leonardo Da Silva Sousa, Anderson Oliveira, Luiz Matheus Alencar, Alessandro Garcia, Thelma E. Colanzi and Roberto Oliveira, "On the density and diversity of degradation symptoms in refactored classes: A multi-case study," *30th International Symposium on Software Reliability Engineering* (ISSRE 2019), Berlin, Germany, October 28-31, 2019.
+21. Marcos César de Oliveira, Davi Freitas, Rodrigo Bonifácio, Gustavo Pinto, and David Lo, "[Finding Needles in a Haystack: Leveraging Co-change Dependencies to Recommend Refactorings](https://doi.org/10.1016/j.jss.2019.110420)," Journal of Systems and Software, 2019.
 
 # Contributors
 The code in package **gr.uom.java.xmi.*** has been developed by [Nikolaos Tsantalis](https://github.com/tsantalis).
@@ -162,12 +163,11 @@ miner.detectAll(repo, "master", new RefactoringHandler() {
 });
 ```
 
-You can also analyze between commits using `detectBetweenCommits` or between tags using `detectBetweenTags`. RefactoringMiner will start from commit or tag as specified and iterate backwards. If the end commit or end tag is not specified, RefactoringMiner will detect until the first beginning.
+You can also analyze between commits using `detectBetweenCommits` or between tags using `detectBetweenTags`. RefactoringMiner will iterate through all *non-merge* commits from **start** commit/tag to **end** commit/tag.
 
 ```java
-// first commit: 819b202bfb09d4142dece04d4039f1708735019b
-// last commit: d4bce13a443cf12da40a77c16c1e591f4f985b47
-// detectBetweenCommits() will process merge commits, while detectAll() skips merge commits
+// start commit: 819b202bfb09d4142dece04d4039f1708735019b
+// end commit: d4bce13a443cf12da40a77c16c1e591f4f985b47
 miner.detectBetweenCommits(repo, 
     "819b202bfb09d4142dece04d4039f1708735019b", "d4bce13a443cf12da40a77c16c1e591f4f985b47",
     new RefactoringHandler() {
@@ -182,9 +182,8 @@ miner.detectBetweenCommits(repo,
 ```
 
 ```java
-// first tag: 1.0
-// last tag: 1.1
-// detectBetweenTags() will process merge commits, while detectAll() skips merge commits
+// start tag: 1.0
+// end tag: 1.1
 miner.detectBetweenTags(repo, "1.0", "1.1", new RefactoringHandler() {
   @Override
   public void handle(String commitId, List<Refactoring> refactorings) {

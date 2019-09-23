@@ -1491,6 +1491,14 @@ public class UMLModelDiff {
 	  for(CandidateAttributeRefactoring candidate : classDiff.getCandidateAttributeRenames()) {
 		 String before = PrefixSuffixUtils.normalize(candidate.getOriginalVariableName());
 		 String after = PrefixSuffixUtils.normalize(candidate.getRenamedVariableName());
+		 if(before.contains(".") && after.contains(".")) {
+				String prefix1 = before.substring(0, before.lastIndexOf(".") + 1);
+				String prefix2 = after.substring(0, after.lastIndexOf(".") + 1);
+				if(prefix1.equals(prefix2)) {
+					before = before.substring(prefix1.length(), before.length());
+					after = after.substring(prefix2.length(), after.length());
+				}
+			}
 		 Replacement renamePattern = new Replacement(before, after, ReplacementType.VARIABLE_NAME);
 		 if(map.containsKey(renamePattern)) {
 			 map.get(renamePattern).add(candidate);
@@ -2015,7 +2023,8 @@ public class UMLModelDiff {
 			   }
 			   Set<String> intersection = new LinkedHashSet<String>(oldParameterNames);
 			   intersection.retainAll(newParameterNames);
-			   return oldParameters.equals(newParameters) || oldParameters.containsAll(newParameters) || newParameters.containsAll(oldParameters) || intersection.size() > 0;
+			   return oldParameters.equals(newParameters) || oldParameters.containsAll(newParameters) || newParameters.containsAll(oldParameters) || intersection.size() > 0 ||
+					   removedOperation.isStatic() || addedOperation.isStatic();
 		   }
 	   }
 	   return false;
