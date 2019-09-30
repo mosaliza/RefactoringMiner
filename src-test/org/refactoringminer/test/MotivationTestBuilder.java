@@ -25,8 +25,11 @@ import org.refactoringminer.api.RefactoringType;
 import org.refactoringminer.rm1.GitHistoryRefactoringMinerImpl;
 import org.refactoringminer.util.GitServiceImpl;
 
+import com.sun.javafx.applet.ExperimentalExtensions;
+
 import gr.uom.java.xmi.diff.MotivationType;
 import org.refactoringminer.test.MotivationPopulator.Refactorings;
+import org.refactoringminer.test.MotivationTestBuilder.ProjectMatcher.CommitMatcher.RefactoringMatcher;
 
 public class MotivationTestBuilder {
 
@@ -53,6 +56,10 @@ public class MotivationTestBuilder {
 		this.tempDir = tempDir;
 		this.verbose = false;
 		this.aggregate = false;
+	}
+	
+	public static String replaceIfExists(String s, String what, String with) {
+		return s.contains(what) ? s.replace(what, with) : s;
 	}
 
 	public MotivationTestBuilder(GitHistoryRefactoringMiner detector, String tempDir, BigInteger refactorings) {
@@ -159,7 +166,8 @@ public class MotivationTestBuilder {
 		boolean success = get(FP) == 0 && get(FN) == 0 && get(TP) > 0;
 		if (!success || verbose) {
 			for (ProjectMatcher m : map.values()) {
-				m.printResults();
+				//m.printResults();
+				m.printRefactoringMatcherResults();
 			}
 		}
 		Assert.assertTrue(mainResultMessage, success);
@@ -255,6 +263,18 @@ public class MotivationTestBuilder {
 		public Set<String> getCommits() {
 			return expected.keySet();
 		}
+
+		public Set<String> getRefactoringDescriptions(String commitID) {
+
+			Set<String> refactoringDescriptions = new HashSet<String>();
+			CommitMatcher commitMatcher = expected.get(commitID);
+			for(String refactoringDescription : commitMatcher.expected1.keySet()) {
+				refactoringDescriptions.add(refactoringDescription);
+			}
+			
+			return refactoringDescriptions;
+		}
+		
 		@Override
 		public boolean skipCommit(String commitId) {
 			if (this.ignoreNonSpecifiedCommits) {
@@ -262,7 +282,24 @@ public class MotivationTestBuilder {
 			}
 			return false;
 		}
+		
+		Set<String> getDetectedRefactoringMotivations(String refactoringDescription , Map<Refactoring, List<MotivationType>> mapRefactoringMotivations){
+			Set<String> motivationsDetected = new HashSet<String>();
+			for (Refactoring refactoring : mapRefactoringMotivations.keySet()) {
+				if(replaceIfExists(refactoring.toString(),"\t"," ").equals(refactoringDescription)) {			
+					List<MotivationType> listMotivations = mapRefactoringMotivations.get(refactoring);
+					for(MotivationType m: listMotivations) {
+						motivationsDetected.add(m.getDescription());	
+					}
+					break;
+				}
+			}		
+			return motivationsDetected;
 
+		}
+		
+		
+		
 		@Override
 		public void handle(String commitId, List<Refactoring> refactorings,
 				Map<Refactoring, List<MotivationType>> mapRefactoringMotivations) {
@@ -284,25 +321,93 @@ public class MotivationTestBuilder {
 				Set<String> refactoringsFound = new HashSet<String>();
 				Set<String> motivationsFound = new HashSet<String>();
 				Set<String> motivationRefactorings = new HashSet<String>();
+				Set<String> refactoringDetectedMotivations = new HashSet<String>();
 				Set<String> expectedMotivations = new HashSet<String>();
-				for (Refactoring ref : mapRefactoringMotivations.keySet()) {
+				for (Refactoring ref : mapRefactoringMotivations.keySet()) {	
 					List<MotivationType> listMotivations = mapRefactoringMotivations.get(ref);
 					for(MotivationType m: listMotivations) {
 						motivationsFound.add(m.getDescription());	
 					}	
 				}
+				
 				for (Refactoring refactoring : refactorings) {
 					refactoringsFound.addAll(normalize(refactoring.toString()));
 				}
 				
+				
 				// count true positives
 				for (Iterator<String> iter = matcher.motivationRefactorings.iterator(); iter.hasNext();) {
 					  motivationRefactorings.add(iter.next());
-				}
+				}		
+				
 				for (Iterator<String> iter = matcher.expectedMotivations.iterator(); iter.hasNext();) {
 					 expectedMotivations.add(iter.next());
 				}
-				for (Iterator<String> iter = matcher.expectedMotivations.iterator(); iter.hasNext();) {
+				
+				Set<String> refactoringDescriptions = getRefactoringDescriptions(commitId);
+				for(String refactoringDescription : refactoringDescriptions) {
+					refactoringDetectedMotivations = getDetectedRefactoringMotivations(refactoringDescription, mapRefactoringMotivations);
+					// Computing the Test Results
+					RefactoringMatcher refactoringMatcher = matcher.atRefactoring(refactoringDescription);
+					for (Iterator<String> iter = refactoringMatcher.expectedMotivations.iterator(); iter.hasNext();) {
+						String expectedMotivation = iter.next();
+						if (refactoringDetectedMotivations.contains(expectedMotivation)) {
+							iter.remove();
+							refactoringDetectedMotivations.remove(expectedMotivation);
+							this.truePositiveCount++;
+							count(TP, expectedMotivation);
+							matcher.truePositive.add(expectedMotivation);
+							refactoringMatcher.truePositive.add(expectedMotivation);
+							}
+					}
+					
+					// count false positives
+					for (Iterator<String> iter = refactoringMatcher.notExpected.iterator(); iter.hasNext();) {
+						String notExpectedMotivations = iter.next();
+						if (refactoringDetectedMotivations.contains(notExpectedMotivations)) {
+							refactoringDetectedMotivations.remove(notExpectedMotivations);
+							this.falsePositiveCount++;
+							count(FP, notExpectedMotivations);
+						} else {
+							this.trueNegativeCount++;
+							count(TN, notExpectedMotivations);
+							iter.remove();
+						}
+					}
+					// count false positives when using containsOnly
+					if (refactoringMatcher.ignoreNonSpecified) {
+						for (String motivation : refactoringDetectedMotivations) {
+							matcher.unknown.add(motivation);
+							refactoringMatcher.unknown.add(motivation);
+							this.unknownCount++;
+							count(UNK,motivation);
+						}
+					} else {
+						for (String motivation : refactoringDetectedMotivations) {
+							matcher.notExpected.add(motivation);
+							refactoringMatcher.notExpected.add(motivation);
+							this.falsePositiveCount++;
+							count(FP, motivation);
+						}
+					}
+					
+					
+				/*	expectedMotivations.stream().filter(s -> s!=null)
+						.forEach(e ->{
+							this.falseNegativeCount ++ ;
+							count(FN,e);
+						}); */
+					
+					// count false negatives
+					for (String expectedButNotFound : refactoringMatcher.expectedMotivations) {
+							this.falseNegativeCount++;
+							count(FN, expectedButNotFound);			
+					}
+				}
+				
+		
+				
+				/*for (Iterator<String> iter = matcher.expectedMotivations.iterator(); iter.hasNext();) {
 					String expectedMotivation = iter.next();
 					if (motivationsFound.contains(expectedMotivation)) {
 						iter.remove();
@@ -345,7 +450,7 @@ public class MotivationTestBuilder {
 				for (String expectedButNotFound : matcher.expectedMotivations) {
 					this.falseNegativeCount++;
 					count(FN, expectedButNotFound);
-				}
+				} */
 			}
 			
 		}
@@ -422,7 +527,60 @@ public class MotivationTestBuilder {
 				}
 			}
 		}
+		private void printRefactoringMatcherResults() {
+			// if (verbose || this.falsePositiveCount > 0 ||
+			// this.falseNegativeCount > 0 || this.errorsCount > 0) {
+			// System.out.println(this.cloneUrl);
+			// }
+			String baseUrl = this.cloneUrl.substring(0, this.cloneUrl.length() - 4) + "/commit/";
+			for (Map.Entry<String, CommitMatcher> entry : this.expected.entrySet()) {
+				String commitUrl = baseUrl + entry.getKey();
+				CommitMatcher matcher = entry.getValue();
+				if (matcher.error != null) {
+					System.out.println("error at " + commitUrl + ": " + matcher.error);
+				} else {
+					if (verbose || !matcher.expectedMotivations.isEmpty() || !matcher.notExpected.isEmpty()
+							|| !matcher.unknown.isEmpty()) {
+						if (!matcher.analyzed) {
+							System.out.println("at not analyzed " + commitUrl);
+						} else {
+							System.out.println("at " + commitUrl);
+							for(String  refactoringDescription : matcher.expected1.keySet()) {
+								
+								RefactoringMatcher refactoringMatcher = matcher.atRefactoring(refactoringDescription);
 
+								System.out.println(refactoringDescription);
+
+								if (verbose && !refactoringMatcher.truePositive.isEmpty()) {
+									System.out.println(" true positives");
+									for (String ref : refactoringMatcher.truePositive) {
+										System.out.println("  " + ref);
+									}
+								}
+								if (!refactoringMatcher.notExpected.isEmpty()) {
+									System.out.println(" false positives");
+									for (String ref : refactoringMatcher.notExpected) {
+										System.out.println("  " + ref);
+									}
+								}
+								if (!refactoringMatcher.expectedMotivations.isEmpty()) {
+									System.out.println(" false negatives");
+									for (String ref : refactoringMatcher.expectedMotivations) {
+										System.out.println("  " + ref);
+									}
+								}
+								if (!refactoringMatcher.unknown.isEmpty()) {
+									System.out.println(" unknown");
+									for (String ref : refactoringMatcher.unknown) {
+										System.out.println("  " + ref);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 		// private void countFalseNegatives() {
 		// for (Map.Entry<String, CommitMatcher> entry :
 		// this.expected.entrySet()) {
@@ -435,6 +593,7 @@ public class MotivationTestBuilder {
 
 		public class CommitMatcher {
 			private Set<String> expected = new HashSet<String>();
+			private Map<String, RefactoringMatcher> expected1 = new HashMap<>();
 			private Set<String> expectedMotivations = new HashSet<String>();
 			private Set<String> motivationRefactorings = new HashSet<String>();
 			private Set<String> notExpected = new HashSet<String>();
@@ -453,7 +612,7 @@ public class MotivationTestBuilder {
 				}
 				return ProjectMatcher.this;
 			}
-			public ProjectMatcher containsMotivation(String[] motivations, String[] refactorings ) {
+			public ProjectMatcher containsMotivation(String[] motivations,  String[] refactorings ) {
 				this.ignoreNonSpecified = false;
 				this.expectedMotivations = new HashSet<String>();
 				this.notExpected = new HashSet<String>();
@@ -463,7 +622,9 @@ public class MotivationTestBuilder {
 				for(String ref : refactorings) {
 					motivationRefactorings.add(ref);
 				}
+				
 				return ProjectMatcher.this;
+				
 			}
 			public ProjectMatcher containsOnly(String... refactorings) {
 				this.ignoreNonSpecified = false;
@@ -484,6 +645,36 @@ public class MotivationTestBuilder {
 					notExpected.addAll(normalize(refactoring));
 				}
 				return ProjectMatcher.this;
+			}
+			// Refactoring Matcher Mock Up builder for Commits
+			public RefactoringMatcher atRefactoring(String refactoringDescription) {
+				RefactoringMatcher m = expected1.get(refactoringDescription);
+				if (m == null) {
+					m = new RefactoringMatcher();
+					expected1.put(refactoringDescription, m);
+				}
+				return m;
+			}
+			public class RefactoringMatcher{
+				private Set<String> expectedMotivations = new HashSet<String>();
+				private Set<String> notExpected = new HashSet<String>();
+				private Set<String> truePositive = new HashSet<String>();
+				private Set<String> unknown = new HashSet<String>();
+				private boolean ignoreNonSpecified = true;
+				private RefactoringMatcher() {
+				}
+				
+				public ProjectMatcher containsMotivation(String[] motivations ) {
+					this.ignoreNonSpecified = false;
+					this.expectedMotivations = new HashSet<String>();
+					this.notExpected = new HashSet<String>();
+					for (String m : motivations) {
+						if( m != null) {
+							expectedMotivations.add(m);
+						}
+					}					
+					return ProjectMatcher.this;					
+				}
 			}
 		}
 	}

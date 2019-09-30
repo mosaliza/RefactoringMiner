@@ -199,9 +199,9 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 				motivationExtractor.detectAllRefactoringMotivations();
 				mapRefactoringMotivations = motivationExtractor.getMapRefactoringMotivations();
 				
-				ProjectMatcher projectMatcher = (ProjectMatcher)handler;
-				String cloneUrl = projectMatcher.getCloneUrl();
-				stringJSON.append(writeToJSON(cloneUrl, commitId, refactoringsAtRevision));	
+				//ProjectMatcher projectMatcher = (ProjectMatcher)handler;
+				//String cloneUrl = projectMatcher.getCloneUrl();
+				stringJSON.append(writeToJSON(/*cloneUrl*/ "https://github.com/github/android.git", commitId, refactoringsAtRevision));	
 				
 				refactoringsAtRevision = filter(refactoringsAtRevision);
 			} else {

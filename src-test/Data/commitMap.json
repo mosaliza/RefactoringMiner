@@ -3298,6 +3298,7 @@
             },
             {
                 "type": "Extract Method",
+                "label": "EM: Decompose method to improve readability",
                 "description": "<b>Extract Method</b> <code>private processBindingConfiguration() : void</code> extracted from <code>public updated(config Dictionary&lt;String,?&gt;) : void</code> in class <code>org.openhab.binding.insteonplm.InsteonPLMActiveBinding</code>"
             }
         ],
@@ -3305,7 +3306,6 @@
         "inferredMotivation": false,
         "motivations": [
             {
-                "label": "EM: Decompose method to improve readability",
                 "status": "match2"
             },
             {
@@ -5069,7 +5069,7 @@
      {
         "id": 1136668,
         "repository": "https://github.com/orfjackal/retrolambda.git",
-        "sha1": "46b0d84de9c309bca48a99e572e6611693ed5236",
+        "sha1": "84de9c309bca48a99e572e6611693ed5236",
         "author": "Esko Luontola",
         "message": "Copy non-class files from input directory to output directory as-is\n\nCloses #54\n",
         "time": "7/8/15 2:08 PM",

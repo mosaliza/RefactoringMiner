@@ -96,11 +96,18 @@ public class MotivationPopulator {
 		/*for (Root root : roots) {
 			test.project(root.repository, "master").atCommit(root.sha1)
 					.containsOnly(extractRefactorings(root.refactorings)); */
-			
-		for (Root root : roots) {
-		test.project(root.repository, "master").atCommit(root.sha1)
+
+		/*for (Root root : roots) {
+				test.project(root.repository, "master").atCommit(root.sha1)
 				.containsMotivation(extractMotivations(root.motivations) , extractRefactorings(root.refactorings)); 
-		}
+		} */
+		
+		for (Root root : roots) {
+			for(Refactoring ref : root.refactorings) {
+				test.project(root.repository, "master").atCommit(root.sha1).atRefactoring(ref.description)
+				.containsMotivation(extractMotivations(ref.motivations)); 	
+			}
+		}	
 	}
 	
 	public static String[] extractMotivations(List<Motivation> motivation) {
@@ -148,7 +155,7 @@ public class MotivationPopulator {
 	public static List<Root> getFSERefactorings(BigInteger flag) throws JsonParseException, JsonMappingException, IOException {
 		ObjectMapper mapper = new ObjectMapper();
 
-		String jsonFile = System.getProperty("user.dir") + "/src-test/Data/commitMap.json";
+		String jsonFile = System.getProperty("user.dir") + "/src-test/Data/commitMap-V1.json";
 
 		List<Root> roots = mapper.readValue(new File(jsonFile),
 				mapper.getTypeFactory().constructCollectionType(List.class, Root.class));
@@ -182,41 +189,6 @@ public class MotivationPopulator {
 		}
 	}
 
-	public static void printRefDiffResults(BigInteger flag) {
-		Hashtable<String, Tuple> result = new Hashtable<>();
-		try {
-			List<Root> roots = getFSERefactorings(flag);
-			for (Refactorings ref : Refactorings.values()) {
-				if (ref == Refactorings.All)
-					continue;
-				result.put(ref.toString(), new Tuple());
-			}
-			for (Root root : roots) {
-				for (Refactoring ref : root.refactorings) {
-					Tuple tuple = result.get(ref.type.replace(" ", ""));
-					tuple.totalTruePositives += ref.validation.contains("TP") ? 1 : 0;
-					tuple.unknown += ref.validation.equals("UKN") ? 1 : 0;
-
-					if (ref.detectionTools.contains("RefDiff")) {
-						tuple.refDiffTruePositives += ref.validation.contains("TP") ? 1 : 0;
-						tuple.refDiffFalsePositives += ref.validation.equals("FP") ? 1 : 0;
-					}
-
-				}
-			}
-			Tuple[] tmp = {};
-			System.out.println("Total\t" + buildResultMessage(result.values().toArray(tmp)));
-			for (String key : result.keySet()) {
-				System.out.println(getInitials(key) + "\t" + buildResultMessage(result.get(key)));
-			}
-		} catch (JsonParseException e) {
-			e.printStackTrace();
-		} catch (JsonMappingException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 
 	private static String getInitials(String str) {
 		StringBuffer sb = new StringBuffer();
@@ -260,20 +232,20 @@ public class MotivationPopulator {
 	}
 
 	public static class Root {
-		public int id;
+		//public int id;
 		public String repository;
 		public String sha1;
-		//public String url;
-		public String author;
-		public String message;
-		public String time;
-		public String emailBody;
+		public String url;
+		//public String author;
+		//public String message;
+		//public String time;
+		//public String emailBody;
 		public List<Refactoring> refactorings;
 		//public long refDiffExecutionTime;
-		public boolean hasResponse;
-		public boolean inferredMotivation;
-		public List<Motivation> motivations;
-		public List<Other> others;
+		//public boolean hasResponse;
+		//public boolean inferredMotivation;
+		//public List<Motivation> motivations;
+		//public List<Other> others;
 	}
 	
 	public static class Motivation {
@@ -289,10 +261,11 @@ public class MotivationPopulator {
 	public static class Refactoring {
 		public String type;
 		public String description;
-		public String comment;
-		public String validation;
-		public String detectionTools; 
-		public String validators;
+		//public String comment;
+		//public String validation;
+		//public String detectionTools; 
+		//public String validators;
+		public List<Motivation> motivations;
 	}
 
 	public static class Comment {
