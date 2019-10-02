@@ -14,10 +14,9 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 		GitService gitService = new GitServiceImpl();
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
-
 		Repository repo = gitService.cloneIfNotExists(
-				"tmp1/cassandra",
-				"https://github.com/apache/cassandra.git");
+				"tmp1/cascading",
+				"https://github.com/cwensel/cascading.git");
 		/*miner.detectAtCommit("https://github.com/luontola/retrolambda.git",
 				"46b0d84de9c309bca48a99e572e6611693ed5236", new RefactoringHandler() {
 					@Override
@@ -28,7 +27,7 @@ public class Main {
 					}
 				},100);*/
 		
-		miner.detectAtCommit(repo,"9a3fa887cfa03c082f249d1d4003d87c14ba5d24", new RefactoringHandler() {
+		miner.detectAtCommit(repo,"f9d3171f5020da5c359cdda28ef05172e858c464", new RefactoringHandler() {
 			@Override 
 			public void handle(String commitData, List<Refactoring> refactorings) {
 				for(Refactoring ref : refactorings) {

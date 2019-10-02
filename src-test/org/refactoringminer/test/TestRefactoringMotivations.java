@@ -25,8 +25,8 @@ public class TestRefactoringMotivations {
 				.add(Refactorings.ExtractInterface.getValue())
 				.add(Refactorings.ExtractAndMoveMethod.getValue());
 		MotivationTestBuilder test = new MotivationTestBuilder(new GitHistoryRefactoringMinerImpl(), "tmp1",
-				 Refactorings.All.getValue());
-		MotivationPopulator.feedRefactoringsInstances(Refactorings.All.getValue() , Systems.FSE.getValue(),
+				 /*Refactorings.All.getValue()*/flag);
+		MotivationPopulator.feedRefactoringsInstances(/*Refactorings.All.getValue()*/ flag, Systems.FSE.getValue(),
 				test);
 		test.assertExpectations();
 	}
