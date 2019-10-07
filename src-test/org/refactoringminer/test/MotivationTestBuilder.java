@@ -4,8 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-
-
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,7 +50,7 @@ public class MotivationTestBuilder {
 	private static final int UNK = 4;
 
 	private BigInteger refactoringFilter;
-
+	StringBuilder motivationsARM = new StringBuilder();
 	public MotivationTestBuilder(GitHistoryRefactoringMiner detector, String tempDir) {
 		this.map = new HashMap<String, ProjectMatcher>();
 		this.refactoringDetector = detector;
@@ -165,9 +166,30 @@ public class MotivationTestBuilder {
 
 		boolean success = get(FP) == 0 && get(FN) == 0 && get(TP) > 0;
 		if (!success || verbose) {
+			
+			Set<String> extractMotivations = new HashSet<String>();
+			for(MotivationType motivation : MotivationType.values()) {
+				if(motivation.toString().startsWith("EM")) {		
+					extractMotivations.add(motivation.getDescription());
+				}
+			}
+			
+			motivationsARM.append("Commit URL").append("|").append("Extract Refactoring Description").append("|");
+			for(String motivation : extractMotivations) {
+				motivationsARM.append(motivation).append("|");
+			}
+			motivationsARM.deleteCharAt(motivationsARM.length()-1);
+			motivationsARM.append("\n");
+			
 			for (ProjectMatcher m : map.values()) {
 				//m.printResults();
-				m.printRefactoringMatcherResults();
+				m.printRefactoringMatcherResults(extractMotivations);
+			}
+			//Writing FP motivations to CSV file for association rule mining.
+			try (FileOutputStream oS = new FileOutputStream(new File("MotivationsARM.csv"))) {
+				oS.write(motivationsARM.toString().getBytes());
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 		Assert.assertTrue(mainResultMessage, success);
@@ -527,7 +549,8 @@ public class MotivationTestBuilder {
 				}
 			}
 		}
-		private void printRefactoringMatcherResults() {
+		private void printRefactoringMatcherResults(Set<String> extractMotivations) {
+
 			// if (verbose || this.falsePositiveCount > 0 ||
 			// this.falseNegativeCount > 0 || this.errorsCount > 0) {
 			// System.out.println(this.cloneUrl);
@@ -544,6 +567,8 @@ public class MotivationTestBuilder {
 						if (!matcher.analyzed) {
 							System.out.println("at not analyzed " + commitUrl);
 						} else {
+							
+							
 							System.out.println("at " + commitUrl);
 							for(String  refactoringDescription : matcher.expected1.keySet()) {
 								
@@ -557,12 +582,31 @@ public class MotivationTestBuilder {
 										System.out.println("  " + ref);
 									}
 								}
+								motivationsARM.append("\"").append(commitUrl).append("\"").append("|").append(refactoringDescription).append("|");
 								if (!refactoringMatcher.notExpected.isEmpty()) {
 									System.out.println(" false positives");
 									for (String ref : refactoringMatcher.notExpected) {
 										System.out.println("  " + ref);
+										//motivationsARM.append(ref).append("|");
 									}
 								}
+								
+								for(String motivation : extractMotivations) {
+									boolean motivationIsDetected = false;
+									for(String  expectedMotivation : refactoringMatcher.notExpected) {
+										if(expectedMotivation.equals(motivation)){
+											motivationIsDetected = true;
+
+										}
+									}
+									if(motivationIsDetected) {
+										motivationsARM.append("true").append("|");
+									}else {
+										motivationsARM.append("false").append("|");
+									}
+								}
+					
+								
 								if (!refactoringMatcher.expectedMotivations.isEmpty()) {
 									System.out.println(" false negatives");
 									for (String ref : refactoringMatcher.expectedMotivations) {
@@ -575,11 +619,15 @@ public class MotivationTestBuilder {
 										System.out.println("  " + ref);
 									}
 								}
+								motivationsARM.deleteCharAt(motivationsARM.length()-1);
+								motivationsARM.append("\n");
 							}
+							
 						}
 					}
 				}
 			}
+			
 		}
 		// private void countFalseNegatives() {
 		// for (Map.Entry<String, CommitMatcher> entry :
