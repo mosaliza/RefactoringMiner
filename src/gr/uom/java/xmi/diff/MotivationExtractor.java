@@ -1102,14 +1102,14 @@ public class MotivationExtractor {
 		 *in case of calls inside expressions or inside return statements we consider the extraction is improving the readability
 		 * Example: mockito:2d036 , jedis:d4b4a , cassandra:9a3fa ,JetBrains/intellij-community/commit/7dd55
 		 */
-		int countDecomposeSigleMethodToImproveReadability = 0;
+		int countDecomposeSingleMethodToImproveReadability = 0;
 		for (Refactoring ref : refList) {
 			if(isExtractedOperationInvokationsToImproveReadability(ref)) {
 				setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
-				countDecomposeSigleMethodToImproveReadability++;
+				countDecomposeSingleMethodToImproveReadability++;
 			}
 		}
-		if(countDecomposeSigleMethodToImproveReadability > 0 ) {
+		if(countDecomposeSingleMethodToImproveReadability > 0 ) {
 			return true;
 		}
 		return false;	
