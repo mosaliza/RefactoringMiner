@@ -172,6 +172,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 	protected List<Refactoring> detectRefactorings(GitService gitService, Repository repository, final RefactoringHandler handler, File projectFolder, RevCommit currentCommit) throws Exception {
 		List<Refactoring> refactoringsAtRevision;
 		Map<Refactoring, List<MotivationType>> mapRefactoringMotivations = Collections.emptyMap();
+		Map<Refactoring, int[]> mapFacilitateExtensionT1T2 = Collections.emptyMap();
 		String commitId = currentCommit.getId().getName();
 		List<String> filePathsBefore = new ArrayList<String>();
 		List<String> filePathsCurrent = new ArrayList<String>();
@@ -198,6 +199,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 				MotivationExtractor motivationExtractor = new MotivationExtractor(modelDiff, refactoringsAtRevision);
 				motivationExtractor.detectAllRefactoringMotivations();
 				mapRefactoringMotivations = motivationExtractor.getMapRefactoringMotivations();
+				mapFacilitateExtensionT1T2 = motivationExtractor.getMapFacilitateExtensionT1T2();
 				
 				//ProjectMatcher projectMatcher = (ProjectMatcher)handler;
 				//String cloneUrl = projectMatcher.getCloneUrl();
@@ -208,9 +210,10 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 				//logger.info(String.format("Ignored revision %s with no changes in java files", commitId));
 				refactoringsAtRevision = Collections.emptyList();
 				mapRefactoringMotivations = Collections.emptyMap();
+				mapFacilitateExtensionT1T2 = Collections.emptyMap();
 			}
 			handler.handle(commitId, refactoringsAtRevision);
-			handler.handle(commitId, refactoringsAtRevision, mapRefactoringMotivations);
+			handler.handle(commitId, refactoringsAtRevision, mapRefactoringMotivations , mapFacilitateExtensionT1T2);
 
 			walk.dispose();
 		}
@@ -250,6 +253,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 	protected List<Refactoring> detectRefactorings(final RefactoringHandler handler, File projectFolder, String cloneURL, String currentCommitId) {
 		List<Refactoring> refactoringsAtRevision = Collections.emptyList();
 		Map<Refactoring, List<MotivationType>> mapRefactoringMotivations = Collections.emptyMap();
+		Map<Refactoring, int[]> mapFacilitateExtensionT1T2 = Collections.emptyMap();
 		try {
 			List<String> filesBefore = new ArrayList<String>();
 			List<String> filesCurrent = new ArrayList<String>();
@@ -272,6 +276,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 				MotivationExtractor motivationExtractor = new MotivationExtractor(modelDiff, refactoringsAtRevision);
 				motivationExtractor.detectAllRefactoringMotivations();
 				mapRefactoringMotivations = motivationExtractor.getMapRefactoringMotivations();
+				mapFacilitateExtensionT1T2 = motivationExtractor.getMapFacilitateExtensionT1T2();
 				
 				stringJSON.append(writeToJSON(cloneURL ,currentCommitId , refactoringsAtRevision));	
 								
@@ -285,7 +290,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 			handler.handleException(currentCommitId, e);
 		}
 		handler.handle(currentCommitId, refactoringsAtRevision);
-		handler.handle(currentCommitId, refactoringsAtRevision, mapRefactoringMotivations);
+		handler.handle(currentCommitId, refactoringsAtRevision, mapRefactoringMotivations,mapFacilitateExtensionT1T2);
 
 		return refactoringsAtRevision;
 	}
@@ -580,6 +585,8 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 	protected List<Refactoring> detectRefactorings(final RefactoringHandler handler, String gitURL, String currentCommitId) {
 		List<Refactoring> refactoringsAtRevision = Collections.emptyList();
 		Map<Refactoring, List<MotivationType>> mapRefactoringMotivations = Collections.emptyMap();
+		Map<Refactoring, int[]> mapFacilitateExtensionT1T2 = Collections.emptyMap();
+		Collections.emptyMap();
 		try {
 			Set<String> repositoryDirectoriesBefore = ConcurrentHashMap.newKeySet();
 			Set<String> repositoryDirectoriesCurrent = ConcurrentHashMap.newKeySet();
@@ -595,6 +602,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 			MotivationExtractor motivationExtractor = new MotivationExtractor(modelDiff, refactoringsAtRevision);
 			motivationExtractor.detectAllRefactoringMotivations();
 			mapRefactoringMotivations = motivationExtractor.getMapRefactoringMotivations();
+			mapFacilitateExtensionT1T2 = motivationExtractor.getMapFacilitateExtensionT1T2();
 			//Never reaches here
 			stringJSON.append(writeToJSON(gitURL ,currentCommitId , refactoringsAtRevision));				
 			refactoringsAtRevision = filter(refactoringsAtRevision);
@@ -608,7 +616,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 			handler.handleException(currentCommitId, e);
 		}
 		handler.handle(currentCommitId, refactoringsAtRevision);
-		handler.handle(currentCommitId, refactoringsAtRevision, mapRefactoringMotivations);
+		handler.handle(currentCommitId, refactoringsAtRevision, mapRefactoringMotivations,mapFacilitateExtensionT1T2);
 		
 		return refactoringsAtRevision;
 	}

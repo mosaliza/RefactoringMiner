@@ -45,7 +45,11 @@ public class MotivationExtractor {
 	private List<Refactoring> refactorings;
 	private Map<RefactoringType, List<Refactoring>> mapClassifiedRefactorings;
 	private Map<Refactoring , List<MotivationType>> mapRefactoringMotivations;
-	
+	private Map<Refactoring, int[] > mapFacilitateExtensionT1T2  = new HashMap<Refactoring, int[]>() ;
+	public Map<Refactoring, int[]> getMapFacilitateExtensionT1T2() {
+		return mapFacilitateExtensionT1T2;
+	}
+
 	public MotivationExtractor(UMLModelDiff modelDiff, List<Refactoring> refactorings) {
 		this.modelDiff = modelDiff;
 		this.refactorings = refactorings;
@@ -712,17 +716,36 @@ public class MotivationExtractor {
 			int filterdParentListNotMappedInnerNodesT2 = parentListNotMappedInnerNodesT2.size()-setParentMarkedT2InnerNodes.size();
             int filteredParentListNotMappedLeavesT2 = parentListNotMappedLeavesT2.size()-setParentMarkedT2Leaves.size();
 			 countParentNonMappedLeavesAndInnerNodesT2 = filterdParentListNotMappedInnerNodesT2 + filteredParentListNotMappedLeavesT2;
-		 	 
+		 	 //CODE ANALYSYS
+				codeAnalysisFaciliateExtension(ref, countChildNonMappedLeavesAndInnerNodesT2,
+						countParentNonMappedLeavesAndInnerNodesT2, listNotMappedleafNodesT1, listNotMappedInnerNodesT1,
+						parentListNotMappedleafNodesT1, parentListNotMappedInnerNodesT1);
 			 //DETECTION RULE: Detect if Some statements(InnerNode or Leave) added either ExtractedOperation or
 			//Source Operation After Extraction
 			if( countChildNonMappedLeavesAndInnerNodesT2 > 0 || countParentNonMappedLeavesAndInnerNodesT2 > 0) {
-				//if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE) && !isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {
-					return true;
+				//if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE) && !isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {	
+				return true;
 				//}
 			}
 		}
+
 		return false;
 	}
+
+	private void codeAnalysisFaciliateExtension(Refactoring ref, int countChildNonMappedLeavesAndInnerNodesT2,
+			int countParentNonMappedLeavesAndInnerNodesT2, List<StatementObject> listNotMappedleafNodesT1,
+			List<CompositeStatementObject> listNotMappedInnerNodesT1,
+			List<StatementObject> parentListNotMappedleafNodesT1,
+			List<CompositeStatementObject> parentListNotMappedInnerNodesT1) {
+		//CODE ANALYSIS
+		int[] addedRemovedCount = new int[2];
+		addedRemovedCount[0] = listNotMappedleafNodesT1.size() + listNotMappedInnerNodesT1.size() 
+		+ parentListNotMappedleafNodesT1.size() + parentListNotMappedInnerNodesT1.size();
+		addedRemovedCount[1] = countChildNonMappedLeavesAndInnerNodesT2 + countParentNonMappedLeavesAndInnerNodesT2;
+		mapFacilitateExtensionT1T2.put(ref,addedRemovedCount);
+	}
+	
+	
 	private boolean isLeafNodeFacilitatingExtension(StatementObject notMappedNode){
 		return notMappedNode.getMethodInvocationMap().size() > 1;
 	}

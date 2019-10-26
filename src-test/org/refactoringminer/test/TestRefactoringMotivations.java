@@ -28,6 +28,7 @@ public class TestRefactoringMotivations {
 				 /*Refactorings.All.getValue()*/flag);
 		MotivationPopulator.feedRefactoringsInstances(/*Refactorings.All.getValue()*/ flag, Systems.FSE.getValue(),
 				test);
+		test.verbose();
 		test.assertExpectations();
 	}
 

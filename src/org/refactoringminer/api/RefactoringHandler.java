@@ -53,7 +53,8 @@ public abstract class RefactoringHandler {
 	public void onFinish(int refactoringsCount, int commitsCount, int errorCommitsCount) {}
 
 	public void handle(String commitId, List<Refactoring> refactorings,
-			Map<Refactoring, List<MotivationType>> mapRefactoringMotivations) {
+			Map<Refactoring, List<MotivationType>> mapRefactoringMotivations,
+			Map<Refactoring, int[]> mapFacilitateExtensionT1T2) {
 		// TODO Auto-generated method stub
 		
 	}
