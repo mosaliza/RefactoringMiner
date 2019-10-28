@@ -1,6 +1,7 @@
 package gr.uom.java.xmi.diff;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,8 +18,10 @@ import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
 
 import com.jcraft.jsch.ChannelSftp.LsEntry;
+import com.sun.corba.se.impl.protocol.INSServerRequestDispatcher;
 import com.sun.javafx.collections.MapAdapterChange;
 import com.sun.webkit.graphics.Ref;
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 import gr.uom.java.xmi.LocationInfo.CodeElementType;
 import gr.uom.java.xmi.UMLAnonymousClass;
@@ -46,6 +49,11 @@ public class MotivationExtractor {
 	private Map<RefactoringType, List<Refactoring>> mapClassifiedRefactorings;
 	private Map<Refactoring , List<MotivationType>> mapRefactoringMotivations;
 	private Map<Refactoring, int[] > mapFacilitateExtensionT1T2  = new HashMap<Refactoring, int[]>() ;
+	private Map<Refactoring, String> mapDecomposeToImproveRedability =  new HashMap<Refactoring,String>();
+	public Map<Refactoring, String> getMapDecomposeToImproveRedability() {
+		return mapDecomposeToImproveRedability;
+	}
+
 	public Map<Refactoring, int[]> getMapFacilitateExtensionT1T2() {
 		return mapFacilitateExtensionT1T2;
 	}
@@ -1111,13 +1119,15 @@ public class MotivationExtractor {
 			 *  the extract operations motivations is Decompose to Improve Readability
 			 */
 			if(list.size() > 1) {
+			 	 //CODE ANALYSYS
+				codeAnalysisDecomposeToImproveRedability(list);
 				for(ExtractOperationRefactoring ref : list) {
 					//Set Motivation for each refactoring with the same source Operation
 					setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
 					countDecomposeMethodToImproveReadability++;
 				}
 			}
-		}
+		}				
 		if(countDecomposeMethodToImproveReadability >= 2) {
 			return true;
 		}
@@ -1128,6 +1138,7 @@ public class MotivationExtractor {
 		int countDecomposeSingleMethodToImproveReadability = 0;
 		for (Refactoring ref : refList) {
 			if(isExtractedOperationInvokationsToImproveReadability(ref)) {
+				codeAnalysisDecomposeToImproveRedability(Arrays.asList((ExtractOperationRefactoring)ref));
 				setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
 				countDecomposeSingleMethodToImproveReadability++;
 			}
@@ -1137,6 +1148,14 @@ public class MotivationExtractor {
 		}
 		return false;	
 	}
+	private void codeAnalysisDecomposeToImproveRedability(List<ExtractOperationRefactoring> list) {
+		
+		for(ExtractOperationRefactoring extractOpRefactoring : list) {
+			String sizeExtractedMethod = Integer.toString(extractOpRefactoring.getBodyMapper().getMappings().size());		 
+			mapDecomposeToImproveRedability.put(extractOpRefactoring, sizeExtractedMethod);
+		}		
+	}
+	
 	private boolean isExtractedOperationInvokationsToImproveReadability(Refactoring ref) {
 		if(ref instanceof ExtractOperationRefactoring) {
 			ExtractOperationRefactoring extractOperationRef = (ExtractOperationRefactoring)ref;

@@ -52,6 +52,7 @@ public class MotivationTestBuilder {
 	private BigInteger refactoringFilter;
 	StringBuilder motivationsARM = new StringBuilder();
 	StringBuilder faciliateExtensionAnalysis = new StringBuilder();
+	StringBuilder decomposeToImproveRedabilityAnalysis = new StringBuilder();
 	public MotivationTestBuilder(GitHistoryRefactoringMiner detector, String tempDir) {
 		this.map = new HashMap<String, ProjectMatcher>();
 		this.refactoringDetector = detector;
@@ -186,6 +187,9 @@ public class MotivationTestBuilder {
 			faciliateExtensionAnalysis.append("ResultType").append("|").append("Commit URL").append("|").append("Extract Refactoring Description")
 			.append("|").append("Removed(T1)").append("|").append("Added(T2)").append("\n");
 			
+			decomposeToImproveRedabilityAnalysis.append("ResultType").append("|").append("Commit URL").append("|").append("Extract Refactoring Description")
+			.append("|").append("Extracted Code Size").append("\n");
+			
 			for (ProjectMatcher m : map.values()) {
 				//m.printResults();
 				m.printRefactoringMatcherResults(extractMotivations);
@@ -200,6 +204,13 @@ public class MotivationTestBuilder {
 			//Writing FP and TP Removed and Added nodes to CSV file for Analysis.
 			try (FileOutputStream oS = new FileOutputStream(new File("FacilitateExtensionAnalysis.csv"))) {
 				oS.write(faciliateExtensionAnalysis.toString().getBytes());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			//Writing Extracted Code Size for Decompose to improve Readability to CSV file for Analysis.
+			try (FileOutputStream oS = new FileOutputStream(new File("DecomposeToImproveReadabilityAnalysis.csv"))) {
+				oS.write(decomposeToImproveRedabilityAnalysis.toString().getBytes());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -337,7 +348,8 @@ public class MotivationTestBuilder {
 		@Override
 		public void handle(String commitId, List<Refactoring> refactorings,
 				Map<Refactoring, List<MotivationType>> mapRefactoringMotivations,
-				Map<Refactoring, int[]> mapFacilitateExtensionT1T2) {
+				Map<Refactoring, int[]> mapFacilitateExtensionT1T2,
+				Map<Refactoring, String> mapDecomposeToImproveRedability) {
 			refactorings= filterRefactoring(refactorings);
 			CommitMatcher matcher;
 			commitsCount++;
@@ -385,12 +397,22 @@ public class MotivationTestBuilder {
 					// Computing the Test Results
 					RefactoringMatcher refactoringMatcher = matcher.atRefactoring(refactoringDescription);
 					
+					//Setting the refactoringMatcher data for the removed and added in Facilitate Extension
 					for(Refactoring ref : mapFacilitateExtensionT1T2.keySet()) {
 						if(normalizeSingle(ref.toString()).equals(normalizeSingle(refactoringDescription))) {
 							refactoringMatcher.facilitateExtensionT1T2 =  mapFacilitateExtensionT1T2.get(ref);
 							break;
 						}
 					}
+					
+					//Setting the refactoringMatcher data for size of Extracted method for Decompose to Improve Readability
+					for(Refactoring ref : mapDecomposeToImproveRedability.keySet()) {
+						if(normalizeSingle(ref.toString()).equals(normalizeSingle(refactoringDescription))) {
+							refactoringMatcher.decomposeToImproveReadabilityExtractedCodeSize =  mapDecomposeToImproveRedability.get(ref);
+							break;
+						}
+					}
+					
 					
 					for (Iterator<String> iter = refactoringMatcher.expectedMotivations.iterator(); iter.hasNext();) {
 						String expectedMotivation = iter.next();
@@ -604,11 +626,17 @@ public class MotivationTestBuilder {
 											System.out.println("  " + ref+ " "+ refactoringMatcher.facilitateExtensionT1T2[0]+","+refactoringMatcher.facilitateExtensionT1T2[1]);
 											faciliateExtensionAnalysis.append("TP").append("|").append(commitUrl).append("|").append(refactoringDescription).append("|").
 											append(refactoringMatcher.facilitateExtensionT1T2[0]).append("|").append(refactoringMatcher.facilitateExtensionT1T2[1]).append("\n");
+											}
+											else if(ref.equals("EM: Decompose method to improve readability")){
+												System.out.println("  " + ref+ " "+ refactoringMatcher.decomposeToImproveReadabilityExtractedCodeSize);
+												decomposeToImproveRedabilityAnalysis.append("TP").append("|").append(commitUrl).append("|").append(refactoringDescription).append("|").
+												append(refactoringMatcher.decomposeToImproveReadabilityExtractedCodeSize).append("\n");
 											}else {
 												System.out.println("  " + ref);
 											}
+										}
 									}
-								}
+								
 								motivationsARM.append("\"").append(commitUrl).append("\"").append("|").append(refactoringDescription).append("|");
 								if (!refactoringMatcher.notExpected.isEmpty()) {
 									System.out.println(" false positives");
@@ -617,7 +645,12 @@ public class MotivationTestBuilder {
 											System.out.println("  " + ref+ " "+ refactoringMatcher.facilitateExtensionT1T2[0]+","+refactoringMatcher.facilitateExtensionT1T2[1]);
 											faciliateExtensionAnalysis.append("FP").append("|").append(commitUrl).append("|").append(refactoringDescription).append("|").
 											append(refactoringMatcher.facilitateExtensionT1T2[0]).append("|").append(refactoringMatcher.facilitateExtensionT1T2[1]).append("\n");
-											}else {
+											}
+										else if(ref.equals("EM: Decompose method to improve readability")){
+											System.out.println("  " + ref+ " "+ refactoringMatcher.decomposeToImproveReadabilityExtractedCodeSize);
+											decomposeToImproveRedabilityAnalysis.append("FP").append("|").append(commitUrl).append("|").append(refactoringDescription).append("|").
+											append(refactoringMatcher.decomposeToImproveReadabilityExtractedCodeSize).append("\n");
+										}else{
 												System.out.println("  " + ref);
 											}
 										//motivationsARM.append(ref).append("|");
@@ -739,6 +772,7 @@ public class MotivationTestBuilder {
 			public class RefactoringMatcher{
 				private Set<String> expectedMotivations = new HashSet<String>();
 				private int[] facilitateExtensionT1T2 = new int[2];
+				private String decomposeToImproveReadabilityExtractedCodeSize ="";
 				private Set<String> notExpected = new HashSet<String>();
 				private Set<String> truePositive = new HashSet<String>();
 				private Set<String> unknown = new HashSet<String>();
