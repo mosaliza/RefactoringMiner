@@ -142,14 +142,14 @@ public class MotivationExtractor {
 		
 		//Motivation Detection algorithms that can detect the motivation independently for each refactoring
 		for(Refactoring ref : listRef) {
-			if(isExtractReusableMethod(ref , listRef)) {
-				setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
-			}
 			if(isIntroduceAlternativeMethodSignature(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE, ref);
 			}
 			if(isReplaceMethodPreservingBackwardCompatibility(ref)){
 				setRefactoringMotivation(MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY, ref);
+			}
+			if(isExtractReusableMethod(ref , listRef)) {
+				setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
 			}
 			if(isExtractedToImproveTestability(ref)) {
 				setRefactoringMotivation(MotivationType.EM_IMPROVE_TESTABILITY, ref);
@@ -970,6 +970,11 @@ public class MotivationExtractor {
 			for(UMLClass addedClass : modelDiff.getAddedClasses()) {
 				mapExtraExtractedOperationInvokationsInClasses.putAll(extractedOperationInvocationsCountInClass(extractOpRefactoring, addedClass , refList));
 			}
+			//Check the mappings of invocations to Extracted method in Original and next class
+			if(isExtractedMethodInvocationsEqualInOriginalAndNextClass(ref)) {
+				return false;
+			}
+			
 			List<UMLOperation> listMatchedOperationsWithExtractedOperationInOtherClasses = getAllMatchedOperationsInOtherClasses(extractedOperation);
 			//In case when there are no other operations in other classes matches extracted operation.
 			if(listMatchedOperationsWithExtractedOperationInOtherClasses.size() == 0) {
@@ -1012,6 +1017,55 @@ public class MotivationExtractor {
 			}
 		}
 		return false;	
+	}
+	
+	private boolean isExtractedMethodInvocationsEqualInOriginalAndNextClass(Refactoring ref){
+		Map<UMLOperation, List<OperationInvocation>> extractedOperationInvokationsInNextClasses = new HashMap<UMLOperation, List<OperationInvocation>>();
+		Map<UMLOperation, List<OperationInvocation>> sourceOperationInvokationsInOriginalClass = new HashMap<UMLOperation, List<OperationInvocation>>();
+		if(ref instanceof ExtractOperationRefactoring) {
+			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring) ref;
+			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
+			UMLOperation sourceOperationBeforeExtraction = extractOpRefactoring.getSourceOperationBeforeExtraction();
+			extractedOperationInvokationsInNextClasses = getAllExtractedOperationInvocationsInNextClasses(extractedOperation);
+			sourceOperationInvokationsInOriginalClass = getAllSourceOperationBeforeExtractionInvocationsInOriginalClass(sourceOperationBeforeExtraction);
+			if(isMotivationDetected(extractOpRefactoring, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {
+				int nextInvocationCount = extractedOperationInvokationsInNextClasses.values().size();
+				int OriginalInvocationCount = sourceOperationInvokationsInOriginalClass.values().size();
+				//Reduce one from the size of right side because of the delegate method extra call.
+				if(OriginalInvocationCount == nextInvocationCount-1) {
+					return true;
+				}	
+			}
+		}				
+		return false;
+	}
+	
+	private Map<UMLOperation, List<OperationInvocation>> getAllExtractedOperationInvocationsInNextClasses(UMLOperation extractedOperation){
+		Map<UMLOperation, List<OperationInvocation>> extractedOperationInvokationsInNextClasses = new HashMap<UMLOperation, List<OperationInvocation>>();
+		for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
+			if(classDiff != null) {
+				UMLClass nextClass = classDiff.getNextClass();
+				for(UMLOperation operation : nextClass.getOperations()) {
+					extractedOperationInvokationsInNextClasses.putAll(countOperationAInvokationsInOperationB(extractedOperation , operation));
+				}
+			}
+		}
+		for(UMLClass addedClass : modelDiff.getAddedClasses()) {
+			for(UMLOperation operation : addedClass.getOperations()) {
+				extractedOperationInvokationsInNextClasses.putAll(countOperationAInvokationsInOperationB(extractedOperation , operation));
+			}
+		}		
+		return extractedOperationInvokationsInNextClasses;
+	}
+	private  Map<UMLOperation, List<OperationInvocation>> getAllSourceOperationBeforeExtractionInvocationsInOriginalClass (UMLOperation sourceOperationBeforeExtraction){
+		Map<UMLOperation, List<OperationInvocation>> sourceOperationInvokationsInOriginalClass = new HashMap<UMLOperation, List<OperationInvocation>>();
+		for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
+			UMLClass originalClass = classDiff.getOriginalClass();
+			for(UMLOperation operation : originalClass.getOperations()) {
+				sourceOperationInvokationsInOriginalClass.putAll(countOperationAInvokationsInOperationB(sourceOperationBeforeExtraction , operation));
+			}
+		}	
+		return sourceOperationInvokationsInOriginalClass;
 	}
 	private Map<UMLOperation, List<OperationInvocation>> getExtraInvocationsToExtractedMethodWhenMatchingOperationExists (UMLOperation extractedOperation , 
 			Map<UMLOperation, List<OperationInvocation>> mapExtraExtractedOperationInvokationsInClasses) {

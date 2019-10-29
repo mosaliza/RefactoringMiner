@@ -3380,10 +3380,6 @@
             {
                 "label": "EM: Replace method keeping backward compatibility",
                 "status": "match2"
-            },
-            {
-                "label": "EM: Extract reusable method",
-                "status": "match2"
             } ]
 },
 {
