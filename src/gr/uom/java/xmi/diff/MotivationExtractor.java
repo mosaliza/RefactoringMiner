@@ -1312,7 +1312,7 @@ public class MotivationExtractor {
 			 */
 			if(getAllCompositeStatementObjectExpressionsWithInvokationsToExtractedOperation(sourceOperationAfterExtractionBody, extratedOperation, sourceOperationAfterExtraction).size() > 0 ||
 					expressionsUsingVariableInitializedWithExtracedOperationInvocation.size() > 0 ||
-					((listReturnStatementswithCallsToExtractedOperation.size() > 0) && extratedOperation.getBody().statementCount() > 1)) {
+					((listReturnStatementswithCallsToExtractedOperation.size() > 0) && (sourceOperationAfterExtraction.getBody().statementCount() > 1))) {
 				return true;
 			}
 		}	
