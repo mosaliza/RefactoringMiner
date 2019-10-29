@@ -13444,10 +13444,6 @@
 	"description": "Extract Method public getRandomToken(r Random) : LongToken extracted from public getRandomToken() : LongToken in class org.apache.cassandra.dht.Murmur3Partitioner",
 	"motivations": [ 
 	{ 
-                "label": "EM: Decompose method to improve readability",
-                "status": "match2"
-	},
-	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
 	},
