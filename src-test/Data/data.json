@@ -3132,6 +3132,13 @@
         "validation": "FP",
         "detectionTools": "GumTreeDiff",
         "validators": null
+    }, {
+        "type": "Merge Variable",
+        "description": "Merge Variable [value : Object, cm : ColumnMapper<T>] to entry : Map.Entry<ColumnMapper<?>,Object> in method public saveQuery(entity T, options Option...) : Statement in class com.datastax.driver.mapping.Mapper",
+        "comment": null,
+        "validation": "TP",
+        "detectionTools": "RefactoringMiner",
+        "validators": null
     }],
     "refDiffExecutionTime": 0
 }, {
@@ -8382,6 +8389,13 @@
         "validation": "FP",
         "detectionTools": "GumTreeDiff",
         "validators": null
+    }, {
+        "type": "Extract And Move Method",
+        "description": "Extract And Move Method package getCapacity() : long extracted from public getCapacity() : long in class com.graphhopper.storage.GraphHopperStorage & moved to class com.graphhopper.storage.BaseGraph",
+        "comment": null,
+        "validation": "TP",
+        "detectionTools": "RefactoringMiner",
+        "validators": null
     }],
     "refDiffExecutionTime": 3012
 }, {
@@ -9491,6 +9505,13 @@
     }, {
         "type": "Extract Method",
         "description": "Extract Method private peekParameter(inTypeExpression boolean) : boolean extracted from private parseFormalParameterList() : FormalParameterListTree in class com.google.javascript.jscomp.parsing.parser.Parser",
+        "comment": null,
+        "validation": "TP",
+        "detectionTools": "RefactoringMiner",
+        "validators": null
+    }, {
+        "type": "Inline Variable",
+        "description": "Inline Variable typeStart : SourcePosition in method private parseFormalParameterList() : FormalParameterListTree from class com.google.javascript.jscomp.parsing.parser.Parser",
         "comment": null,
         "validation": "TP",
         "detectionTools": "RefactoringMiner",
@@ -37787,7 +37808,7 @@
         "validators": null
     }, {
         "type": "Split Parameter",
-        "description": "Split Parameter request : QueryRequest to [jpqlString : String, maxResults : int, startOffset : long] in method private buildLuceneQuery(cache AdvancedCache<?,?>, isCompatMode boolean, serCtx SerializationContext, jpqlString String, startOffset long, maxResults int) : Query in class org.infinispan.query.remote.QueryFacadeImpl",
+        "description": "Split Parameter request : QueryRequest to [jpqlString : String, startOffset : long, maxResults : int] in method private buildLuceneQuery(cache AdvancedCache<?,?>, isCompatMode boolean, serCtx SerializationContext, jpqlString String, startOffset long, maxResults int) : Query in class org.infinispan.query.remote.QueryFacadeImpl",
         "comment": null,
         "validation": "TP",
         "detectionTools": "RefactoringMiner",
@@ -43761,6 +43782,13 @@
         "validation": "FP",
         "detectionTools": "GumTreeDiff",
         "validators": "Nikos"
+    }, {
+        "type": "Inline Variable",
+        "description": "Inline Variable id : Integer in method public onCreate(savedInstanceState Bundle) : void from class org.wordpress.android.ui.prefs.SiteSettingsFragment",
+        "comment": null,
+        "validation": "TP",
+        "detectionTools": "RefactoringMiner",
+        "validators": null
     }],
     "refDiffExecutionTime": 1235
 }, {
@@ -47537,6 +47565,13 @@
     }, {
         "type": "Rename Method",
         "description": "Rename Method package should_include_enumtype_in_accessor_ordinal() : void renamed to public should_allow_enum_as_int_in_accessor_params() : void in class com.datastax.driver.mapping.MapperAccessorParamsTest",
+        "comment": null,
+        "validation": "TP",
+        "detectionTools": "RefactoringMiner",
+        "validators": null
+    }, {
+        "type": "Extract Variable",
+        "description": "Extract Variable variables : ColumnDefinitions in method private validateParameters() : void from class com.datastax.driver.mapping.MethodMapper",
         "comment": null,
         "validation": "TP",
         "detectionTools": "RefactoringMiner",
@@ -63414,10 +63449,10 @@
     }, {
         "type": "Pull Up Method",
         "description": "Pull Up Method public convert(inputData File, outputDirectory File, typeName String, format OgrFormat, crs CoordinateReferenceSystem) : File from class org.geoserver.wfs.response.OGRWrapper to public convert(inputData File, outputDirectory File, typeName String, format Format, crs CoordinateReferenceSystem) : File from class org.geoserver.ogr.core.AbstractToolWrapper",
-        "comment": "<p>We have Extract Superclass refactroing see:</p><p>http://refactoring.encs.concordia.ca/oracle/refactoring-details/1158913/4182</p><p>Since already the abstract refactoring exists as TP, and RefDiff is able to&nbsp; detect Extract Superclass, thus this is a FP</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>",
-        "validation": "FP",
-        "detectionTools": "RefDiff",
-        "validators": "Matin, Laleh, Davood"
+        "comment": "<p>http://refactoring.encs.concordia.ca/oracle/refactoring-details/1158913/4182</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>",
+        "validation": "TP",
+        "detectionTools": "RefactoringMiner, RefDiff",
+        "validators": null
     }, {
         "type": "Extract and Move Method",
         "description": "Extract Method protected setInputOutput(cmd List, inputData File, outputDirectory File, typeName String, format Format) : String extracted from public convert(inputData File, outputDirectory File, typeName String, format OgrFormat, crs CoordinateReferenceSystem) : File in class org.geoserver.wfs.response.OGRWrapper",
@@ -63621,6 +63656,13 @@
         "validation": "TP",
         "detectionTools": "RefactoringMiner, GumTreeDiff",
         "validators": "Nikos"
+    }, {
+        "type": "Change Parameter Type",
+        "description": "Change Parameter Type format : OgrFormat to format : Format in method public convert(inputData File, outputDirectory File, typeName String, format Format, crs CoordinateReferenceSystem) : File in class org.geoserver.ogr.core.AbstractToolWrapper",
+        "comment": null,
+        "validation": "TP",
+        "detectionTools": "RefactoringMiner",
+        "validators": null
     }],
     "refDiffExecutionTime": 3729
 }, {
@@ -64556,7 +64598,7 @@
         "description": "Extract Method private assertExistsAndReturn(content String) : Object extracted from public assertValueIsArray(responseContent String) : void in class org.springframework.test.util.JsonPathExpectationsHelper",
         "comment": null,
         "validation": "TP",
-        "detectionTools": "RefDiff",
+        "detectionTools": "RefactoringMiner, RefDiff",
         "validators": "Matin, Davood"
     }, {
         "type": "Rename Parameter",
@@ -64593,6 +64635,27 @@
         "validation": "TP",
         "detectionTools": "GumTreeDiff",
         "validators": "Nikos"
+    }, {
+        "type": "Rename Variable",
+        "description": "Rename Variable actualValue : Object to value : Object in method private assertExistsAndReturn(content String) : Object in class org.springframework.test.util.JsonPathExpectationsHelper",
+        "comment": null,
+        "validation": "TP",
+        "detectionTools": "RefactoringMiner",
+        "validators": null
+    }, {
+        "type": "Rename Parameter",
+        "description": "Rename Parameter responseContent : String to content : String in method private assertExistsAndReturn(content String) : Object in class org.springframework.test.util.JsonPathExpectationsHelper",
+        "comment": null,
+        "validation": "TP",
+        "detectionTools": "RefactoringMiner",
+        "validators": null
+    }, {
+        "type": "Extract Variable",
+        "description": "Extract Variable reason : String in method private assertExistsAndReturn(content String) : Object from class org.springframework.test.util.JsonPathExpectationsHelper",
+        "comment": null,
+        "validation": "TP",
+        "detectionTools": "RefactoringMiner",
+        "validators": null
     }],
     "refDiffExecutionTime": 4367
 }, {
