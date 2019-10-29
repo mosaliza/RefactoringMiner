@@ -235,7 +235,7 @@ public class MotivationExtractor {
 						}
 					}
 					if(listReturnTypeObjectsCreatedInReturnStatement.size() == 1) {
-						return true;
+						return true;							
 					}
 				}
 			}
@@ -273,12 +273,92 @@ public class MotivationExtractor {
 				List<String> variableNames = variableTypeNameMap.get(type);
 				for(String variableName : variableNames) {
 					if( returnStatementVariables.size() == 1 && returnStatementVariables.contains(variableName)){
-						return true;
+						//Check if all statements in the Extracted Operation are object creation related
+						if(isAllStatementsObjectCreationRelated(extractedOperation,listObjectCreationVariableDeclerationsWithReturnType))
+						{
+							return true;							
+						}
 					}	
 				}
 			}
 		}
 		return false;
+	}
+	
+	private boolean isAllStatementsObjectCreationRelated (UMLOperation extractedOperation , List<VariableDeclaration> returnTypeObjectCreationVariableDeclerations ){
+		
+		List<VariableDeclaration> allVariableDeclerations = extractedOperation.getBody().getAllVariableDeclarations();
+		List<String> allObjectCreationRelatedVariables = new ArrayList<String>();
+		List<String> allObjectStateSettingVariables = new ArrayList<String>();
+		Set<String> allFactoryMethodRelatedVariables = new HashSet<String>();
+		
+		if(returnTypeObjectCreationVariableDeclerations.size() == 1) {
+			AbstractExpression returnTypeObjectCreationExpression = returnTypeObjectCreationVariableDeclerations.get(0).getInitializer();
+			String objectCreationVariable = returnTypeObjectCreationVariableDeclerations.get(0).getVariableName();
+			allObjectStateSettingVariables = getAllObjectStateSettingVariables(extractedOperation, objectCreationVariable);
+			allObjectCreationRelatedVariables = getAllObjectCreationRelatedVariables(returnTypeObjectCreationExpression , allVariableDeclerations);
+			allFactoryMethodRelatedVariables.addAll(allObjectCreationRelatedVariables);
+			allFactoryMethodRelatedVariables.addAll(allObjectStateSettingVariables);
+			allFactoryMethodRelatedVariables.addAll(getAllObjectCreationRelatedCompositeStatementVariables(extractedOperation,allFactoryMethodRelatedVariables));
+			for(VariableDeclaration variableDecleration : allVariableDeclerations) {
+				if(!variableDecleration.equals(returnTypeObjectCreationVariableDeclerations.get(0))) {
+					//Check if there is a variable declaration that variable is not part of Object creation
+					if(!allFactoryMethodRelatedVariables.contains(variableDecleration.getVariableName())) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+	
+	private Set<String> getAllObjectCreationRelatedCompositeStatementVariables(UMLOperation operation, Set<String> relatedVariables){
+		List<CompositeStatementObject> compositeStatements = operation.getBody().getCompositeStatement().getInnerNodes();
+		for(CompositeStatementObject compositeStatement : compositeStatements) {
+			List<String> variables = compositeStatement.getVariables();
+			List<AbstractExpression> abstractExpressions = compositeStatement.getExpressions();
+			for(String variable: variables) {
+				if(relatedVariables.contains(variable)) {
+					for(AbstractExpression expression: abstractExpressions) {
+						relatedVariables.addAll(expression.getVariables());
+					}
+				}	
+			}
+		}
+		return relatedVariables ;
+	}
+	private List<String> getAllObjectStateSettingVariables(UMLOperation operation , String ObjectCreatianiVariableName){
+		List<String> allObjectStateSettingVariables = new ArrayList<String>();
+		ObjectCreatianiVariableName += ".";
+		for(StatementObject statement : operation.getBody().getCompositeStatement().getLeaves()) {
+			if(statement.toString().startsWith(ObjectCreatianiVariableName)) {
+				allObjectStateSettingVariables.addAll(statement.getVariables());
+			}
+		}
+		return allObjectStateSettingVariables;
+	}
+	private List<String> getAllObjectCreationRelatedVariables(AbstractExpression returnTypeObjectCreationExpression , List<VariableDeclaration> allVariableDeclerations){	
+		List<String> returnTypeObjectCreationExpressionVariables = returnTypeObjectCreationExpression.getVariables();
+		List<String> otherDependentObjectCreationVariables = getObjectCreationRelatedVariables(returnTypeObjectCreationExpressionVariables, allVariableDeclerations);
+		returnTypeObjectCreationExpressionVariables.addAll(otherDependentObjectCreationVariables);
+		return  returnTypeObjectCreationExpressionVariables ;
+	}
+	
+	private List<String> getObjectCreationRelatedVariables(List<String> variables , List<VariableDeclaration> allVariableDeclerations){
+		int intialVariableSize = variables.size();
+		int newVariableVariableSize = 0;
+		for(VariableDeclaration variableDecleration: allVariableDeclerations) {	
+			String variableName = variableDecleration.getVariableName();
+			if(variables.contains(variableName)){
+				variables.addAll(variableDecleration.getInitializer().getVariables());
+			}
+		}
+		newVariableVariableSize = variables.size();
+		if(newVariableVariableSize> intialVariableSize) {
+			variables.addAll(getObjectCreationRelatedVariables(variables ,allVariableDeclerations));
+		}
+		return  variables;
+		
 	}
 
 	private boolean isExtractedtoIntroduceAsyncOperation(Refactoring ref) {
