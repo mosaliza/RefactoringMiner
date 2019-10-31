@@ -908,53 +908,56 @@ public class MotivationExtractor {
 	
 	private boolean isNeutralNodeForFacilitateExtension(AbstractStatement statement , List<Refactoring> refList , UMLOperation statementOperation){
 		Set<CodeElementType> neutralCodeElements = new HashSet<CodeElementType>();
-		neutralCodeElements.add(CodeElementType.VARIABLE_DECLARATION_STATEMENT);
 		neutralCodeElements.add(CodeElementType.RETURN_STATEMENT);
 		neutralCodeElements.add(CodeElementType.BLOCK);
-		List<OperationInvocation> invokationsToExtractedMethods = new ArrayList<OperationInvocation>();
-		List<OperationInvocation> statementInvokationsOtherThanExtractedOperationsCalls = new ArrayList<OperationInvocation>(); 
 		CodeElementType elementType  = statement.getLocationInfo().getCodeElementType();
-		for(CodeElementType type: neutralCodeElements) {
-			if(type.equals(elementType)) {
-				if(elementType.equals(CodeElementType.VARIABLE_DECLARATION_STATEMENT)) {
-					Map<String, List<OperationInvocation>> mapStatementInvokations = statement.getMethodInvocationMap();
-					if(mapStatementInvokations.isEmpty()) {
-						//There is no invokations in the variable declaration statement
-						return true;
-					} else {
-						for(String invokationString : mapStatementInvokations.keySet()) {
-							List<OperationInvocation> statementInvokations = mapStatementInvokations.get(invokationString);
-							for (OperationInvocation invokation: statementInvokations) {
-								for(Refactoring ref : refList) {
-									ExtractOperationRefactoring extractOperationRefactoring = (ExtractOperationRefactoring)ref;
-									if(invokation.matchesOperation(extractOperationRefactoring.getExtractedOperation(), statementOperation.variableTypeMap(),modelDiff)){
-										invokationsToExtractedMethods.add(invokation);
-									}else {
-										statementInvokationsOtherThanExtractedOperationsCalls.add(invokation);
-									}
-								}
-							}
-						}
-						if(invokationsToExtractedMethods.isEmpty()) {
-							//There are invokations other than the ones to the Extracted methods 
-							//which can be considered as extension.
-							if(statementInvokationsOtherThanExtractedOperationsCalls.isEmpty()) {
-								return true;
-							}else {
-								return false;
-							}
-						}else {
-							return false;
-						}
-					}
-
-				}
+		int  extractedOperationInvocationCountInStatement = 0;
+		int  otherOperationInvocationCountInStatement = 0;
+		if(neutralCodeElements.contains(elementType)) {
+			return true;
+		}else {
+			Map<String, List<OperationInvocation>> mapStatementInvokations = statement.getMethodInvocationMap();
+			if(mapStatementInvokations.isEmpty()) {
+				//There is no invokations in the variable declaration statement
 				return true;
+			} else {				
+				for(String invokationString : mapStatementInvokations.keySet()) {
+					List<OperationInvocation> statementInvokations = mapStatementInvokations.get(invokationString);
+					if(isInvocationToExtractedOperation(statementInvokations , statementOperation , refList)) {
+						extractedOperationInvocationCountInStatement++;
+					}else {
+						otherOperationInvocationCountInStatement++;
+					}
+				}
+				if(elementType.equals(CodeElementType.IF_STATEMENT) ||
+						elementType.equals(CodeElementType.VARIABLE_DECLARATION_STATEMENT)||
+						elementType.equals(CodeElementType.EXPRESSION_STATEMENT)
+						) {
+					if(extractedOperationInvocationCountInStatement == 0 && otherOperationInvocationCountInStatement == 0) {
+						return true;
+					}
+				}else {
+					if(extractedOperationInvocationCountInStatement == 0) {
+						return true;
+					}
+				}
 			}
 		}
 		return false;
+	}
+	
+	private boolean isInvocationToExtractedOperation(List<OperationInvocation> statementInvokations , UMLOperation statementOperation , List<Refactoring> refList){
+		List<OperationInvocation> invokationToExtractedOperation = new ArrayList<OperationInvocation>();
+		for (OperationInvocation invokation: statementInvokations) {
+			for(Refactoring ref : refList) {
+				ExtractOperationRefactoring extractOperationRefactoring = (ExtractOperationRefactoring)ref;
+				if( invokation.matchesOperation(extractOperationRefactoring.getExtractedOperation(), statementOperation.variableTypeMap(),modelDiff)){
+					invokationToExtractedOperation.add(invokation);
+				}
+			}
 		}
-
+		return invokationToExtractedOperation.size() > 0 ? true : false;
+	}
 	private boolean isExtractReusableMethod(Refactoring ref ,List<Refactoring> refList) {		
 		if(ref instanceof ExtractOperationRefactoring) {
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
