@@ -48,10 +48,13 @@ public class MotivationExtractor {
 	private List<Refactoring> refactorings;
 	private Map<RefactoringType, List<Refactoring>> mapClassifiedRefactorings;
 	private Map<Refactoring , List<MotivationType>> mapRefactoringMotivations;
+	private List<ExtractOperationRefactoring> removeDuplicationFromSingleMethodRefactorings = new ArrayList<ExtractOperationRefactoring>();
+	private int countSingleMethodRemoveDuplications = 0;
 	private Map<Refactoring, int[] > mapFacilitateExtensionT1T2  = new HashMap<Refactoring, int[]>() ;
 	private Map<Refactoring, String> mapDecomposeToImproveRedability =  new HashMap<Refactoring,String>();
 	public Map<Refactoring, String> getMapDecomposeToImproveRedability() {
 		return mapDecomposeToImproveRedability;
+		
 	}
 
 	public Map<Refactoring, int[]> getMapFacilitateExtensionT1T2() {
@@ -960,9 +963,18 @@ public class MotivationExtractor {
 	}
 	private boolean isExtractReusableMethod(Refactoring ref ,List<Refactoring> refList) {		
 		if(ref instanceof ExtractOperationRefactoring) {
+			countSingleMethodRemoveDuplications = 0;
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
-
+			//Removing duplication from a single method.
+			Map<String, List<ExtractOperationRefactoring>> groupedByToStringSingleMthods =
+					removeDuplicationFromSingleMethodRefactorings.stream().collect(Collectors.groupingBy(x->x.toString()));
+			if(groupedByToStringSingleMthods.containsKey(extractOpRefactoring.toString())) {
+				countSingleMethodRemoveDuplications = groupedByToStringSingleMthods.get(extractOpRefactoring.toString()).size();
+			}
+			if(countSingleMethodRemoveDuplications > 0 ) {
+				countSingleMethodRemoveDuplications --;
+			}
 			Map<UMLOperation, List<OperationInvocation>> mapExtraExtractedOperationInvokationsInClasses = new HashMap<UMLOperation, List<OperationInvocation>>() ;
 			for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
 				if(classDiff != null) {
@@ -1010,7 +1022,9 @@ public class MotivationExtractor {
 							for (OperationInvocation invokation: mapExtraExtractedOperationInvokationsInClasses.get(operation)) {
 								if(invokation.getExpression() == null || invokation.getExpression().equals("this")) {
 									if(operation.getClassName().equals(extractedOperation.getClassName())){
-										return true;
+										if((extractOpRefactoring.getExtractedOperationInvocations().size() - countSingleMethodRemoveDuplications) > 1 ) {
+											return true;
+										}
 									}
 								}
 							}
@@ -1125,7 +1139,9 @@ public class MotivationExtractor {
 		 * IF Invocations to Extracted method from source method after Extraction is more than one OR 
 		 *  there are other Invocations from other methods to extracted operation.
 		 *  Invocations inside test methods will not be considered as reusable calls. */
-		if(extractOpRefactoring.getExtractedOperationInvocations().size()>1 || mapExtraExtractedOperationInvokationsInClasses.size() > 0 ) {
+
+		int extarctOpRefactoringCallstoExtractedOperation = extractOpRefactoring.getExtractedOperationInvocations().size();
+		if((extarctOpRefactoringCallstoExtractedOperation - countSingleMethodRemoveDuplications) > 1 || mapExtraExtractedOperationInvokationsInClasses.size() > 0 ) {
 			return true;
 		}
 		return false;
@@ -1163,6 +1179,8 @@ public class MotivationExtractor {
 			List<Refactoring> refList ){
 		Map<UMLOperation, List<OperationInvocation>> mapExtraInvokations = new HashMap<UMLOperation, List<OperationInvocation>>();
 		UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
+		
+		
 		if(isMotivationDetected(extractOpRefactoring, MotivationType.EM_REMOVE_DUPLICATION) && refList.size() > 1) {
 			/*When we check extra calls to detect Reuse if there has been a Remove Duplication motivation from multiple
 			 *  source methods we ignore extra invokations from "same remove duplication" "source operations after extraction"  Extract method's. */
@@ -1256,13 +1274,15 @@ public class MotivationExtractor {
 			 *  the extract operations motivations is Decompose to Improve Readability
 			 */
 			if(list.size() > 1) {
-			 	 //CODE ANALYSYS
-				codeAnalysisDecomposeToImproveRedability(list);
-				for(ExtractOperationRefactoring ref : list) {
-					//Set Motivation for each refactoring with the same source Operation
-					setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
-					countDecomposeMethodToImproveReadability++;
-				}
+			 	if(!isExtractMethodRefactoringsEqual(list)) {
+					//CODE ANALYSYS
+					codeAnalysisDecomposeToImproveRedability(list);
+					for(ExtractOperationRefactoring ref : list) {
+						//Set Motivation for each refactoring with the same source Operation
+						setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
+						countDecomposeMethodToImproveReadability++;
+					}	
+			 	}
 			}
 		}				
 		if(countDecomposeMethodToImproveReadability >= 2) {
@@ -1284,6 +1304,37 @@ public class MotivationExtractor {
 			return true;
 		}
 		return false;	
+	}
+	
+	private boolean isExtractMethodRefactoringsEqual(List<ExtractOperationRefactoring> extractOperationRefactorings){
+		Set<UMLOperation> setSourceOperationsBeforeExtraction = new HashSet<>();
+		Set<UMLOperation> setExtractedOperations = new HashSet<>();
+		Set<UMLOperation> setSourceOperationsAfterExtraction = new HashSet<>();
+		Set<String> setSourceFiles = new HashSet<>();
+		Set<String> setClassesNames = new HashSet<>();
+		for(ExtractOperationRefactoring extractOpRefactroing : extractOperationRefactorings) {
+			setSourceOperationsBeforeExtraction.add(extractOpRefactroing.getSourceOperationBeforeExtraction());
+			setSourceOperationsAfterExtraction.add(extractOpRefactroing.getSourceOperationAfterExtraction());
+			setExtractedOperations.add(extractOpRefactroing.getExtractedOperation());
+			setClassesNames.add(extractOpRefactroing.getExtractedOperation().getClassName());
+			setClassesNames.add(extractOpRefactroing.getSourceOperationBeforeExtraction().getClassName());
+			
+			UMLClassBaseDiff umlClass = modelDiff.getUMLClassDiff(extractOpRefactroing.getExtractedOperation().getClassName());
+			if(umlClass != null) {
+				UMLClass nextClass = umlClass.getNextClass();
+				UMLClass OriginalClass = umlClass.getOriginalClass();
+				setSourceFiles.add(nextClass.getSourceFile());
+				setSourceFiles.add(OriginalClass.getSourceFile());
+			}
+		}
+		if(setExtractedOperations.size() == 1 && setSourceOperationsBeforeExtraction.size() == 1 && 
+				setSourceOperationsAfterExtraction.size() == 1 && 
+				setClassesNames.size() == 1 && setSourceFiles.size()==1) {
+			return true;
+		}
+		
+		return false;
+
 	}
 	private void codeAnalysisDecomposeToImproveRedability(List<ExtractOperationRefactoring> list) {
 		
@@ -1314,14 +1365,13 @@ public class MotivationExtractor {
 			 *Check if any return statements exists with calls to the extracted operation
 			 */
 			if(getAllCompositeStatementObjectExpressionsWithInvokationsToExtractedOperation(sourceOperationAfterExtractionBody, extratedOperation, sourceOperationAfterExtraction).size() > 0 ||
-					expressionsUsingVariableInitializedWithExtracedOperationInvocation.size() > 0 ||
+					expressionsUsingVariableInitializedWithExtracedOperationInvocation.size() > 0 || 
 					((listReturnStatementswithCallsToExtractedOperation.size() > 0) && (sourceOperationAfterExtraction.getBody().statementCount() > 1))) {
 				return true;
 			}
 		}	
 		return false;
 	}
-
 	private List<StatementObject> getStatementsCallingExtractedOperation(ExtractOperationRefactoring extractOperationRef, CodeElementType codeElementType) {
 		List<StatementObject> statementswithCallsToExtractedOperation = new ArrayList<StatementObject>();
 		OperationBody sourceOperationBody = extractOperationRef.getSourceOperationAfterExtraction().getBody();
@@ -1407,22 +1457,17 @@ public class MotivationExtractor {
 		}
 		List<ExtractOperationRefactoring> allRemoveDuplicationExtractRefactorings = new ArrayList<ExtractOperationRefactoring>();
 		for(UMLOperation extractOperation : sourceOperationMapWithExtractedOperationAsKey.keySet()){
-			List<ExtractOperationRefactoring> listRepetativeExtractOperations = new ArrayList<ExtractOperationRefactoring>();
 			List<ExtractOperationRefactoring> listSourceOperations = sourceOperationMapWithExtractedOperationAsKey.get(extractOperation);
 			/*DETECTION RULE: if multiple source operations(Or the Extract Refactorings that contain them)
 			 *  have the same extractedOperation the extract operations motivations is Remove Duplication*/
 			if(listSourceOperations.size() > 1){
-				for (int i = 0; i < listSourceOperations.size(); i++) {
-					for (int j = i+1; j <listSourceOperations.size() ; j++) {
-						if(listSourceOperations.get(i).toString().equals(listSourceOperations.get(j).toString())){
-							listRepetativeExtractOperations.add(listSourceOperations.get(i));
-						}
-					}
-				}
 				if(listSourceOperations.size() > 1) {
+					if(isExtractMethodRefactoringsEqual(listSourceOperations)) {
+						removeDuplicationFromSingleMethodRefactorings.addAll(listSourceOperations);
+					}
 					for(ExtractOperationRefactoring extractOp : listSourceOperations){
 						setRefactoringMotivation(MotivationType.EM_REMOVE_DUPLICATION, extractOp);
-						allRemoveDuplicationExtractRefactorings.add(extractOp);
+						allRemoveDuplicationExtractRefactorings.add(extractOp);	
 					}
 				}
 			}				
@@ -1432,6 +1477,18 @@ public class MotivationExtractor {
 		}
 		return false;
 	}
+	private List<ExtractOperationRefactoring> getRepetativeExtractOperations(List<ExtractOperationRefactoring> listExtractOperations){
+		List<ExtractOperationRefactoring> listRepetativeExtractOperations = new ArrayList<ExtractOperationRefactoring>();
+		for (int i = 0; i < listExtractOperations.size(); i++) {
+			for (int j = i+1; j <listExtractOperations.size() ; j++) {
+				if(listExtractOperations.get(i).toString().equals(listExtractOperations.get(j).toString())){
+					listRepetativeExtractOperations.add(listExtractOperations.get(i));
+				}
+			}
+		}
+		return listRepetativeExtractOperations;
+	}
+
 	
 	private boolean isMotivationDetected(Refactoring ref, MotivationType type){
 		

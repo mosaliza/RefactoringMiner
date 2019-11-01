@@ -16344,20 +16344,12 @@
 	"refactorings": [{
 	"type": "Extract Method",
 	"description": "Extract Method private canBinaryExpressionBeUnboxed(lhs PsiExpression, rhs PsiExpression) : boolean extracted from private canBeUnboxed(expression PsiExpression) : boolean in class com.siyeh.ig.migration.UnnecessaryBoxingInspection.UnnecessaryBoxingVisitor",
-	"motivations": [ 
-	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match2"
-	} ]
+	"motivations": [  ]
 },
 {
 	"type": "Extract Method",
 	"description": "Extract Method private canBinaryExpressionBeUnboxed(lhs PsiExpression, rhs PsiExpression) : boolean extracted from private canBeUnboxed(expression PsiExpression) : boolean in class com.siyeh.ig.migration.UnnecessaryBoxingInspection.UnnecessaryBoxingVisitor",
-	"motivations": [ 
-	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match2"
-	} ]
+	"motivations": [  ]
 }
 ]},{	"repository": "https://github.com/JetBrains/intellij-community.git",
 	"sha1": "1b70adbfd49e00194c4c1170ef65e8114d7a2e46",
