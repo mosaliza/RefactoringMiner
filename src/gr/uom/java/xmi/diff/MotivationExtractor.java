@@ -49,6 +49,7 @@ public class MotivationExtractor {
 	private Map<RefactoringType, List<Refactoring>> mapClassifiedRefactorings;
 	private Map<Refactoring , List<MotivationType>> mapRefactoringMotivations;
 	private List<ExtractOperationRefactoring> removeDuplicationFromSingleMethodRefactorings = new ArrayList<ExtractOperationRefactoring>();
+	private List<ExtractOperationRefactoring> decomposeToImproveReadabilityFromSingleMethodRefactorings = new ArrayList<ExtractOperationRefactoring>();
 	private int countSingleMethodRemoveDuplications = 0;
 	private Map<Refactoring, int[] > mapFacilitateExtensionT1T2  = new HashMap<Refactoring, int[]>() ;
 	private Map<Refactoring, String> mapDecomposeToImproveRedability =  new HashMap<Refactoring,String>();
@@ -140,9 +141,8 @@ public class MotivationExtractor {
 
 	private void detectExtractOperationMotivation(List<Refactoring> listRef) {		
 		//Motivation Detection algorithms that depends on other refactorings of the same type
-		isDecomposeMethodToImroveReadability(listRef);
+		isDecomposeMethodToImroveReadability(listRef);		
 		isMethodExtractedToRemoveDuplication(listRef);
-		
 		//Motivation Detection algorithms that can detect the motivation independently for each refactoring
 		for(Refactoring ref : listRef) {
 			if(isIntroduceAlternativeMethodSignature(ref)) {
@@ -1278,9 +1278,9 @@ public class MotivationExtractor {
 					//CODE ANALYSYS
 					codeAnalysisDecomposeToImproveRedability(list);
 					for(ExtractOperationRefactoring ref : list) {
-						//Set Motivation for each refactoring with the same source Operation
+						//Set Motivation for each refactoring with the same source 
 						setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
-						countDecomposeMethodToImproveReadability++;
+						countDecomposeMethodToImproveReadability++;	
 					}	
 			 	}
 			}
@@ -1296,8 +1296,9 @@ public class MotivationExtractor {
 		for (Refactoring ref : refList) {
 			if(isExtractedOperationInvokationsToImproveReadability(ref)) {
 				codeAnalysisDecomposeToImproveRedability(Arrays.asList((ExtractOperationRefactoring)ref));
+				decomposeToImproveReadabilityFromSingleMethodRefactorings.add((ExtractOperationRefactoring)ref);
 				setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
-				countDecomposeSingleMethodToImproveReadability++;
+				countDecomposeSingleMethodToImproveReadability++;	
 			}
 		}
 		if(countDecomposeSingleMethodToImproveReadability > 0 ) {
@@ -1467,6 +1468,10 @@ public class MotivationExtractor {
 					}
 					for(ExtractOperationRefactoring extractOp : listSourceOperations){
 						setRefactoringMotivation(MotivationType.EM_REMOVE_DUPLICATION, extractOp);
+						if(isMotivationDetected(extractOp , MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY) 
+								&& !decomposeToImproveReadabilityFromSingleMethodRefactorings.contains(extractOp)) {
+							removeRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY, extractOp);
+						}
 						allRemoveDuplicationExtractRefactorings.add(extractOp);	
 					}
 				}
