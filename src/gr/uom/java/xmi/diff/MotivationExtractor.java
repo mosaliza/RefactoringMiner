@@ -50,6 +50,7 @@ public class MotivationExtractor {
 	private Map<Refactoring , List<MotivationType>> mapRefactoringMotivations;
 	private List<ExtractOperationRefactoring> removeDuplicationFromSingleMethodRefactorings = new ArrayList<ExtractOperationRefactoring>();
 	private List<ExtractOperationRefactoring> decomposeToImproveReadabilityFromSingleMethodRefactorings = new ArrayList<ExtractOperationRefactoring>();
+	private List<ExtractOperationRefactoring> decomposeToImproveReadabilityFromSingleMethodByHavingCallToExtractedMethodInReturn = new ArrayList<ExtractOperationRefactoring>();
 	private int countSingleMethodRemoveDuplications = 0;
 	private Map<Refactoring, int[] > mapFacilitateExtensionT1T2  = new HashMap<Refactoring, int[]>() ;
 	private Map<Refactoring, String> mapDecomposeToImproveRedability =  new HashMap<Refactoring,String>();
@@ -1365,12 +1366,49 @@ public class MotivationExtractor {
 			 *Check if any expression exists with Variables initialized with invokations to the extracted operation
 			 *Check if any return statements exists with calls to the extracted operation
 			 */
+			if(listReturnStatementswithCallsToExtractedOperation.size() > 0) {
+				decomposeToImproveReadabilityFromSingleMethodByHavingCallToExtractedMethodInReturn.add((ExtractOperationRefactoring)ref);
+			}
 			if(getAllCompositeStatementObjectExpressionsWithInvokationsToExtractedOperation(sourceOperationAfterExtractionBody, extratedOperation, sourceOperationAfterExtraction).size() > 0 ||
 					expressionsUsingVariableInitializedWithExtracedOperationInvocation.size() > 0 || 
 					((listReturnStatementswithCallsToExtractedOperation.size() > 0) && (sourceOperationAfterExtraction.getBody().statementCount() > 1))) {
 				return true;
 			}
+			OperationBody sourceOperationBody = extractOperationRef.getSourceOperationAfterExtraction().getBody();
+			CompositeStatementObject compositeStatement =  sourceOperationBody.getCompositeStatement();
+			//if(isCompositeStatementWithLeavesCallingExtractedOepration(compositeStatement , CodeElementType.CATCH_CLAUSE , extractOperationRef)) {
+			//	return true;
+			//}
 		}	
+		return false;
+	}
+	private boolean isCompositeStatementWithLeavesCallingExtractedOepration(CompositeStatementObject compositeStatement, CodeElementType codeElementType , ExtractOperationRefactoring extractOperationRef){
+		if(compositeStatement.getLocationInfo().getCodeElementType().equals(codeElementType)) {
+			    if(isLeavesContainingCallsToExtractedMethod(compositeStatement, extractOperationRef)) {
+			    	return true;
+			    }
+		}else {
+			List<CompositeStatementObject> innerNodes = compositeStatement.getInnerNodes();
+			for( CompositeStatementObject composite : innerNodes) {
+				if(composite.getLocationInfo().getCodeElementType().equals(codeElementType)) {
+					if(isLeavesContainingCallsToExtractedMethod(composite, extractOperationRef)) {
+						return true;
+					}	
+				}
+			}
+		}
+		return false;
+	}
+	
+	private boolean isLeavesContainingCallsToExtractedMethod(CompositeStatementObject compositeStatement , ExtractOperationRefactoring extractOperationRef){
+		List<StatementObject> listStatementObjects = compositeStatement.getLeaves();
+		for(StatementObject statement : listStatementObjects) {
+			for(OperationInvocation invokation : extractOperationRef.getExtractedOperationInvocations()) {
+				if(statement.getLocationInfo().subsumes(invokation.getLocationInfo())){
+					return true;
+				}	
+			}
+		}
 		return false;
 	}
 	private List<StatementObject> getStatementsCallingExtractedOperation(ExtractOperationRefactoring extractOperationRef, CodeElementType codeElementType) {
@@ -1383,14 +1421,27 @@ public class MotivationExtractor {
 			CodeElementType type = statement.getLocationInfo().getCodeElementType();
 			if(type.equals(codeElementType)) {
 				for(OperationInvocation invokation : extractOperationRef.getExtractedOperationInvocations()) {
-					if(statement.getLocationInfo().subsumes(invokation.getLocationInfo())){
-						statementswithCallsToExtractedOperation.add(statement);
-						break;
+					if(statement.getLocationInfo().subsumes(invokation.getLocationInfo()) && invokation.getExpression() == null ){
+						//if(isAllStatementInvocationsToExtractedOperation(statement , extractOperationRef.getExtractedOperation())) {
+							statementswithCallsToExtractedOperation.add(statement);
+							break;
+						//}
 					}	
 				}
 			}
 		}
 		return statementswithCallsToExtractedOperation;
+	}
+	
+	private boolean isAllStatementInvocationsToExtractedOperation(StatementObject statement, UMLOperation extractOperation){
+		for( String invocationString : statement.getMethodInvocationMap().keySet()) {
+			for(OperationInvocation invocation : statement.getMethodInvocationMap().get(invocationString)) {
+				if(!invocation.matchesOperation(extractOperation)) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 	
 	private List<AbstractExpression> getAllCompositeStatementObjectExpressionsWithInvokationsToExtractedOperation(CompositeStatementObject compositeStatement ,
@@ -1469,7 +1520,8 @@ public class MotivationExtractor {
 					for(ExtractOperationRefactoring extractOp : listSourceOperations){
 						setRefactoringMotivation(MotivationType.EM_REMOVE_DUPLICATION, extractOp);
 						if(isMotivationDetected(extractOp , MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY) 
-								&& !decomposeToImproveReadabilityFromSingleMethodRefactorings.contains(extractOp)) {
+								&& (!decomposeToImproveReadabilityFromSingleMethodRefactorings.contains(extractOp)||
+										decomposeToImproveReadabilityFromSingleMethodByHavingCallToExtractedMethodInReturn.contains(extractOp))) {
 							removeRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY, extractOp);
 						}
 						allRemoveDuplicationExtractRefactorings.add(extractOp);	
