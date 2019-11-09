@@ -51,6 +51,11 @@ public class MotivationExtractor {
 	private List<ExtractOperationRefactoring> removeDuplicationFromSingleMethodRefactorings = new ArrayList<ExtractOperationRefactoring>();
 	private List<ExtractOperationRefactoring> decomposeToImproveReadabilityFromSingleMethodRefactorings = new ArrayList<ExtractOperationRefactoring>();
 	private List<ExtractOperationRefactoring> decomposeToImproveReadabilityFromSingleMethodByHavingCallToExtractedMethodInReturn = new ArrayList<ExtractOperationRefactoring>();
+	private List<ExtractOperationRefactoring> facilitateExtensionRefactoringsWithExtrensionInParent = new ArrayList<ExtractOperationRefactoring>();
+
+	
+
+	
 	private int countSingleMethodRemoveDuplications = 0;
 	private Map<Refactoring, int[] > mapFacilitateExtensionT1T2  = new HashMap<Refactoring, int[]>() ;
 	private Map<Refactoring, String> mapDecomposeToImproveRedability =  new HashMap<Refactoring,String>();
@@ -146,11 +151,17 @@ public class MotivationExtractor {
 		isMethodExtractedToRemoveDuplication(listRef);
 		//Motivation Detection algorithms that can detect the motivation independently for each refactoring
 		for(Refactoring ref : listRef) {
+			if(isExtractFacilitateExtension(ref,listRef)){		
+				setRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+			}
 			if(isIntroduceAlternativeMethodSignature(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE, ref);
 			}
-			if(isReplaceMethodPreservingBackwardCompatibility(ref)){
-				setRefactoringMotivation(MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY, ref);
+			//Check if facilitate extension happened in source operation after extraction (parent)
+			if(facilitateExtensionRefactoringsWithExtrensionInParent.size() == 0) {
+				if(isReplaceMethodPreservingBackwardCompatibility(ref)){
+					setRefactoringMotivation(MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY, ref);
+				}
 			}
 			if(isExtractReusableMethod(ref , listRef)) {
 				setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
@@ -169,11 +180,7 @@ public class MotivationExtractor {
 			}
 			if(isExtractedtoIntroduceAsyncOperation(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ASYNC_OPERATION, ref);
-			}
-			
-			if(isExtractFacilitateExtension(ref,listRef)){		
-				setRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
-			}		
+			}	
 		}
 		
 		postProcessingForIsExtractFacilitateExtension(listRef);
@@ -566,10 +573,12 @@ public class MotivationExtractor {
 					return true;	
 				}else {
 					// In this case introducing an alternative method has priority over backward compatibility if it is previously detected
-					if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
+					if(isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
+						return false;
+					}else {
 						return true;
 					}
-				}
+				} 
 			}
 		}
 		return false;
@@ -632,7 +641,7 @@ public class MotivationExtractor {
 	
 
 	private boolean isIntroduceAlternativeMethodSignature(Refactoring ref) {
-		
+
 		if( ref instanceof ExtractOperationRefactoring){
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
 			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();;	
@@ -650,7 +659,7 @@ public class MotivationExtractor {
 						return true;
 					}
 				}
-			}
+			}	
 		}
 		return false;
 	}
@@ -662,11 +671,17 @@ public class MotivationExtractor {
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
 			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
 			List<OperationInvocation> listExtractedOpInvokations = extractOpRefactoring.getExtractedOperationInvocations();
-			boolean isToIntroduceAlternativeMethod = (!sourceOpAfterExtraction.equalParameters(extractedOperation))?true:false;
+			boolean isEqualParameters = sourceOpAfterExtraction.equalParameters(extractedOperation);
+			//boolean isEqualNames = extractedOperation.getName().equals(sourceOpAfterExtraction.getName());
+			//boolean isEqualParametersDifferentNames = isEqualParameters && !isEqualNames ;
+			boolean isToIntroduceAlternativeMethod = !isEqualParameters ?true:false;
 			/*DETECTION RULE: Check IF the method parameters has changed AND if source Operation after extraction is a delegate 
 			*/
 			if(isToIntroduceAlternativeMethod && (listExtractedOpInvokations.size() == 1)) {
-				return true;
+				if(!isMotivationDetected(extractOpRefactoring, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {
+					return true;
+
+				}
 			}
 		}
 		return false;
@@ -678,7 +693,7 @@ public class MotivationExtractor {
 		Set<CodeElementType> codeElementTypeSet = new HashSet<CodeElementType>();
 		List<AbstractStatement> nonTempAbstractStatements = new ArrayList<AbstractStatement>();
 		codeElementTypeSet.add(CodeElementType.VARIABLE_DECLARATION_STATEMENT);
-		codeElementTypeSet.add(CodeElementType.RETURN_STATEMENT);//Considering return statements as Temp
+		//codeElementTypeSet.add(CodeElementType.RETURN_STATEMENT);//Considering return statements as Temp
 		for(AbstractStatement statement : abstractStatements) {
 			CodeElementType statementType = statement.getLocationInfo().getCodeElementType();
 			if(!codeElementTypeSet.contains(statementType)) {
@@ -814,6 +829,9 @@ public class MotivationExtractor {
 						parentListNotMappedleafNodesT1, parentListNotMappedInnerNodesT1);
 			 //DETECTION RULE: Detect if Some statements(InnerNode or Leave) added either ExtractedOperation or
 			//Source Operation After Extraction
+				if(countParentNonMappedLeavesAndInnerNodesT2 > 0) {
+					facilitateExtensionRefactoringsWithExtrensionInParent.add(extractOperationRefactoring);
+				}
 			if( countChildNonMappedLeavesAndInnerNodesT2 > 0 || countParentNonMappedLeavesAndInnerNodesT2 > 0) {
 				//if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE) && !isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {	
 				return true;
@@ -1369,7 +1387,8 @@ public class MotivationExtractor {
 			if(listReturnStatementswithCallsToExtractedOperation.size() > 0) {
 				decomposeToImproveReadabilityFromSingleMethodByHavingCallToExtractedMethodInReturn.add((ExtractOperationRefactoring)ref);
 			}
-			if(getAllCompositeStatementObjectExpressionsWithInvokationsToExtractedOperation(sourceOperationAfterExtractionBody, extratedOperation, sourceOperationAfterExtraction).size() > 0 ||
+			List<AbstractExpression> expressionsInCompositesWithCallsToExtractedMethod = getAllCompositeStatementObjectExpressionsWithInvokationsToExtractedOperation(sourceOperationAfterExtractionBody, extratedOperation, sourceOperationAfterExtraction);
+			if(expressionsInCompositesWithCallsToExtractedMethod.size() > 0 ||
 					expressionsUsingVariableInitializedWithExtracedOperationInvocation.size() > 0 || 
 					((listReturnStatementswithCallsToExtractedOperation.size() > 0) && (sourceOperationAfterExtraction.getBody().statementCount() > 1))) {
 				return true;
