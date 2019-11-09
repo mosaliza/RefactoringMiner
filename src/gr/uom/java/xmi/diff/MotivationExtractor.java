@@ -166,11 +166,13 @@ public class MotivationExtractor {
 			if(isExtractReusableMethod(ref , listRef)) {
 				setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
 			}
-			if(isExtractedToImproveTestability(ref)) {
-				setRefactoringMotivation(MotivationType.EM_IMPROVE_TESTABILITY, ref);
-			}
 			if(isExtractedtoEnableRecursion(ref)) {
 				setRefactoringMotivation(MotivationType.EM_ENABLE_RECURSION, ref);
+			}
+			if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
+				if(isExtractedToImproveTestability(ref)) {
+					setRefactoringMotivation(MotivationType.EM_IMPROVE_TESTABILITY, ref);
+				}
 			}
 			if(isExtractedToEnableOverriding(ref)) {
 				setRefactoringMotivation(MotivationType.EM_ENABLE_OVERRIDING, ref);
