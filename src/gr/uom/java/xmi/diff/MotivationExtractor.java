@@ -172,6 +172,9 @@ public class MotivationExtractor {
 			if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
 				if(isExtractedToImproveTestability(ref)) {
 					setRefactoringMotivation(MotivationType.EM_IMPROVE_TESTABILITY, ref);
+					//e.g. : JetBrains/intellij-community:7ed3f2
+					removeRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY, ref);
+					removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
 				}
 			}
 			if(isExtractedToEnableOverriding(ref)) {
@@ -825,22 +828,21 @@ public class MotivationExtractor {
 			int filterdParentListNotMappedInnerNodesT2 = parentListNotMappedInnerNodesT2.size()-setParentMarkedT2InnerNodes.size();
             int filteredParentListNotMappedLeavesT2 = parentListNotMappedLeavesT2.size()-setParentMarkedT2Leaves.size();
 			 countParentNonMappedLeavesAndInnerNodesT2 = filterdParentListNotMappedInnerNodesT2 + filteredParentListNotMappedLeavesT2;
-		 	 //CODE ANALYSYS
-				codeAnalysisFaciliateExtension(ref, countChildNonMappedLeavesAndInnerNodesT2,
-						countParentNonMappedLeavesAndInnerNodesT2, listNotMappedleafNodesT1, listNotMappedInnerNodesT1,
-						parentListNotMappedleafNodesT1, parentListNotMappedInnerNodesT1);
+			 //CODE ANALYSYS
+			 codeAnalysisFaciliateExtension(ref, countChildNonMappedLeavesAndInnerNodesT2,
+					 countParentNonMappedLeavesAndInnerNodesT2, listNotMappedleafNodesT1, listNotMappedInnerNodesT1,
+					 parentListNotMappedleafNodesT1, parentListNotMappedInnerNodesT1);
 			 //DETECTION RULE: Detect if Some statements(InnerNode or Leave) added either ExtractedOperation or
-			//Source Operation After Extraction
-				if(countParentNonMappedLeavesAndInnerNodesT2 > 0) {
-					facilitateExtensionRefactoringsWithExtrensionInParent.add(extractOperationRefactoring);
-				}
-			if( countChildNonMappedLeavesAndInnerNodesT2 > 0 || countParentNonMappedLeavesAndInnerNodesT2 > 0) {
-				//if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE) && !isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {	
-				return true;
-				//}
-			}
+			 //Source Operation After Extraction
+			 if(countParentNonMappedLeavesAndInnerNodesT2 > 0) {
+				 facilitateExtensionRefactoringsWithExtrensionInParent.add(extractOperationRefactoring);
+			 }
+			 if( countChildNonMappedLeavesAndInnerNodesT2 > 0 || countParentNonMappedLeavesAndInnerNodesT2 > 0) {
+				// if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE) && !isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {	
+					 return true;
+				 //}	
+			 }
 		}
-
 		return false;
 	}
 
@@ -953,13 +955,13 @@ public class MotivationExtractor {
 						otherOperationInvocationCountInStatement++;
 					}
 				}
-				if(elementType.equals(CodeElementType.IF_STATEMENT) ||
-						elementType.equals(CodeElementType.VARIABLE_DECLARATION_STATEMENT)||
-						elementType.equals(CodeElementType.EXPRESSION_STATEMENT)
-						) {
+
+				if (elementType.equals(CodeElementType.IF_STATEMENT) ||
+						elementType.equals(CodeElementType.EXPRESSION_STATEMENT)||
+						elementType.equals(CodeElementType.VARIABLE_DECLARATION_STATEMENT)) {
 					if(extractedOperationInvocationCountInStatement == 0 && otherOperationInvocationCountInStatement == 0) {
 						return true;
-					}
+						}
 				}else {
 					if(extractedOperationInvocationCountInStatement == 0) {
 						return true;
