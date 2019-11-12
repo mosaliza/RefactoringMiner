@@ -172,8 +172,7 @@ public class MotivationExtractor {
 				}
 			}
 			if(isExtractReusableMethod(ref , listRef)) {
-				if (!(isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)||
-						isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE))) {
+				if (!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {
 					setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
 				}
 			}
@@ -188,16 +187,20 @@ public class MotivationExtractor {
 					removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
 				}
 			}
-			if(isExtractedToEnableOverriding(ref)) {
-				setRefactoringMotivation(MotivationType.EM_ENABLE_OVERRIDING, ref);
-			}
 			if(isExtractedToIntroduceFactoryMethod(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
 				removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
 			}
 			if(isExtractedtoIntroduceAsyncOperation(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ASYNC_OPERATION, ref);
-			}	
+			}
+			if(isExtractedToEnableOverriding(ref)) {
+				setRefactoringMotivation(MotivationType.EM_ENABLE_OVERRIDING, ref);
+				removeRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
+				removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+				removeRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
+				removeRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY, ref);
+			}
 		}
 		
 		postProcessingForIsExtractFacilitateExtension(listRef);
