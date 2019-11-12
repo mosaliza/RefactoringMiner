@@ -157,14 +157,18 @@ public class MotivationExtractor {
 				setRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
 			}
 			if(isIntroduceAlternativeMethodSignature(ref)) {
-				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE, ref);
-				removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+				if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
+					setRefactoringMotivation(MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE, ref);
+					removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+				}
 			}
 			//Check if facilitate extension happened in source operation after extraction (parent)
 			if(facilitateExtensionRefactoringsWithExtrensionInParent.size() == 0) {
 				if(isReplaceMethodPreservingBackwardCompatibility(ref)){
-					setRefactoringMotivation(MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY, ref);
-					removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+					if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
+						setRefactoringMotivation(MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY, ref);
+						removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+					}
 				}
 			}
 			if(isExtractReusableMethod(ref , listRef)) {
