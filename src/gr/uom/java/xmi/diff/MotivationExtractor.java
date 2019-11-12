@@ -32,6 +32,8 @@ import gr.uom.java.xmi.UMLOperation;
 import gr.uom.java.xmi.UMLParameter;
 import gr.uom.java.xmi.UMLTagElement;
 import gr.uom.java.xmi.UMLType;
+import gr.uom.java.xmi.decomposition.AbstractCodeFragment;
+import gr.uom.java.xmi.decomposition.AbstractCodeMapping;
 import gr.uom.java.xmi.decomposition.AbstractExpression;
 import gr.uom.java.xmi.decomposition.AbstractStatement;
 import gr.uom.java.xmi.decomposition.AnonymousClassDeclarationObject;
@@ -182,6 +184,7 @@ public class MotivationExtractor {
 			}
 			if(isExtractedToIntroduceFactoryMethod(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
+				removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
 			}
 			if(isExtractedtoIntroduceAsyncOperation(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ASYNC_OPERATION, ref);
@@ -236,19 +239,21 @@ public class MotivationExtractor {
 			UMLParameter returnParameter =  extractedOperation.getReturnParameter();
 			UMLType returnParameterType = returnParameter.getType();
 			List<String> returnStatementVariables = new ArrayList<String>();
-			Map<String ,List<ObjectCreation>> returnStatementobjectCreationsMap = new HashMap<String,List<ObjectCreation>>();
+			Map<String ,List<ObjectCreation>> returnStatementobjectCreationsMap = new HashMap<String,List<ObjectCreation>>();		
 			for(AbstractStatement statement : extractedOperation.getBody().getCompositeStatement().getStatements()) {
-				if(statement.getLocationInfo().getCodeElementType().equals(CodeElementType.RETURN_STATEMENT)) {
+				if (statement.getLocationInfo().getCodeElementType().equals(CodeElementType.RETURN_STATEMENT)) {
 					returnStatementVariables = statement.getVariables();
 					returnStatementobjectCreationsMap = statement.getCreationMap();
-					for(String objectCreationString : returnStatementobjectCreationsMap.keySet() ) {
-						List<ObjectCreation> listObjectCreation = returnStatementobjectCreationsMap.get(objectCreationString);
-						for(ObjectCreation objectCreation: listObjectCreation) {
-							if(objectCreation.getType().equalClassType(returnParameterType) ||
-									returnParameterType.equalsWithSubType(objectCreation.getType())) {
-								listReturnTypeObjectsCreatedInReturnStatement.add(objectCreation);
-							}
-						}
+					for(String objectCreationString : returnStatementobjectCreationsMap.keySet()) {
+						//if(!isStatementInMappings(objectCreationString, extractOpRefactoring)) {
+							List<ObjectCreation> listObjectCreation = returnStatementobjectCreationsMap.get(objectCreationString);
+							for(ObjectCreation objectCreation: listObjectCreation) {
+								if(objectCreation.getType().equalClassType(returnParameterType) ||
+										returnParameterType.equalsWithSubType(objectCreation.getType())) {
+									listReturnTypeObjectsCreatedInReturnStatement.add(objectCreation);
+								}
+							}	
+						//}
 					}
 					if(listReturnTypeObjectsCreatedInReturnStatement.size() == 1) {
 						return true;							
@@ -265,22 +270,25 @@ public class MotivationExtractor {
 					AbstractExpression abstractExpression = variableDecleration.getInitializer();
 					abstractExpressionObjectCreationsMap = abstractExpression.getCreationMap();
 					for(String objectCreationString : abstractExpressionObjectCreationsMap.keySet()) {
-						abstractExpressionObjectCreations = abstractExpressionObjectCreationsMap.get(objectCreationString);
-						for(ObjectCreation objectCreation: abstractExpressionObjectCreations) {
-							if(objectCreation.getType().equalClassType(returnParameterType) ||
-									returnParameterType.equalsWithSubType(objectCreation.getType())) {
-								listObjectCreationVariableDeclerationsWithReturnType.add(variableDecleration);
+						//ObjectCreation statement should not be in the mappings 
+						//if(!isStatementInMappings(objectCreationString, extractOpRefactoring)) {
+							abstractExpressionObjectCreations = abstractExpressionObjectCreationsMap.get(objectCreationString);
+							for(ObjectCreation objectCreation: abstractExpressionObjectCreations) {
+								if(objectCreation.getType().equalClassType(returnParameterType) ||
+										returnParameterType.equalsWithSubType(objectCreation.getType())) {
+									listObjectCreationVariableDeclerationsWithReturnType.add(variableDecleration);
+								}
+							}	
+							for(VariableDeclaration objectCreationVariableDecleration :listObjectCreationVariableDeclerationsWithReturnType){
+								if(variableTypeNameMap.containsKey(variableDecleration.getType())) {
+									variableTypeNameMap.get(objectCreationVariableDecleration.getType()).add(objectCreationVariableDecleration.getVariableName());
+								}else {
+									List<String> variableNames  = new ArrayList<String>();
+									variableNames.add(objectCreationVariableDecleration.getVariableName());
+									variableTypeNameMap.put(objectCreationVariableDecleration.getType(), variableNames);						
+								}
 							}
-						}	
-						for(VariableDeclaration objectCreationVariableDecleration :listObjectCreationVariableDeclerationsWithReturnType){
-							if(variableTypeNameMap.containsKey(variableDecleration.getType())) {
-								variableTypeNameMap.get(objectCreationVariableDecleration.getType()).add(objectCreationVariableDecleration.getVariableName());
-							}else {
-								List<String> variableNames  = new ArrayList<String>();
-								variableNames.add(objectCreationVariableDecleration.getVariableName());
-								variableTypeNameMap.put(objectCreationVariableDecleration.getType(), variableNames);						
-							}
-						}
+					//	}
 					}			
 				}
 			}
@@ -300,7 +308,16 @@ public class MotivationExtractor {
 		}
 		return false;
 	}
-	
+	private boolean isStatementInMappings(String statementString , ExtractOperationRefactoring  extractOpRef) {
+		Set<AbstractCodeMapping> abstractCodeMappings = extractOpRef.getBodyMapper().getMappings();		
+		for(AbstractCodeMapping abstractCodeMapping: abstractCodeMappings) {
+			AbstractCodeFragment abstractCodeFragment = abstractCodeMapping.getFragment2();
+			if(abstractCodeFragment.toString().contains(statementString)) {
+				return true;
+			}
+		}
+		return false;
+	}
 	private boolean isAllStatementsObjectCreationRelated (UMLOperation extractedOperation , List<VariableDeclaration> returnTypeObjectCreationVariableDeclerations ){
 		
 		List<VariableDeclaration> allVariableDeclerations = extractedOperation.getBody().getAllVariableDeclarations();
