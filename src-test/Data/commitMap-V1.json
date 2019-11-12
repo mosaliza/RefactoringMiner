@@ -11543,7 +11543,8 @@
 	"description": "Extract Method public makeAlertMessage(payloadBytes byte[]) : Message extracted from private makeMessage(command String, length int, payloadBytes byte[], hash byte[], checksum byte[]) : Message in class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11560,7 +11561,8 @@
 	"description": "Extract Method public makeBloomFilter(payloadBytes byte[]) : Message extracted from private makeMessage(command String, length int, payloadBytes byte[], hash byte[], checksum byte[]) : Message in class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11568,7 +11570,8 @@
 	"description": "Extract Method public makeFilteredBlock(payloadBytes byte[]) : FilteredBlock extracted from private makeMessage(command String, length int, payloadBytes byte[], hash byte[], checksum byte[]) : Message in class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11827,7 +11830,8 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[]) : Block extracted from package parse() : void in class org.bitcoinj.core.FilteredBlock & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11835,7 +11839,8 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[]) : Block extracted from public deserializeCompact(params NetworkParameters, buffer ByteBuffer) : StoredBlock in class org.bitcoinj.core.StoredBlock & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11843,7 +11848,8 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[]) : Block extracted from public get(hash Sha256Hash, wasUndoableOnly boolean) : StoredBlock in class org.bitcoinj.store.DatabaseFullPrunedBlockStore & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11851,7 +11857,8 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[]) : Block extracted from public testBlockVerification() : void in class org.bitcoinj.core.BlockTest & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11859,7 +11866,8 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[]) : Block extracted from public testDate() : void in class org.bitcoinj.core.BlockTest & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11867,7 +11875,8 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[]) : Block extracted from public testProofOfWork() : void in class org.bitcoinj.core.BlockTest & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11875,7 +11884,8 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[]) : Block extracted from public testBadTransactions() : void in class org.bitcoinj.core.BlockTest & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11883,7 +11893,8 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[]) : Block extracted from public testHeaderParse() : void in class org.bitcoinj.core.BlockTest & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11891,7 +11902,8 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[]) : Block extracted from public testBitcoinSerialization() : void in class org.bitcoinj.core.BlockTest & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11899,7 +11911,8 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[]) : Block extracted from private roundtrip(b2 Block) : Block in class org.bitcoinj.core.ChainSplitTest & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11907,7 +11920,8 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[]) : Block extracted from public testReceiveCoinbaseTransaction() : void in class org.bitcoinj.core.CoinbaseBlockTest & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11915,7 +11929,8 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[]) : Block extracted from public getBlocksToTest(runBarelyExpensiveTests boolean, runExpensiveTests boolean, blockStorageFile File) : RuleList in class org.bitcoinj.core.FullBlockTestGenerator & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11923,7 +11938,8 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[]) : Block extracted from public testLastBlockSeenHash() : void in class org.bitcoinj.store.WalletProtobufSerializerTest & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11931,7 +11947,8 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[], length int) : Block extracted from package parse() : void in class org.bitcoinj.core.HeadersMessage & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11939,7 +11956,8 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[], length int) : Block extracted from public getBlocksToTest(runBarelyExpensiveTests boolean, runExpensiveTests boolean, blockStorageFile File) : RuleList in class org.bitcoinj.core.FullBlockTestGenerator & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11947,7 +11965,8 @@
 	"description": "Extract And Move Method public getSerializer(parseLazy boolean, parseRetain boolean) : BitcoinSerializer extracted from public testLazyParsing() : void in class org.bitcoinj.core.BitcoinSerializerTest & moved to class org.bitcoinj.params.AbstractBitcoinNetParams",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11955,7 +11974,8 @@
 	"description": "Extract And Move Method public getSerializer(parseLazy boolean, parseRetain boolean) : BitcoinSerializer extracted from private testCachedParsing(lazy boolean) : void in class org.bitcoinj.core.BitcoinSerializerTest & moved to class org.bitcoinj.params.AbstractBitcoinNetParams",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11963,7 +11983,8 @@
 	"description": "Extract And Move Method public getSerializer(parseLazy boolean, parseRetain boolean) : BitcoinSerializer extracted from public testBlock(blockBytes byte[], isChild boolean, lazy boolean, retain boolean) : void in class org.bitcoinj.core.LazyParseByteCacheTest & moved to class org.bitcoinj.params.AbstractBitcoinNetParams",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -11971,7 +11992,8 @@
 	"description": "Extract And Move Method public getSerializer(parseLazy boolean, parseRetain boolean) : BitcoinSerializer extracted from public testTransaction(params NetworkParameters, txBytes byte[], isChild boolean, lazy boolean, retain boolean) : void in class org.bitcoinj.core.LazyParseByteCacheTest & moved to class org.bitcoinj.params.AbstractBitcoinNetParams",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/bitcoinj/bitcoinj.git",
