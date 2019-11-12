@@ -172,7 +172,10 @@ public class MotivationExtractor {
 				}
 			}
 			if(isExtractReusableMethod(ref , listRef)) {
-				setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
+				if (!(isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)||
+						isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY))) {
+					setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
+				}
 			}
 			if(isExtractedtoEnableRecursion(ref)) {
 				setRefactoringMotivation(MotivationType.EM_ENABLE_RECURSION, ref);
