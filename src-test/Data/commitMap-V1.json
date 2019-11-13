@@ -14968,7 +14968,8 @@
 	"description": "Extract Method private reserveSpace(size long) : void extracted from public addTempBlockMeta(tempBlockMeta TempBlockMeta) : boolean in class tachyon.worker.block.meta.StorageDir",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match2"
 	} ]
 },
 {
@@ -14984,7 +14985,8 @@
 	"description": "Extract Method private reclaimSpace(size long) : void extracted from public removeBlockMeta(block BlockMeta) : boolean in class tachyon.worker.block.meta.StorageDir",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match2"
 	} ]
 },
 {
@@ -14992,7 +14994,8 @@
 	"description": "Extract Method private reclaimSpace(size long) : void extracted from public removeTempBlockMeta(tempBlockMeta TempBlockMeta) : boolean in class tachyon.worker.block.meta.StorageDir",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match2"
 	} ]
 },
 {

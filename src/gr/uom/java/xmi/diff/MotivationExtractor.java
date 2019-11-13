@@ -188,8 +188,8 @@ public class MotivationExtractor {
 				}
 			}
 			if(isExtractedToIntroduceFactoryMethod(ref)) {
-				setRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
-				removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);	
+					setRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
+					removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
 			}
 			if(isExtractedtoIntroduceAsyncOperation(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ASYNC_OPERATION, ref);
