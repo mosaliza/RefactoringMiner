@@ -1702,7 +1702,8 @@
 	"description": "Extract Method private releaseCurrentRequest() : void extracted from public delegateAIEnded(ai AIRobot) : void in class buildcraft.robotics.boards.BoardRobotDelivery",
 	"motivations": [ 
 	{ 
-
+		       "label": "EM: Facilitate extension",
+                "status": "match1"
 	} ]
 },
 {
@@ -1710,7 +1711,8 @@
 	"description": "Extract Method private releaseCurrentRequest() : void extracted from public delegateAIEnded(ai AIRobot) : void in class buildcraft.robotics.boards.BoardRobotDelivery",
 	"motivations": [ 
 	{ 
-
+		       "label": "EM: Facilitate extension",
+                "status": "match1"
 	} ]
 },
 {
@@ -3417,7 +3419,8 @@
 	"description": "Extract Method private createEnvironment(propName String, propValue String) : ConfigurableEnvironment extracted from public differentEventTypes() : void in class org.springframework.boot.actuate.system.ApplicationPidFileWriterTests",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -3442,7 +3445,8 @@
 	"description": "Extract Method private createEnvironment(propName String, propValue String) : ConfigurableEnvironment extracted from public overridePidFileWithSpring() : void in class org.springframework.boot.actuate.system.ApplicationPidFileWriterTests",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
