@@ -7978,7 +7978,8 @@
 	"description": "Extract Method private getUsefulClass() : Class<? extends Model> extracted from private find(conn Connection, sql String, paras Object...) : List<M> in class com.jfinal.plugin.activerecord.Model",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -14141,7 +14142,8 @@
 	"description": "Extract Method private peekParameter(inTypeExpression boolean) : boolean extracted from private parseFormalParameterList() : FormalParameterListTree in class com.google.javascript.jscomp.parsing.parser.Parser",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 },
 {
@@ -14765,7 +14767,8 @@
 	"description": "Extract Method private isDeclarationToken(parentType int) : boolean extracted from private processIDENT(ast DetailAST) : void in class com.puppycrawl.tools.checkstyle.checks.coding.RequireThisCheck",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -14785,7 +14788,8 @@
 	"description": "Extract Method private addWearActions(builder NotificationCompat.Builder, totalMsgCount int, msgCount int, account Account, allRefs ArrayList<MessageReference>, messages List<? extends Message>, notificationID int) : void extracted from private notifyAccountWithDataLocked(context Context, account Account, message LocalMessage, data NotificationData) : void in class com.fsck.k9.controller.MessagingController",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -14875,7 +14879,8 @@
 	"description": "Extract Method private notifySynchronizeMailboxFailed(account Account, localFolder Folder, exception Exception) : void extracted from public sendPendingMessagesSynchronous(account Account) : void in class com.fsck.k9.controller.MessagingController",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 },
 {
@@ -14945,7 +14950,7 @@
 }
 ]},{	"repository": "https://github.com/amplab/tachyon.git",
 	"sha1": "ed966510ccf8441115614e2258aea61df0ea55f5",
-	"url": "https://github.com/amplab/tachyon/commit/ed966510ccf8441115614e2258aea61df0ea55f5",
+	"url": "https://github.com/amplab/tachyon/commit/ed966510ccf8441115614e2258aea61df0ea55f5https://github.com/amplab/tachyon/commit/ed966510ccf8441115614e2258aea61df0ea55f5",
 	"refactorings": [{
 	"type": "Extract Method",
 	"description": "Extract Method private reserveSpace(size long) : void extracted from public addBlockMeta(block BlockMeta) : Optional<BlockMeta> in class tachyon.worker.block.meta.StorageDir",
@@ -15003,7 +15008,8 @@
 	"description": "Extract And Move Method public resizeTempBlockMeta(tempBlockMeta TempBlockMeta, newSize long) : void extracted from private requestSpaceNoLock(userId long, blockId long, moreBytes long) : boolean in class tachyon.worker.block.TieredBlockStore & moved to class tachyon.worker.block.meta.StorageDir",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/amplab/tachyon.git",
