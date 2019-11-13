@@ -16260,7 +16260,8 @@
 	"description": "Extract Method private setNewName(newText String) : PsiElement extracted from public bindToElement(element PsiElement) : PsiElement in class org.jetbrains.plugins.javaFX.fxml.refs.FxmlReferencesContributor.MyJavaClassReferenceProvider.JavaClassReferenceWrapper",
 	"motivations": [ 
 	{ 
-
+			"label": "EM: Facilitate extension",
+			"status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/JetBrains/intellij-community.git",
