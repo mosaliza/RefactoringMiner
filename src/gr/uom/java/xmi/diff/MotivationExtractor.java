@@ -189,7 +189,7 @@ public class MotivationExtractor {
 			}
 			if(isExtractedToIntroduceFactoryMethod(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
-				removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+				removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);	
 			}
 			if(isExtractedtoIntroduceAsyncOperation(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ASYNC_OPERATION, ref);
@@ -260,8 +260,10 @@ public class MotivationExtractor {
 						//if(!isStatementInMappings(objectCreationString, extractOpRefactoring)) {
 							List<ObjectCreation> listObjectCreation = returnStatementobjectCreationsMap.get(objectCreationString);
 							for(ObjectCreation objectCreation: listObjectCreation) {
+								String statementWithoutObjectCreation = statement.toString().replace(objectCreationString, "").replace(";","");
+								boolean isOnlyObjectCreation = statementWithoutObjectCreation.trim().equals("return")?true:false;
 								if(objectCreation.getType().equalClassType(returnParameterType) ||
-										returnParameterType.equalsWithSubType(objectCreation.getType())) {
+										returnParameterType.equalsWithSubType(objectCreation.getType()) || isOnlyObjectCreation) {
 									listReturnTypeObjectsCreatedInReturnStatement.add(objectCreation);
 								}
 							}	
