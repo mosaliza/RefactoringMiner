@@ -14062,6 +14062,14 @@
 	"type": "Extract Method",
 	"description": "Extract Method private foldExprShortcut(desc ExprNodeDesc, constants Map<ColumnInfo,ExprNodeDesc>, cppCtx ConstantPropagateProcCtx, op Operator<? extends Serializable>, tag int, propagate boolean) : ExprNodeDesc extracted from private foldExpr(desc ExprNodeDesc, constants Map<ColumnInfo,ExprNodeDesc>, cppCtx ConstantPropagateProcCtx, op Operator<? extends Serializable>, tag int, propagate boolean) : ExprNodeDesc in class org.apache.hadoop.hive.ql.optimizer.ConstantPropagateProcFactory",
 	"motivations": [ 
+	            {
+                "label": "EM: Decompose method to improve readability",
+                "status": "add"
+            },
+            {
+                "label": "EM: Facilitate extension",
+                "status": "match1"
+            }
 	]
 },
 {
@@ -14141,7 +14149,8 @@
 	"description": "Extract Method private parseParameter(inTypeExpression boolean) : ParseTree extracted from private parseFormalParameterList() : FormalParameterListTree in class com.google.javascript.jscomp.parsing.parser.Parser",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 },
 {
