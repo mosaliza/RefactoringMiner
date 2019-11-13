@@ -1693,7 +1693,8 @@
 	"description": "Extract Method private releaseCurrentRequest() : void extracted from public delegateAIEnded(ai AIRobot) : void in class buildcraft.robotics.boards.BoardRobotDelivery",
 	"motivations": [ 
 	{ 
-
+		       "label": "EM: Facilitate extension",
+                "status": "match1"
 	} ]
 },
 {
