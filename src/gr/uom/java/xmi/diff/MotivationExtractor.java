@@ -195,11 +195,13 @@ public class MotivationExtractor {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ASYNC_OPERATION, ref);
 			}
 			if(isExtractedToEnableOverriding(ref)) {
-				setRefactoringMotivation(MotivationType.EM_ENABLE_OVERRIDING, ref);
-				removeRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
-				removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
-				removeRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
-				removeRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY, ref);
+				if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
+					setRefactoringMotivation(MotivationType.EM_ENABLE_OVERRIDING, ref);
+					removeRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
+					removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+					removeRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
+					removeRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY, ref);
+				}
 			}
 		}
 		
