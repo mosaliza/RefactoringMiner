@@ -162,15 +162,6 @@ public class MotivationExtractor {
 					removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
 				}
 			}
-			//Check if facilitate extension happened in source operation after extraction (parent)
-			if(facilitateExtensionRefactoringsWithExtrensionInParent.size() == 0) {
-				if(isReplaceMethodPreservingBackwardCompatibility(ref)){
-					if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
-						setRefactoringMotivation(MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY, ref);
-						removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
-					}
-				}
-			}
 			if(isExtractReusableMethod(ref , listRef)) {
 				if (!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {
 					setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
@@ -185,6 +176,17 @@ public class MotivationExtractor {
 					//e.g. : JetBrains/intellij-community:7ed3f2
 					removeRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY, ref);
 					removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+				}
+			}
+			//Check if facilitate extension happened in source operation after extraction (parent)
+			if(facilitateExtensionRefactoringsWithExtrensionInParent.size() == 0) {
+				if(isReplaceMethodPreservingBackwardCompatibility(ref)){
+					if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
+						setRefactoringMotivation(MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY, ref);
+						removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+						removeRefactoringMotivation(MotivationType.EM_IMPROVE_TESTABILITY, ref);
+
+					}
 				}
 			}
 			if(isExtractedToIntroduceFactoryMethod(ref)) {
