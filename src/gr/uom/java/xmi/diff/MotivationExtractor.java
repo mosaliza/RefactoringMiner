@@ -162,14 +162,6 @@ public class MotivationExtractor {
 					removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
 				}
 			}
-			if(isExtractReusableMethod(ref , listRef)) {
-				if (!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {
-					setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
-				}
-			}
-			if(isExtractedtoEnableRecursion(ref)) {
-				setRefactoringMotivation(MotivationType.EM_ENABLE_RECURSION, ref);
-			}
 			if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
 				if(isExtractedToImproveTestability(ref)) {
 					setRefactoringMotivation(MotivationType.EM_IMPROVE_TESTABILITY, ref);
@@ -188,6 +180,15 @@ public class MotivationExtractor {
 
 					}
 				}
+			}
+			if(isExtractReusableMethod(ref , listRef)) {
+				if (!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {
+					setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
+					//removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+				}
+			}
+			if(isExtractedtoEnableRecursion(ref)) {
+				setRefactoringMotivation(MotivationType.EM_ENABLE_RECURSION, ref);
 			}
 			if(isExtractedToIntroduceFactoryMethod(ref)) {
 					setRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
