@@ -220,28 +220,23 @@ public class MotivationExtractor {
 		 * (LIKE THE CASE OF REMOVE DUPLICATION) exists and at least one of them has no new added code .
 		 *  we will omit the facilitate extension from all the other extract operations
 		 *  of that group as well. Example: j2objc fa3e6fa */
-		boolean extracteOperationwithoutAddedCodeInExtractedMethodExists = false;
-		List<ExtractOperationRefactoring> listExtractOperationstoRemoveDupliction = new ArrayList<ExtractOperationRefactoring>();
-		for(Refactoring refactoring : listRef) {
-			if(refactoring instanceof ExtractOperationRefactoring) {
-				if(mapRefactoringMotivations.containsKey(refactoring)){
-					if(mapRefactoringMotivations.get(refactoring).contains(MotivationType.EM_REMOVE_DUPLICATION)){
-						listExtractOperationstoRemoveDupliction.add((ExtractOperationRefactoring)refactoring);	
-					}
-				}	
+		
+		Map<String, List<ExtractOperationRefactoring>> listRefGroupedByExtractedOperationNames = 
+				listRef.stream()
+				.map(x->(ExtractOperationRefactoring)x)
+				.collect(Collectors.groupingBy(x->x.getExtractedOperation().getName()));
+		
+		for(String extractedMethodgroupName : listRefGroupedByExtractedOperationNames.keySet()) {
+			boolean noFacilitateExtension =false;
+			for( ExtractOperationRefactoring extractOpRef : listRefGroupedByExtractedOperationNames.get(extractedMethodgroupName)) {
+				if(!isMotivationDetected(extractOpRef, MotivationType.EM_FACILITATE_EXTENSION)) {
+					noFacilitateExtension = true;
+					 break;
+				}
 			}
-		}
-		for(ExtractOperationRefactoring refactoring : listExtractOperationstoRemoveDupliction) {
-			List<MotivationType> extractRefactoringMotivations = mapRefactoringMotivations.get(refactoring);
-			if(!extractRefactoringMotivations.contains(MotivationType.EM_FACILITATE_EXTENSION)) {
-				extracteOperationwithoutAddedCodeInExtractedMethodExists = true;
-				break;
-			}
-		}
-		if(extracteOperationwithoutAddedCodeInExtractedMethodExists) {
-			for(Refactoring refactoring : listExtractOperationstoRemoveDupliction) {
-				if(mapRefactoringMotivations.get(refactoring).contains(MotivationType.EM_FACILITATE_EXTENSION)) {
-					mapRefactoringMotivations.get(refactoring).remove(MotivationType.EM_FACILITATE_EXTENSION);
+			if(noFacilitateExtension) {
+				for( ExtractOperationRefactoring extractOpRef : listRefGroupedByExtractedOperationNames.get(extractedMethodgroupName)) {
+					removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, extractOpRef);
 				}
 			}
 		}
