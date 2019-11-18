@@ -16268,6 +16268,24 @@
 			"label": "EM: Facilitate extension",
 			"status": "match1"
 	} ]
+},
+{
+	"type": "Extract Method",
+	"description": "Extract Method private getOldName() : String extracted from public handleElementRename(newElementName String) : PsiElement in class org.jetbrains.plugins.javaFX.fxml.refs.FxmlReferencesContributor.MyJavaClassReferenceProvider.JavaClassReferenceWrapper",
+	"motivations": [ 
+	{ 
+			"label": "EM: Facilitate extension",
+			"status": "match1"
+	} ]
+},
+{
+	"type": "Extract Method",
+	"description": "Extract Method private getOldName() : String extracted from public bindToElement(element PsiElement) : PsiElement in class org.jetbrains.plugins.javaFX.fxml.refs.FxmlReferencesContributor.MyJavaClassReferenceProvider.JavaClassReferenceWrapper",
+	"motivations": [ 
+	{ 
+			"label": "EM: Facilitate extension",
+			"status": "match1"
+	} ]
 }
 ]},{	"repository": "https://github.com/JetBrains/intellij-community.git",
 	"sha1": "3972b9b3d4e03bdb5e62dfa663e3e0a1871e3c9f",

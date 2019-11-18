@@ -42,6 +42,7 @@ import gr.uom.java.xmi.decomposition.ObjectCreation;
 import gr.uom.java.xmi.decomposition.OperationBody;
 import gr.uom.java.xmi.decomposition.OperationInvocation;
 import gr.uom.java.xmi.decomposition.StatementObject;
+import gr.uom.java.xmi.decomposition.TernaryOperatorExpression;
 import gr.uom.java.xmi.decomposition.UMLOperationBodyMapper;
 import gr.uom.java.xmi.decomposition.VariableDeclaration;
 
@@ -750,7 +751,9 @@ public class MotivationExtractor {
 			UMLOperation sourceOperationAfterExtrction = extractOperationRefactoring.getExtractedOperation();
 			int countChildNonMappedLeavesAndInnerNodesT2 = 0;
 			int countParentNonMappedLeavesAndInnerNodesT2 = 0;
-			
+			if(isExtractedMethodMappingAddedTernaryOperator(extractOperationRefactoring)) {
+				return true;
+			}
 			List<CompositeStatementObject> listParentT2CompositesWithInvokationsToExtractedMethodInExpression = new ArrayList<CompositeStatementObject>();
 			List<CompositeStatementObject> listParentNeutralInnerNodes = new ArrayList<CompositeStatementObject>();
 			List<StatementObject> listParentNotMappedLeavesWithInvokationsToExtractedMethod = new ArrayList<StatementObject>();
@@ -873,6 +876,17 @@ public class MotivationExtractor {
 					 return true;
 				 //}	
 			 }
+		}
+		return false;
+	}
+	private boolean isExtractedMethodMappingAddedTernaryOperator(ExtractOperationRefactoring extrctOpRefactoring){
+		Set<AbstractCodeMapping> codeMappings = extrctOpRefactoring.getBodyMapper().getMappings();
+		for(AbstractCodeMapping abstractCodeMapping: codeMappings) {
+			List<TernaryOperatorExpression> fragment1TernaryOperatorExpressions = abstractCodeMapping.getFragment1().getTernaryOperatorExpressions();
+			List<TernaryOperatorExpression> fragment2TernaryOperatorExpressions = abstractCodeMapping.getFragment2().getTernaryOperatorExpressions();
+			if(fragment2TernaryOperatorExpressions.size() > 0  && fragment1TernaryOperatorExpressions.size() == 0) {
+				return true;
+			}				
 		}
 		return false;
 	}
