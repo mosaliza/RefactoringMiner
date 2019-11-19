@@ -14,6 +14,7 @@ import javax.swing.text.html.parser.TagElement;
 
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jgit.api.AddCommand;
 import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
 
@@ -155,7 +156,7 @@ public class MotivationExtractor {
 		//Motivation Detection algorithms that can detect the motivation independently for each refactoring
 		for(Refactoring ref : listRef) {
 			if(isExtractFacilitateExtension(ref,listRef)){
-				setRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+					setRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);					
 			}
 			if(isIntroduceAlternativeMethodSignature(ref)) {
 				if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
@@ -868,8 +869,17 @@ public class MotivationExtractor {
 					 parentListNotMappedleafNodesT1, parentListNotMappedInnerNodesT1);
 			 //DETECTION RULE: Detect if Some statements(InnerNode or Leave) added either ExtractedOperation or
 			 //Source Operation After Extraction
+			 
 			 if(countParentNonMappedLeavesAndInnerNodesT2 > 0) {
-				 facilitateExtensionRefactoringsWithExtrensionInParent.add(extractOperationRefactoring);
+				 //Checking that the extension in the parent is in the "extraction scope" in source operation after extraction
+				if(isParentExtraNodeInExtractedScope(extractOperationRefactoring, parentListNotMappedInnerNodesT2,setParentMarkedT2InnerNodes,
+						 parentListNotMappedLeavesT2, setParentMarkedT2Leaves )) {
+					 facilitateExtensionRefactoringsWithExtrensionInParent.add(extractOperationRefactoring);
+				}else {
+					if(countChildNonMappedLeavesAndInnerNodesT2 == 0 ) {
+						return false;
+					}
+				}
 			 }
 			 if( countChildNonMappedLeavesAndInnerNodesT2 > 0 || countParentNonMappedLeavesAndInnerNodesT2 > 0) {
 				// if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE) && !isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {	
@@ -879,6 +889,74 @@ public class MotivationExtractor {
 		}
 		return false;
 	}
+	private boolean isParentExtraNodeInExtractedScope (ExtractOperationRefactoring extractOpRefactoring,  List<CompositeStatementObject> parentListNotMappedInnerNodesT2 , Set<CompositeStatementObject> setParentMarkedT2InnerNodes ,
+			List<StatementObject> parentListNotMappedLeavesT2 , Set<StatementObject> setParentMarkedT2Leaves ){
+		parentListNotMappedLeavesT2.removeAll(setParentMarkedT2Leaves);
+		Set<AbstractCodeMapping> abstractMappings = extractOpRefactoring.getBodyMapper().getMappings();
+		Set<CompositeStatementObject> codeFragment1sParents = new HashSet<CompositeStatementObject>();
+		for(AbstractCodeMapping abstractCodeMapping : abstractMappings) {
+			codeFragment1sParents.add(getNonBlockParentOfAbstractCodeFragment(abstractCodeMapping.getFragment1()));
+		}
+			for(CompositeStatementObject compositeStatement: parentListNotMappedInnerNodesT2) {				
+				CompositeStatementObject compositeStatementParent = getAbstractStatementNonBlockParent(compositeStatement);
+				for(CompositeStatementObject parent : codeFragment1sParents) {
+					if(parent == null && compositeStatementParent == null) {
+						//parents are either source operation before/after extraction
+						return true;
+					}
+					if (parent == null || compositeStatementParent == null) {
+						break;
+					}
+					if(parent.toString().equals(compositeStatementParent.toString())) {
+						return true;
+					}
+				}
+			}
+			for(StatementObject statementObject: parentListNotMappedLeavesT2) {
+				CompositeStatementObject statementObjectParent = getAbstractStatementNonBlockParent(statementObject);
+				for(CompositeStatementObject parent : codeFragment1sParents) {
+					if(parent == null && statementObjectParent == null) {
+						//parents are either source operation before/after extraction
+						return true;
+					}
+					if (parent == null || statementObjectParent == null) {
+						break;
+					}
+					if(parent.toString().equals(statementObjectParent.toString())) {
+						return true;
+					}
+				}
+			}	
+		return false;
+	}
+	
+	private CompositeStatementObject getAbstractStatementNonBlockParent(AbstractStatement abstractStatement) {
+		 CompositeStatementObject parent = abstractStatement.getParent();
+		while (parent.getLocationInfo().getCodeElementType().equals(CodeElementType.BLOCK)) {
+			if(parent.getParent() != null) {
+				parent = parent.getParent();	
+			}else {
+				return null;
+			}
+		}		
+		return parent;
+	}
+	
+	
+	private CompositeStatementObject getNonBlockParentOfAbstractCodeFragment(AbstractCodeFragment fragment){
+		 CompositeStatementObject parent = fragment.getParent();
+		while (parent.getLocationInfo().getCodeElementType().equals(CodeElementType.BLOCK)) {
+			if(parent.getParent() != null) {
+				parent = parent.getParent();	
+			}else {
+				return null;
+			}
+		}
+		
+		return parent;
+	}
+	
+	
 	private boolean isExtractedMethodMappingAddedTernaryOperator(ExtractOperationRefactoring extrctOpRefactoring){
 		Set<AbstractCodeMapping> codeMappings = extrctOpRefactoring.getBodyMapper().getMappings();
 		for(AbstractCodeMapping abstractCodeMapping: codeMappings) {
