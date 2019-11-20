@@ -179,7 +179,6 @@ public class MotivationExtractor {
 						setRefactoringMotivation(MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY, ref);
 						removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
 						removeRefactoringMotivation(MotivationType.EM_IMPROVE_TESTABILITY, ref);
-
 					}
 				}
 			}
@@ -193,8 +192,11 @@ public class MotivationExtractor {
 				setRefactoringMotivation(MotivationType.EM_ENABLE_RECURSION, ref);
 			}
 			if(isExtractedToIntroduceFactoryMethod(ref)) {
-					setRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
-					removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+				setRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
+				removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+				if(isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
+					removeRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
+				}
 			}
 			if(isExtractedtoIntroduceAsyncOperation(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ASYNC_OPERATION, ref);
