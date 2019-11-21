@@ -191,18 +191,21 @@ public class MotivationExtractor {
 			if(isExtractedtoEnableRecursion(ref)) {
 				setRefactoringMotivation(MotivationType.EM_ENABLE_RECURSION, ref);
 			}
+			if(isExtractedtoIntroduceAsyncOperation(ref)) {
+				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ASYNC_OPERATION, ref);
+			}
 			if(isExtractedToIntroduceFactoryMethod(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
 				removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+				removeRefactoringMotivation(MotivationType.EM_REMOVE_DUPLICATION, ref);
+				//Removing Reusable method when it is Introduce Factory method and Introduce alternative method signature.
 				if(isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
 					removeRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
 				}
 			}
-			if(isExtractedtoIntroduceAsyncOperation(ref)) {
-				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ASYNC_OPERATION, ref);
-			}
 			if(isExtractedToEnableOverriding(ref)) {
-				if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
+				if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)
+						&& decomposeToImproveReadabilityFromSingleMethodRefactorings.size() == 0 ) {
 					setRefactoringMotivation(MotivationType.EM_ENABLE_OVERRIDING, ref);
 					removeRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
 					removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
