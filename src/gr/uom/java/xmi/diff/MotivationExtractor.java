@@ -20,6 +20,7 @@ import org.refactoringminer.api.RefactoringType;
 
 import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.sun.corba.se.impl.protocol.INSServerRequestDispatcher;
+import com.sun.corba.se.pept.transport.ContactInfo;
 import com.sun.javafx.collections.MapAdapterChange;
 import com.sun.webkit.graphics.Ref;
 import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
@@ -179,6 +180,7 @@ public class MotivationExtractor {
 						setRefactoringMotivation(MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY, ref);
 						removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
 						removeRefactoringMotivation(MotivationType.EM_IMPROVE_TESTABILITY, ref);
+						removeRefactoringMotivation(MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE, ref);
 					}
 				}
 			}
@@ -584,7 +586,7 @@ public class MotivationExtractor {
 				}
 			}else{
 				//Temporary Variables should be excluded.
-				if(isUmlOperationStatementsAllTempVariables(sourceOpAfterExtraction)) {
+				if(isUmlOperationStatementsAllTempVariables(sourceOpAfterExtraction , extractOpRefactoring)) {
 					if(isExtractOperationForBackwardCompatibility(ref)) {
 						return true;
 					}
@@ -696,8 +698,13 @@ public class MotivationExtractor {
 				}
 
 			}else{
+				//Excluding cases with more than one invocation in source operation After extraction to extracted method
+				List<OperationInvocation> countExtractedOperationInvocations = getAllOperationInvocationToExtractedMethod(sourceOpAfterExtraction, extractOpRefactoring.getExtractedOperation());
+				if(countExtractedOperationInvocations.size() > 1) {
+					return false;
+				}
 				//Temporary Variables should be excluded.
-				if(isUmlOperationStatementsAllTempVariables(sourceOpAfterExtraction)) {
+				if(isUmlOperationStatementsAllTempVariables(sourceOpAfterExtraction , extractOpRefactoring)) {
 					if(isExtractOperationToIntroduceAlternativeMethod(ref)) {
 						return true;
 					}
@@ -721,34 +728,80 @@ public class MotivationExtractor {
 			/*DETECTION RULE: Check IF the method parameters has changed AND if source Operation after extraction is a delegate 
 			*/
 			if(isToIntroduceAlternativeMethod && (listExtractedOpInvokations.size() == 1)) {
-				if(!isMotivationDetected(extractOpRefactoring, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {
+				//if(!isMotivationDetected(extractOpRefactoring, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {
 					return true;
 
-				}
+				//}
 			}
 		}
 		return false;
 	}
 	
-	private boolean isUmlOperationStatementsAllTempVariables(UMLOperation operation) {
-		CompositeStatementObject compositeStatement = operation.getBody().getCompositeStatement();
+	private boolean isUmlOperationStatementsAllTempVariables(UMLOperation sourceOperationAfterExtraction , ExtractOperationRefactoring extracteOpRefactoring) {
+		CompositeStatementObject compositeStatement = sourceOperationAfterExtraction.getBody().getCompositeStatement();
 		List<AbstractStatement> abstractStatements = compositeStatement.getStatements();
 		Set<CodeElementType> codeElementTypeSet = new HashSet<CodeElementType>();
 		List<AbstractStatement> nonTempAbstractStatements = new ArrayList<AbstractStatement>();
+		List<StatementObject> statementsCallingExtractedOperation = new ArrayList<StatementObject>();
+		statementsCallingExtractedOperation.addAll(getStatementsCallingExtractedOperation(extracteOpRefactoring, CodeElementType.VARIABLE_DECLARATION_STATEMENT));	
+		statementsCallingExtractedOperation.addAll(getStatementsCallingExtractedOperation(extracteOpRefactoring, CodeElementType.EXPRESSION_STATEMENT));
 		codeElementTypeSet.add(CodeElementType.VARIABLE_DECLARATION_STATEMENT);
 		//codeElementTypeSet.add(CodeElementType.RETURN_STATEMENT);//Considering return statements as Temp
 		for(AbstractStatement statement : abstractStatements) {
 			CodeElementType statementType = statement.getLocationInfo().getCodeElementType();
-			if(!codeElementTypeSet.contains(statementType)) {
-				nonTempAbstractStatements.add(statement);														
-			}
-		}
+			boolean statementVariableIncludesParameterNames = isStatementUsingUMLOperationParametersNames(statement, sourceOperationAfterExtraction);
+			boolean statementContainsInvocationToExtractedMethod = false;
+			for( StatementObject statementObject : statementsCallingExtractedOperation) {
+		    	if(statement.equals(statementObject)) {
+		    		statementContainsInvocationToExtractedMethod = true;
+		    		break;
+		    	}
+		    }			
+			if(!codeElementTypeSet.contains(statementType) && !statementContainsInvocationToExtractedMethod /*&& !statementVariableIncludesParameterNames*/ ){
+					nonTempAbstractStatements.add(statement);																			
+				}
+			}			
 		if(nonTempAbstractStatements.size() == 0 ) {
 			return true;
 		}else {
 			return false;
 		}
 	}
+	
+	private boolean isStatementUsingUMLOperationParametersNames(AbstractStatement statement , UMLOperation operation){			
+			List<String> sourceOperationAfterExtarctionParameterNames = new ArrayList<String>();  
+			List<UMLParameter> sourceOperationAfterExtarctionParameters = operation.getParametersWithoutReturnType();
+			for(UMLParameter parameter : sourceOperationAfterExtarctionParameters) {
+				sourceOperationAfterExtarctionParameterNames.add(parameter.getName());
+			}
+			List<String> variableNames = statement.getVariables();
+			for (String variable : variableNames) {
+				if(sourceOperationAfterExtarctionParameterNames.contains(variable)) {
+					return true;
+				}
+			}
+		return false;		
+	}
+	private List<OperationInvocation> getAllOperationInvocationToExtractedMethod(UMLOperation sourceOperationAfterExtraction , UMLOperation extractedOperation) {
+		List<OperationInvocation> allExtractedMethodInvocations = new ArrayList<OperationInvocation>();
+		for(OperationInvocation invocation : sourceOperationAfterExtraction.getAllOperationInvocations()) {
+				if(invocation.matchesOperation(extractedOperation)) {
+					allExtractedMethodInvocations.add(invocation);
+				}
+			}
+		return allExtractedMethodInvocations; 
+	}
+	private boolean isStatementHavingInvocationsToExtractedOperation(AbstractStatement statement , UMLOperation extractedOperation) {
+		for( String invocationString : statement.getMethodInvocationMap().keySet()) {
+			for(OperationInvocation invocation : statement.getMethodInvocationMap().get(invocationString)) {
+				if(invocation.matchesOperation(extractedOperation)) {
+					return true;
+				}
+			}
+		}
+		return false; 
+	}
+		
 	private boolean isExtractFacilitateExtension(Refactoring ref , List<Refactoring> refList){
 		if( ref instanceof ExtractOperationRefactoring){
 			ExtractOperationRefactoring extractOperationRefactoring = (ExtractOperationRefactoring)ref;
