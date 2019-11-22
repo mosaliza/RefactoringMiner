@@ -2,7 +2,6 @@ package gr.uom.java.xmi.diff;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -10,25 +9,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.swing.text.html.parser.TagElement;
-
 import org.eclipse.jdt.core.dom.Annotation;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jgit.api.AddCommand;
 import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
-
-import com.jcraft.jsch.ChannelSftp.LsEntry;
-import com.sun.corba.se.impl.protocol.INSServerRequestDispatcher;
-import com.sun.corba.se.pept.transport.ContactInfo;
-import com.sun.javafx.collections.MapAdapterChange;
-import com.sun.webkit.graphics.Ref;
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 import gr.uom.java.xmi.LocationInfo.CodeElementType;
 import gr.uom.java.xmi.UMLAnonymousClass;
 import gr.uom.java.xmi.UMLClass;
-import gr.uom.java.xmi.UMLGeneralization;
 import gr.uom.java.xmi.UMLJavadoc;
 import gr.uom.java.xmi.UMLOperation;
 import gr.uom.java.xmi.UMLParameter;

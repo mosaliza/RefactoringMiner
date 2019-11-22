@@ -1,7 +1,6 @@
 import java.util.List;
 
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.refactoringminer.api.GitHistoryRefactoringMiner;
 import org.refactoringminer.api.GitService;
 import org.refactoringminer.api.Refactoring;
@@ -15,8 +14,8 @@ public class Main {
 		GitService gitService = new GitServiceImpl();
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 		Repository repo = gitService.cloneIfNotExists(
-				"tmp1/cascading",
-				"https://github.com/cwensel/cascading.git");
+				"tmp1/orientdb",
+				"https://github.com/orientechnologies/orientdb.git");
 		/*miner.detectAtCommit("https://github.com/luontola/retrolambda.git",
 				"46b0d84de9c309bca48a99e572e6611693ed5236", new RefactoringHandler() {
 					@Override
@@ -27,7 +26,7 @@ public class Main {
 					}
 				},100);*/
 		
-		miner.detectAtCommit(repo,"f9d3171f5020da5c359cdda28ef05172e858c464", new RefactoringHandler() {
+		miner.detectAtCommit(repo,"1089957b645bde069d3864563bbf1f7c7da8045c", new RefactoringHandler() {
 			@Override 
 			public void handle(String commitData, List<Refactoring> refactorings) {
 				for(Refactoring ref : refactorings) {
