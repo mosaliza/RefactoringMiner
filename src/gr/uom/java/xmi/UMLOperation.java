@@ -155,6 +155,12 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 		return new ArrayList<VariableDeclaration>();
 	}
 
+	public List<VariableDeclaration> getVariableDeclarationsInScope(LocationInfo location) {
+		if(operationBody != null)
+			return operationBody.getVariableDeclarationsInScope(location);
+		return new ArrayList<VariableDeclaration>();
+	}
+
 	public VariableDeclaration getVariableDeclaration(String variableName) {
 		if(operationBody != null)
 			return operationBody.getVariableDeclaration(variableName);
@@ -403,10 +409,39 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 	public boolean isGetter() {
 		if(getBody() != null) {
 			List<AbstractStatement> statements = getBody().getCompositeStatement().getStatements();
+			List<UMLParameter> parameters = getParametersWithoutReturnType();
 			if(statements.size() == 1 && statements.get(0) instanceof StatementObject) {
 				StatementObject statement = (StatementObject)statements.get(0);
-				if(statement.getString().startsWith("return ") && statement.containsOnlyOneVariableAccess()) {
-					return true;
+				if(statement.getString().startsWith("return ")) {
+					for(String variable : statement.getVariables()) {
+						if(statement.getString().equals("return " + variable + ";\n") && parameters.size() == 0) {
+							return true;
+						}
+					}
+					UMLParameter returnParameter = getReturnParameter();
+					if((name.startsWith("is") || name.startsWith("has")) && parameters.size() == 0 &&
+							returnParameter != null && returnParameter.getType().getClassType().equals("boolean")) {
+						return true;
+					}
+					if(statement.getString().equals("return null;\n")) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	public boolean isSetter() {
+		List<String> parameterNames = getParameterNameList();
+		if(getBody() != null && parameterNames.size() == 1) {
+			List<AbstractStatement> statements = getBody().getCompositeStatement().getStatements();
+			if(statements.size() == 1 && statements.get(0) instanceof StatementObject) {
+				StatementObject statement = (StatementObject)statements.get(0);
+				for(String variable : statement.getVariables()) {
+					if(statement.getString().equals(variable + "=" + parameterNames.get(0) + ";\n")) {
+						return true;
+					}
 				}
 			}
 		}

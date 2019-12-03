@@ -763,7 +763,21 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 		return count;
 	}
 
-	private int operationNameEditDistance() {
+	public double normalizedEditDistance() {
+		double editDistance = 0;
+		double maxLength = 0;
+		for(AbstractCodeMapping mapping : getMappings()) {
+			String s1 = preprocessInput1(mapping.getFragment1(), mapping.getFragment2());
+			String s2 = preprocessInput2(mapping.getFragment1(), mapping.getFragment2());
+			if(!s1.equals(s2)) {
+				editDistance += StringDistance.editDistance(s1, s2);
+				maxLength += Math.max(s1.length(), s2.length());
+			}
+		}
+		return editDistance/maxLength;
+	}
+
+	public int operationNameEditDistance() {
 		return StringDistance.editDistance(this.operation1.getName(), this.operation2.getName());
 	}
 
@@ -1664,7 +1678,7 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 					if(distanceRaw == -1 && multipleInstances) {
 						distanceRaw = StringDistance.editDistance(temp, replacementInfo.getArgumentizedString2());
 					}
-					boolean multipleInstanceRule = multipleInstances && Math.abs(s1.length() - s2.length()) == Math.abs(distanceRaw - minDistance);
+					boolean multipleInstanceRule = multipleInstances && Math.abs(s1.length() - s2.length()) == Math.abs(distanceRaw - minDistance) && !s1.equals(s2);
 					if(distanceRaw >= 0 && (distanceRaw < replacementInfo.getRawDistance() || multipleInstanceRule)) {
 						minDistance = distanceRaw;
 						Replacement replacement = null;
@@ -2172,7 +2186,13 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 		//object creation is identical
 		if(creationCoveringTheEntireStatement1 != null && creationCoveringTheEntireStatement2 != null &&
 				creationCoveringTheEntireStatement1.identical(creationCoveringTheEntireStatement2, replacementInfo.getReplacements())) {
-			return replacementInfo.getReplacements();
+			boolean identicalArrayInitializer = true;
+			if(creationCoveringTheEntireStatement1.isArray() && creationCoveringTheEntireStatement2.isArray()) {
+				identicalArrayInitializer = creationCoveringTheEntireStatement1.identicalArrayInitializer(creationCoveringTheEntireStatement2);
+			}
+			if(identicalArrayInitializer) {
+				return replacementInfo.getReplacements();
+			}
 		}
 		//object creation has only changes in the arguments
 		if(creationCoveringTheEntireStatement1 != null && creationCoveringTheEntireStatement2 != null) {
@@ -3572,6 +3592,10 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
     	return false;
 	}
 
+	public String toString() {
+		return operation1.toString() + " -> " + operation2.toString();
+	}
+
 	@Override
 	public int compareTo(UMLOperationBodyMapper operationBodyMapper) {
 		int thisCallChainIntersectionSum = 0;
@@ -3694,6 +3718,9 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 							mappedLeavesSize++;
 						}
 					}
+				}
+				if(leaveSize1 == 1 && leaveSize2 == 1 && leaves1.get(0).getString().equals("continue;\n") && leaves2.get(0).getString().equals("return null;\n")) {
+					mappedLeavesSize++;
 				}
 			}
 			int max = Math.max(leaveSize1, leaveSize2);
