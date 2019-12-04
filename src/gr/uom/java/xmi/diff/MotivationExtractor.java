@@ -179,6 +179,7 @@ public class MotivationExtractor {
 			}
 			if(isExtractedtoEnableRecursion(ref)) {
 				setRefactoringMotivation(MotivationType.EM_ENABLE_RECURSION, ref);
+				//removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
 			}
 			if(isExtractedtoIntroduceAsyncOperation(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ASYNC_OPERATION, ref);
@@ -808,7 +809,9 @@ public class MotivationExtractor {
 			List<CompositeStatementObject> listChildNeutralInnerNodes = new ArrayList<CompositeStatementObject>();
 			List<CompositeStatementObject> listChildT2CompositesWithInvokationsToExtractedMethodInExpression = new ArrayList<CompositeStatementObject>();
 			List<StatementObject> listChildNotMappedLeavesWithInvokationsToExtractedMethod = new ArrayList<StatementObject>();
+			List<StatementObject> listChildNotMappedLeavesWithRecursiveOrParameterInvokations = new ArrayList<StatementObject>();
 
+			
 			List<StatementObject> listNotMappedLeavesT2 = umlBodyMapper.getNonMappedLeavesT2();
 			List<CompositeStatementObject> listNotMappedInnerNodesT2 = umlBodyMapper.getNonMappedInnerNodesT2();
 			List<StatementObject> parentListNotMappedLeavesT2 = umlBodyMapper.getParentMapper().getNonMappedLeavesT2();
@@ -851,7 +854,7 @@ public class MotivationExtractor {
 			for(StatementObject  notMappedNode :  parentListNotMappedLeavesT2) {
 	
 				if(isLeafNodeContainingInvokationsToExtractedMethods(notMappedNode, refList)) {
-					if(!isLeafNodeFacilitatingExtension(notMappedNode)) {
+					if(!isLeafNodeHavingExtraCalls(notMappedNode)) {
 					listParentNotMappedLeavesWithInvokationsToExtractedMethod.add(notMappedNode);
 					}
 				}
@@ -885,9 +888,12 @@ public class MotivationExtractor {
 			
 			for(StatementObject  notMappedNode :  listNotMappedLeavesT2) {
 				if(isLeafNodeContainingInvokationsToExtractedMethods(notMappedNode, refList)) {
-					if(!isLeafNodeFacilitatingExtension(notMappedNode)) {
+					if(!isLeafNodeHavingExtraCalls(notMappedNode)) {
 						listChildNotMappedLeavesWithInvokationsToExtractedMethod.add(notMappedNode);
 					}
+				}
+				if(isLeafNodeExtraInvocationsRecursiveOrParameterCalls(notMappedNode, extractedOperation)) {
+					listChildNotMappedLeavesWithRecursiveOrParameterInvokations.add(notMappedNode);
 				}
 				if(isNeutralNodeForFacilitateExtension(notMappedNode, refList, extractedOperation)){
 					listChildNeutralLeaves.add(notMappedNode);
@@ -897,6 +903,7 @@ public class MotivationExtractor {
 				}
 			}
 			setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithInvokationsToExtractedMethod);
+			setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithRecursiveOrParameterInvokations);
 			setChildMarkedT2Leaves.addAll(listChildNeutralLeaves);
 			setChildMarkedT2Leaves.addAll(listChildT2LeafNodeInT1LeafNodes);
 			
@@ -1027,8 +1034,31 @@ public class MotivationExtractor {
 		mapFacilitateExtensionT1T2.put(ref,addedRemovedCount);
 	}
 	
-	
-	private boolean isLeafNodeFacilitatingExtension(StatementObject notMappedNode){
+
+	private boolean isLeafNodeExtraInvocationsRecursiveOrParameterCalls(StatementObject notMappedNode , UMLOperation extractedOperation){
+		//checking extra invocations for extension
+		List<OperationInvocation > recursiveInvocations = new ArrayList<OperationInvocation>();
+		List<OperationInvocation > invocationOfParametersList = new ArrayList<OperationInvocation>();
+		if(notMappedNode.getMethodInvocationMap().size() == 0) {
+			return false;
+		}
+		for(String invocationString : notMappedNode.getMethodInvocationMap().keySet()) {
+			List<OperationInvocation> operationInvocations = notMappedNode.getMethodInvocationMap().get(invocationString);
+			for(OperationInvocation invocation : operationInvocations) {
+				if(invocation.matchesOperation(extractedOperation, extractedOperation.variableTypeMap() , modelDiff)) {
+					recursiveInvocations.add(invocation);
+				}
+				if(extractedOperation.getParameterNameList().contains(invocation.getExpression())) {
+					invocationOfParametersList.add(invocation);
+				}
+			}
+		}
+		if(recursiveInvocations.size() > 0 || invocationOfParametersList.size() > 0) {
+			return true;
+		}
+		return false;
+	}
+	private boolean isLeafNodeHavingExtraCalls(StatementObject notMappedNode){
 		return notMappedNode.getMethodInvocationMap().size() > 1;
 	}
 	
