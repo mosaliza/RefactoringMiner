@@ -13,6 +13,7 @@ import org.eclipse.jdt.core.dom.Annotation;
 import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
 
+import gr.uom.java.xmi.LocationInfo;
 import gr.uom.java.xmi.LocationInfo.CodeElementType;
 import gr.uom.java.xmi.UMLAnonymousClass;
 import gr.uom.java.xmi.UMLClass;
@@ -593,12 +594,12 @@ public class MotivationExtractor {
 					!extractedOperation.getName().equals(sourceOpAfterExtraction.getName());
 			String extractedOperationAccessModifier = extractedOperation.getVisibility();
 			String sourceOperationAfterExtractionAccessModifier = sourceOpAfterExtraction.getVisibility();
-			boolean isSourceOperationAfterExtractionAndExtractedOperationModifiersPrivate = 
-					(extractedOperationAccessModifier.equals("private") && sourceOperationAfterExtractionAccessModifier.equals("private")) ? true: false;
+			boolean isSourceOperationAfterExtractionAndExtractedOperationModifiersProtectedOrPrivate = 
+					sourceOperationAfterExtractionAccessModifier.equals("protected") || sourceOperationAfterExtractionAccessModifier.equals("private") ? true: false;
 			/*DETECTION RULE: Check IF the method parameters OR name has changed AND if source Operation after extraction is a delegate
 			 * AND also check if it contains @deprecated in annotations or JavaDoc 
 			 */
-			if(isBackwardCompatible && (listExtractedOpInvokations.size() == 1) /*&& isSourceOperationAfterExtractionAndExtractedOperationModifiersPrivate*/) {
+			if(isBackwardCompatible && (listExtractedOpInvokations.size() == 1) && !isSourceOperationAfterExtractionAndExtractedOperationModifiersProtectedOrPrivate) {
 				if(isUmlOperationWithDeprecatedAnnotation(sourceOpAfterExtraction) || isUmlOperationJavaDocContainsTagName(sourceOpAfterExtraction, "@deprecated")) {
 					if(isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
 						removeRefactoringMotivation(MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE, ref);
@@ -810,6 +811,7 @@ public class MotivationExtractor {
 			List<CompositeStatementObject> listChildT2CompositesWithInvokationsToExtractedMethodInExpression = new ArrayList<CompositeStatementObject>();
 			List<StatementObject> listChildNotMappedLeavesWithInvokationsToExtractedMethod = new ArrayList<StatementObject>();
 			List<StatementObject> listChildNotMappedLeavesWithRecursiveOrParameterInvokations = new ArrayList<StatementObject>();
+			List<StatementObject> listChildNotMappedLeavesWithInvocationExpressionsInVariableNames = new ArrayList<StatementObject>();
 
 			
 			List<StatementObject> listNotMappedLeavesT2 = umlBodyMapper.getNonMappedLeavesT2();
@@ -833,6 +835,9 @@ public class MotivationExtractor {
 			List<StatementObject> listParentT2LeafNodeInT1LeafNodes = new ArrayList<StatementObject>();
 			List<CompositeStatementObject> listChildT2InnerNodeInT1InnerNodes = new ArrayList<CompositeStatementObject>();
 			List<StatementObject> listChildT2LeafNodeInT1LeafNodes = new ArrayList<StatementObject>();
+					
+			List<String> addedOperationNames = getOperationNames(OperationType.ADDED);
+			List<String> allOperationNames = getOperationNames(OperationType.ALL);
 			
 			//Processing Parent (Source Operation After Extraction) T2 Inner(Composite)/Leaf Nodes to filter out  marked nodes
 			for(CompositeStatementObject  notMappedCompositeNode :  parentListNotMappedInnerNodesT2) {
@@ -840,7 +845,7 @@ public class MotivationExtractor {
 				if(isCompositeNodeExpressionContainingInvokationsToExtractedMethods(notMappedCompositeNode , refList)) {
 					listParentT2CompositesWithInvokationsToExtractedMethodInExpression.add(notMappedCompositeNode);
 				}
-				if(isNeutralNodeForFacilitateExtension(notMappedCompositeNode , refList , sourceOperationAfterExtrction)) {
+				if(isNeutralNodeForFacilitateExtension(notMappedCompositeNode , refList , sourceOperationAfterExtrction, addedOperationNames, allOperationNames )) {
 					listParentNeutralInnerNodes.add(notMappedCompositeNode);
 				}	
 				if(isParentT2InnerNodeinT1InnerNodes(notMappedCompositeNode.toString(), parentListNotMappedInnerNodesT1)) {
@@ -852,13 +857,12 @@ public class MotivationExtractor {
 			setParentMarkedT2InnerNodes.addAll(listParentT2InnerNodeInT1InnerNodes);
 			
 			for(StatementObject  notMappedNode :  parentListNotMappedLeavesT2) {
-	
 				if(isLeafNodeContainingInvokationsToExtractedMethods(notMappedNode, refList)) {
-					if(!isLeafNodeHavingExtraCalls(notMappedNode)) {
+					if(!isLeafNodeHavingExtraCalls(notMappedNode , getExtractedMethodInvocationsInStatement(notMappedNode, refList))) {
 					listParentNotMappedLeavesWithInvokationsToExtractedMethod.add(notMappedNode);
 					}
 				}
-				if(isNeutralNodeForFacilitateExtension(notMappedNode , refList , sourceOperationAfterExtrction)) {
+				if(isNeutralNodeForFacilitateExtension(notMappedNode , refList , sourceOperationAfterExtrction, addedOperationNames, allOperationNames )) {
 					listParentNeutralLeaves.add(notMappedNode);
 				}
 				if(isParentT2LeafNodeinT1leafNodes(notMappedNode.toString(), parentListNotMappedleafNodesT1)) {
@@ -875,7 +879,7 @@ public class MotivationExtractor {
 				if(isCompositeNodeExpressionContainingInvokationsToExtractedMethods(notMappedCompositeNode , refList)) {
 					listChildT2CompositesWithInvokationsToExtractedMethodInExpression.add(notMappedCompositeNode);
 				}
-				if(isNeutralNodeForFacilitateExtension(notMappedCompositeNode ,refList, extractedOperation)) {
+				if(isNeutralNodeForFacilitateExtension(notMappedCompositeNode ,refList, extractedOperation ,  addedOperationNames, allOperationNames)) {
 					listChildNeutralInnerNodes.add(notMappedCompositeNode);
 				}
 				if(isChildT2InnerNodeinT1InnerNodes(notMappedCompositeNode.toString(), listNotMappedInnerNodesT1)) {
@@ -888,14 +892,14 @@ public class MotivationExtractor {
 			
 			for(StatementObject  notMappedNode :  listNotMappedLeavesT2) {
 				if(isLeafNodeContainingInvokationsToExtractedMethods(notMappedNode, refList)) {
-					if(!isLeafNodeHavingExtraCalls(notMappedNode)) {
+					if(!isLeafNodeHavingExtraCalls(notMappedNode , getExtractedMethodInvocationsInStatement(notMappedNode, refList))) {
 						listChildNotMappedLeavesWithInvokationsToExtractedMethod.add(notMappedNode);
 					}
 				}
 				if(isLeafNodeExtraInvocationsRecursiveOrParameterCalls(notMappedNode, extractedOperation)) {
 					listChildNotMappedLeavesWithRecursiveOrParameterInvokations.add(notMappedNode);
 				}
-				if(isNeutralNodeForFacilitateExtension(notMappedNode, refList, extractedOperation)){
+				if(isNeutralNodeForFacilitateExtension(notMappedNode, refList, extractedOperation,  addedOperationNames, allOperationNames)){
 					listChildNeutralLeaves.add(notMappedNode);
 				}
 				if(isChildT2LeafNodeinT1leafNodes(notMappedNode.toString(), listNotMappedleafNodesT1)) {
@@ -1034,7 +1038,26 @@ public class MotivationExtractor {
 		mapFacilitateExtensionT1T2.put(ref,addedRemovedCount);
 	}
 	
-
+	private boolean isInvocationExpressionsInOperationVariableNames(AbstractStatement statement , UMLOperation extarctedOperation) {
+		List<String> invocationExpressionInVariableNames = new ArrayList<String>();
+		List<VariableDeclaration> allVariableDeclarations = extarctedOperation.getAllVariableDeclarations();
+		List<String> allVariableNames = new ArrayList<String>();
+		for(VariableDeclaration decleration : allVariableDeclarations) {
+			allVariableNames.add(decleration.getVariableName());
+		}		
+		for(String invocationString : statement.getMethodInvocationMap().keySet()) {
+			List<OperationInvocation> operationInvocations = statement.getMethodInvocationMap().get(invocationString);
+			for(OperationInvocation invocation : operationInvocations) {
+				if(allVariableNames.contains(invocation.getExpression())){
+					invocationExpressionInVariableNames.add(invocation.getExpression());
+				}
+			}
+		}
+		if(invocationExpressionInVariableNames.size() > 0) {
+			return true;
+		}
+		return false;
+	}
 	private boolean isLeafNodeExtraInvocationsRecursiveOrParameterCalls(StatementObject notMappedNode , UMLOperation extractedOperation){
 		//checking extra invocations for extension
 		List<OperationInvocation > recursiveInvocations = new ArrayList<OperationInvocation>();
@@ -1052,14 +1075,31 @@ public class MotivationExtractor {
 					invocationOfParametersList.add(invocation);
 				}
 			}
-		}
-		if(recursiveInvocations.size() > 0 || invocationOfParametersList.size() > 0) {
-			return true;
+			if(recursiveInvocations.size() > 0) {
+				return true;
+			}
+			if(invocationOfParametersList.size() == operationInvocations.size()) {
+				return true;
+			}
 		}
 		return false;
 	}
-	private boolean isLeafNodeHavingExtraCalls(StatementObject notMappedNode){
-		return notMappedNode.getMethodInvocationMap().size() > 1;
+	private boolean isLeafNodeHavingExtraCalls(StatementObject notMappedNode , List<OperationInvocation> extractedMethodInvocations){
+		
+		boolean extraCallsExist = notMappedNode.getMethodInvocationMap().size() > 1;
+		List<OperationInvocation> extractedMethodSubsumedInvocations = new ArrayList<OperationInvocation>();
+		for(String invocationString :  notMappedNode.getMethodInvocationMap().keySet()) {
+			for(OperationInvocation invocation: notMappedNode.getMethodInvocationMap().get(invocationString)) {
+				if(!extractedMethodInvocations.contains(invocation)) {
+					for(OperationInvocation extractedInvocation : extractedMethodInvocations) {
+						if(extractedInvocation.getLocationInfo().subsumes(invocation.getLocationInfo())) {
+							extractedMethodSubsumedInvocations.add(invocation);
+						}
+					}
+				}
+			}
+		}
+		return extraCallsExist && (extractedMethodSubsumedInvocations.size() == 0);
 	}
 	
 	
@@ -1076,6 +1116,21 @@ public class MotivationExtractor {
 		}
 		return false;
 	}
+	private List<OperationInvocation> getExtractedMethodInvocationsInStatement(StatementObject notMappedNode,List<Refactoring> refList) {
+		List<OperationInvocation> extractedMehtodInvocations = new ArrayList<OperationInvocation>();
+		for(Refactoring refactoring : refList) {
+			if(refactoring instanceof ExtractOperationRefactoring) {
+				ExtractOperationRefactoring extractOperationRefactoring = (ExtractOperationRefactoring)refactoring;
+				for(OperationInvocation invocation : extractOperationRefactoring.getExtractedOperationInvocations()) {
+					if(notMappedNode.getLocationInfo().subsumes(invocation.getLocationInfo())){
+						extractedMehtodInvocations.add(invocation);
+					}
+				}
+			}
+		}
+		return extractedMehtodInvocations;
+	}
+	
 	private boolean isCompositeNodeExpressionContainingInvokationsToExtractedMethods(CompositeStatementObject notMappedCompositeNode , 
 			List<Refactoring> refList) {
 		for(AbstractExpression expression: notMappedCompositeNode.getExpressions()) {
@@ -1130,13 +1185,15 @@ public class MotivationExtractor {
 		return false;
 	}
 	
-	private boolean isNeutralNodeForFacilitateExtension(AbstractStatement statement , List<Refactoring> refList , UMLOperation statementOperation){
+	private boolean isNeutralNodeForFacilitateExtension(AbstractStatement statement , List<Refactoring> refList , UMLOperation statementOperation , 
+			List<String> addedOperationNames , List<String> allOperationNames){
 		Set<CodeElementType> neutralCodeElements = new HashSet<CodeElementType>();
 		neutralCodeElements.add(CodeElementType.RETURN_STATEMENT);
 		neutralCodeElements.add(CodeElementType.BLOCK);
 		CodeElementType elementType  = statement.getLocationInfo().getCodeElementType();
 		int  extractedOperationInvocationCountInStatement = 0;
 		int  otherOperationInvocationCountInStatement = 0;
+		
 		if(neutralCodeElements.contains(elementType)) {
 			return true;
 		}else {
@@ -1152,14 +1209,26 @@ public class MotivationExtractor {
 					}else {
 						otherOperationInvocationCountInStatement++;
 					}
-				}
-
+				}				
 				if (elementType.equals(CodeElementType.IF_STATEMENT) ||
 						elementType.equals(CodeElementType.EXPRESSION_STATEMENT)||
 						elementType.equals(CodeElementType.VARIABLE_DECLARATION_STATEMENT)) {
 					if(extractedOperationInvocationCountInStatement == 0 && otherOperationInvocationCountInStatement == 0) {
 						return true;
 						}
+					if(extractedOperationInvocationCountInStatement == 0 && otherOperationInvocationCountInStatement > 0) {	
+						if(elementType.equals(CodeElementType.VARIABLE_DECLARATION_STATEMENT)||elementType.equals(CodeElementType.EXPRESSION_STATEMENT)) {
+							if(isInvocationExpressionsInOperationVariableNames(statement , statementOperation) ) {
+								return false;
+							}
+							if(isStatementInvocationsInAddedOperations(statement , statementOperation , addedOperationNames)) {
+								return false;
+							}	
+							if(!isStatementInvocationsInAllOperationNames(statement , allOperationNames)) {
+								return true;
+							}	
+						}
+					}
 				}else {
 					if(extractedOperationInvocationCountInStatement == 0) {
 						return true;
@@ -1168,6 +1237,123 @@ public class MotivationExtractor {
 			}
 		}
 		return false;
+	}
+	private boolean isStatementInvocationsInAllOperationNames(AbstractStatement statement , List<String> allOperationNames) {
+		List<String> methodNamesInvokedInStatement = getStatementInvocationNames(statement);
+
+		
+		List<String> invorcationsInAllOperations = new ArrayList<String>();
+		for(String  methodInvocation : methodNamesInvokedInStatement) {
+				if(allOperationNames.contains(methodInvocation)) {
+					invorcationsInAllOperations.add(methodInvocation);
+				}
+			}		
+		if(invorcationsInAllOperations.size() == methodNamesInvokedInStatement.size()) {
+			return true;
+		}	
+		return false;
+	}
+	private boolean isStatementInvocationsInAddedOperations(AbstractStatement statement , UMLOperation statementOperation ,List<String> addedOperationNames) {
+		List<String> addedOperationsInVariableDeclarionOrParameterClasses = new ArrayList<String>();
+		List<String> invocationClassNames = new ArrayList<String>();
+		List<String> methodNamesInvokedInStatement = getStatementInvocationNames(statement);
+		//Adding Classes of the variable declarations or parameter Class names with same class Type of invocation expression
+		for(String invocationString : statement.getMethodInvocationMap().keySet()) {
+			for( OperationInvocation invocation : statement.getMethodInvocationMap().get(invocationString)) {
+				if(invocation.getExpression() == null || invocation.getExpression().equals("this")) {
+					invocationClassNames.add(statementOperation.getClassName());
+				}
+				for(VariableDeclaration declaration : statementOperation.getAllVariableDeclarations()) {
+					if(declaration.getVariableName().equals(invocation.getExpression())) {
+						invocationClassNames.add(declaration.getType().getClassType());
+					}			
+				}
+				List<UMLParameter> statementOperationParameters = statementOperation.getParameters();
+				for(UMLParameter parameter : statementOperationParameters) {
+					if(parameter.getName().equals(invocation.getExpression())) {
+						invocationClassNames.add(parameter.getType().getClassType());
+					}
+				}
+			}
+		}	
+		for(String invocationClassName : invocationClassNames) {
+			 UMLClassBaseDiff umlClassBaseDiff = modelDiff.getUMLClassDiff(invocationClassName);
+			 if(umlClassBaseDiff != null) {
+				 for(UMLOperation operation :umlClassBaseDiff.getAddedOperations()) {
+					 addedOperationsInVariableDeclarionOrParameterClasses.add(operation.getName());
+				 }
+			 }
+		}			
+	
+		addedOperationNames.addAll(addedOperationsInVariableDeclarionOrParameterClasses);
+		
+		List<String> invorcationsInAddedOperations = new ArrayList<String>();
+		for(String  methodInvocation : methodNamesInvokedInStatement) {
+				if(addedOperationNames.contains(methodInvocation)) {
+					invorcationsInAddedOperations.add(methodInvocation);
+				}
+			}
+		
+		if(invorcationsInAddedOperations.size() == methodNamesInvokedInStatement.size()) {
+			return true;
+		}	
+		return false;
+	}
+	private List<String> getStatementInvocationNames(AbstractStatement statement){
+		
+		List<String> methodNamesInvokedInStatement = new ArrayList<String>();
+		for(String invocationString : statement.getMethodInvocationMap().keySet()) {
+			List<OperationInvocation> operationInvocations = statement.getMethodInvocationMap().get(invocationString);
+			for(OperationInvocation invocation : operationInvocations) {
+				methodNamesInvokedInStatement.add(invocation.getMethodName());
+			}
+		}
+		return methodNamesInvokedInStatement;
+	}
+	private enum OperationType{
+		ADDED,
+		ALL;
+	}
+	private List<String> getOperationNames(OperationType operationType){
+		
+		List<String> operationNames = new ArrayList<String>();
+		List<String> addedClassesOperationNames = new ArrayList<String>();
+		List<String> commonClassesAddedOperationNames = new ArrayList<String>();
+		List<String> commonClassesAllOperationNames = new ArrayList<String>();
+		for(UMLClass addedClass : modelDiff.getAddedClasses()) {
+			for(UMLOperation operation : addedClass.getOperations()) {
+				addedClassesOperationNames.add(operation.getName());
+			}
+		}
+		for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
+			if(classDiff != null) {
+				for(UMLOperation operartion: classDiff.getAddedOperations()) {
+					commonClassesAddedOperationNames.add(operartion.getName());
+				}
+			}
+		}
+		for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
+			if(classDiff != null) {
+				for(UMLOperation operartion: classDiff.getNextClass().getOperations()) {
+					commonClassesAllOperationNames.add(operartion.getName());
+				}
+			}
+		}
+		
+		switch(operationType) {
+		case ADDED:
+			operationNames.addAll(commonClassesAddedOperationNames);
+			operationNames.addAll(addedClassesOperationNames);
+			break;
+		case ALL:
+			operationNames.addAll(commonClassesAllOperationNames);
+			operationNames.addAll(addedClassesOperationNames);
+		default:
+			break;
+		}
+	
+		
+		return operationNames;
 	}
 	
 	private boolean isInvocationToExtractedOperation(List<OperationInvocation> statementInvokations , UMLOperation statementOperation , List<Refactoring> refList){
