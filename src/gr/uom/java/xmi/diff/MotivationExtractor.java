@@ -1165,6 +1165,9 @@ public class MotivationExtractor {
 			if(notMappedNode.getString().equals(strParentT2Leave)) {
 				return true;
 			}
+			if(notMappedNode.getString().indexOf(strParentT2Leave) >= 0) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -1179,6 +1182,9 @@ public class MotivationExtractor {
 	private boolean isChildT2LeafNodeinT1leafNodes(String strChildT2Leaf,List<StatementObject> childLeavesT1){
 		for(StatementObject  notMappedNode :  childLeavesT1) {
 			if(notMappedNode.getString().equals(strChildT2Leaf)) {
+				return true;
+			}
+			if(notMappedNode.getString().indexOf(strChildT2Leaf) >= 0) {
 				return true;
 			}
 		}
