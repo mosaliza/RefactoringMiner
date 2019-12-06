@@ -2766,7 +2766,11 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match2"
-	} ]
+	},
+	{
+	            "label": "EM: Facilitate extension",
+                "status": "match1"
+	}	]
 }
 ]},{	"repository": "https://github.com/spring-projects/spring-integration.git",
 	"sha1": "4cca684f368d3ff719c62d3fa4cac3cdb7828bff",
