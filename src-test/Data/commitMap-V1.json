@@ -2183,6 +2183,10 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
+	},
+	{
+	            "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/baasbox/baasbox.git",
