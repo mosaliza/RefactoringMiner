@@ -1250,6 +1250,8 @@ public class MotivationExtractor {
 							}	
 							if(!isStatementInvocationsInAllOperationNames(statement , allOperationNames)) {
 								return false;
+							}else {
+								return true;
 							}
 						}
 					}
