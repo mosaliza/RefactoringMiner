@@ -810,7 +810,8 @@ public class MotivationExtractor {
 			List<CompositeStatementObject> listChildNeutralInnerNodes = new ArrayList<CompositeStatementObject>();
 			List<CompositeStatementObject> listChildT2CompositesWithInvokationsToExtractedMethodInExpression = new ArrayList<CompositeStatementObject>();
 			List<StatementObject> listChildNotMappedLeavesWithInvokationsToExtractedMethod = new ArrayList<StatementObject>();
-			List<StatementObject> listChildNotMappedLeavesWithRecursiveOrParameterInvokations = new ArrayList<StatementObject>();
+			List<StatementObject> listChildNotMappedLeavesWithRecursive = new ArrayList<StatementObject>();
+			List<StatementObject> listChildNotMappedLeavesWithInvocationsExpressionsInOperationParameters = new ArrayList<StatementObject>();
 			List<StatementObject> listChildNotMappedLeavesWithInvocationExpressionsInVariableNames = new ArrayList<StatementObject>();
 
 			
@@ -895,9 +896,12 @@ public class MotivationExtractor {
 					if(!isLeafNodeHavingExtraCalls(notMappedNode , getExtractedMethodInvocationsInStatement(notMappedNode, refList))) {
 						listChildNotMappedLeavesWithInvokationsToExtractedMethod.add(notMappedNode);
 					}
+				}			
+				if(isLeafNodeExtraInvocationsRecursive(notMappedNode, extractedOperation)) {
+					listChildNotMappedLeavesWithRecursive.add(notMappedNode);
 				}
-				if(isLeafNodeExtraInvocationsRecursiveOrParameterCalls(notMappedNode, extractedOperation)) {
-					listChildNotMappedLeavesWithRecursiveOrParameterInvokations.add(notMappedNode);
+				if(isLeafNodeExtraInvocationsExpressionsInOperationParameters(notMappedNode, extractedOperation)) {
+					listChildNotMappedLeavesWithInvocationsExpressionsInOperationParameters.add(notMappedNode);
 				}
 				if(isNeutralNodeForFacilitateExtension(notMappedNode, refList, extractedOperation,  addedOperationNames, allOperationNames)){
 					listChildNeutralLeaves.add(notMappedNode);
@@ -907,7 +911,8 @@ public class MotivationExtractor {
 				}
 			}
 			setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithInvokationsToExtractedMethod);
-			setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithRecursiveOrParameterInvokations);
+			setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithRecursive);
+			//setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithInvocationsExpressionsInOperationParameters);
 			setChildMarkedT2Leaves.addAll(listChildNeutralLeaves);
 			setChildMarkedT2Leaves.addAll(listChildT2LeafNodeInT1LeafNodes);
 			
@@ -1058,10 +1063,9 @@ public class MotivationExtractor {
 		}
 		return false;
 	}
-	private boolean isLeafNodeExtraInvocationsRecursiveOrParameterCalls(StatementObject notMappedNode , UMLOperation extractedOperation){
+	private boolean isLeafNodeExtraInvocationsRecursive(StatementObject notMappedNode , UMLOperation extractedOperation){
 		//checking extra invocations for extension
 		List<OperationInvocation > recursiveInvocations = new ArrayList<OperationInvocation>();
-		List<OperationInvocation > invocationOfParametersList = new ArrayList<OperationInvocation>();
 		if(notMappedNode.getMethodInvocationMap().size() == 0) {
 			return false;
 		}
@@ -1071,12 +1075,26 @@ public class MotivationExtractor {
 				if(invocation.matchesOperation(extractedOperation, extractedOperation.variableTypeMap() , modelDiff)) {
 					recursiveInvocations.add(invocation);
 				}
-				if(extractedOperation.getParameterNameList().contains(invocation.getExpression())) {
-					invocationOfParametersList.add(invocation);
-				}
 			}
 			if(recursiveInvocations.size() > 0) {
 				return true;
+			}
+		}
+		return false;
+	}
+	
+	private boolean isLeafNodeExtraInvocationsExpressionsInOperationParameters(StatementObject notMappedNode , UMLOperation extractedOperation){
+		//checking extra invocations for extension
+		List<OperationInvocation > invocationOfParametersList = new ArrayList<OperationInvocation>();
+		if(notMappedNode.getMethodInvocationMap().size() == 0) {
+			return false;
+		}
+		for(String invocationString : notMappedNode.getMethodInvocationMap().keySet()) {
+			List<OperationInvocation> operationInvocations = notMappedNode.getMethodInvocationMap().get(invocationString);
+			for(OperationInvocation invocation : operationInvocations) {
+				if(extractedOperation.getParameterNameList().contains(invocation.getExpression())) {
+					invocationOfParametersList.add(invocation);
+				}
 			}
 			if(invocationOfParametersList.size() == operationInvocations.size()) {
 				return true;
@@ -1231,8 +1249,8 @@ public class MotivationExtractor {
 								return false;
 							}	
 							if(!isStatementInvocationsInAllOperationNames(statement , allOperationNames)) {
-								return true;
-							}	
+								return false;
+							}
 						}
 					}
 				}else {
