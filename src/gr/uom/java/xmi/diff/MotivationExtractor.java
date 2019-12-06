@@ -796,7 +796,7 @@ public class MotivationExtractor {
 			ExtractOperationRefactoring extractOperationRefactoring = (ExtractOperationRefactoring)ref;
 			UMLOperationBodyMapper umlBodyMapper = extractOperationRefactoring.getBodyMapper();
 			UMLOperation extractedOperation = extractOperationRefactoring.getExtractedOperation();
-			UMLOperation sourceOperationAfterExtrction = extractOperationRefactoring.getExtractedOperation();
+			UMLOperation sourceOperationAfterExtrction = extractOperationRefactoring.getSourceOperationAfterExtraction();
 			int countChildNonMappedLeavesAndInnerNodesT2 = 0;
 			int countParentNonMappedLeavesAndInnerNodesT2 = 0;
 			if(isExtractedMethodMappingAddedTernaryOperator(extractOperationRefactoring)) {
@@ -1186,6 +1186,9 @@ public class MotivationExtractor {
 			if(notMappedNode.getString().indexOf(strParentT2Leave) >= 0) {
 				return true;
 			}
+			if(notMappedNode.getString().startsWith(strParentT2Leave)) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -1203,6 +1206,9 @@ public class MotivationExtractor {
 				return true;
 			}
 			if(notMappedNode.getString().indexOf(strChildT2Leaf) >= 0) {
+				return true;
+			}
+			if(notMappedNode.getString().startsWith(strChildT2Leaf)) {
 				return true;
 			}
 		}
