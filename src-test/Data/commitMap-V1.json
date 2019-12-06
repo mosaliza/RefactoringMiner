@@ -1885,7 +1885,8 @@
 	"description": "Extract Method public addResponseCompressionHeaders(responseCompressionOverride CompressionOption, req RestRequest) : RestRequest extracted from public onRestRequest(req RestRequest, requestContext RequestContext, wireAttrs Map<String,String>, nextFilter NextFilter<RestRequest,RestResponse>) : void in class com.linkedin.r2.filter.compression.ClientCompressionFilter",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match2"
 	} ]
 },
 {
@@ -2061,7 +2062,8 @@
 	"description": "Extract Method public addCompressionHeaders(getMessage HttpGet, acceptEncoding String) : void extracted from public testCompatibleDefault(acceptEncoding String, contentEncoding String) : void in class com.linkedin.restli.examples.TestCompressionServer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match2"
 	} ]
 },
 {
@@ -2077,7 +2079,8 @@
 	"description": "Extract Method public addCompressionHeaders(getMessage HttpGet, acceptEncoding String) : void extracted from public testCompressionBetter(compressor Compressor) : void in class com.linkedin.restli.examples.TestCompressionServer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match2"
 	} ]
 },
 {
@@ -2093,7 +2096,8 @@
 	"description": "Extract Method public addCompressionHeaders(getMessage HttpGet, acceptEncoding String) : void extracted from public testCompressionWorse(compressor Compressor) : void in class com.linkedin.restli.examples.TestCompressionServer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match2"
 	} ]
 },
 {
@@ -2109,7 +2113,8 @@
 	"description": "Extract Method public addCompressionHeaders(getMessage HttpGet, acceptEncoding String) : void extracted from public testAcceptEncoding(acceptedEncoding String, contentEncoding String) : void in class com.linkedin.restli.examples.TestCompressionServer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match2"
 	} ]
 },
 {
@@ -2125,7 +2130,8 @@
 	"description": "Extract Method public addCompressionHeaders(getMessage HttpGet, acceptEncoding String) : void extracted from public test406Error(acceptContent String) : void in class com.linkedin.restli.examples.TestCompressionServer",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match2"
 	} ]
 },
 {
