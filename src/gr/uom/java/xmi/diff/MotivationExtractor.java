@@ -834,6 +834,7 @@ public class MotivationExtractor {
 			List<CompositeStatementObject> parentListNotMappedInnerNodesT1 = umlBodyMapper.getParentMapper().getNonMappedInnerNodesT1();
 			List<CompositeStatementObject> listParentT2InnerNodeInT1InnerNodes = new ArrayList<CompositeStatementObject>();
 			List<StatementObject> listParentT2LeafNodeInT1LeafNodes = new ArrayList<StatementObject>();
+			List<StatementObject> listParentLeafWithInvocationsExpressionsInExtractOperationInvocationParameters = new ArrayList<StatementObject>();
 			List<CompositeStatementObject> listChildT2InnerNodeInT1InnerNodes = new ArrayList<CompositeStatementObject>();
 			List<StatementObject> listChildT2LeafNodeInT1LeafNodes = new ArrayList<StatementObject>();
 					
@@ -869,11 +870,15 @@ public class MotivationExtractor {
 				if(isParentT2LeafNodeinT1leafNodes(notMappedNode.toString(), parentListNotMappedleafNodesT1)) {
 					listParentT2LeafNodeInT1LeafNodes.add(notMappedNode);
 				}
+				if(isParentLeafNodeExtraInvocationsExpressionsInExtractedMethodParameters(notMappedNode ,extractedOperation, sourceOperationAfterExtrction)) {
+					listParentLeafWithInvocationsExpressionsInExtractOperationInvocationParameters.add(notMappedNode);
+				}
 			}
 			setParentMarkedT2Leaves.addAll(listParentNotMappedLeavesWithInvokationsToExtractedMethod);
 			setParentMarkedT2Leaves.addAll(listParentNeutralLeaves);
 			setParentMarkedT2Leaves.addAll(listParentT2LeafNodeInT1LeafNodes);
-			
+			setParentMarkedT2Leaves.addAll(listParentLeafWithInvocationsExpressionsInExtractOperationInvocationParameters);
+
 			//Processing Child (Extracted Operation) T2 Inner(Composite)/Leaf Nodes to filter out  marked nodes
 			for(CompositeStatementObject  notMappedCompositeNode : listNotMappedInnerNodesT2) {
 				
@@ -1082,7 +1087,32 @@ public class MotivationExtractor {
 		}
 		return false;
 	}
-	
+	private boolean isParentLeafNodeExtraInvocationsExpressionsInExtractedMethodParameters(StatementObject notMappedNode ,UMLOperation extractedOperation, UMLOperation sourceOperationAfterExtraction) {
+		List<OperationInvocation > invocationExpressionInExtractedMethodInvocationParameters = new ArrayList<OperationInvocation>();
+		List<String> extractMethodInvocationArguments = new ArrayList<String>();
+		if(notMappedNode.getMethodInvocationMap().size() == 0) {
+			return false;
+		}
+		for(OperationInvocation invocation : sourceOperationAfterExtraction.getAllOperationInvocations()) {
+			if(invocation.matchesOperation(extractedOperation,sourceOperationAfterExtraction.variableTypeMap(),modelDiff)) {
+				extractMethodInvocationArguments.addAll(invocation.getArguments());
+				break;
+			}
+		}
+
+		for(String invocationString : notMappedNode.getMethodInvocationMap().keySet()) {
+			List<OperationInvocation> operationInvocations = notMappedNode.getMethodInvocationMap().get(invocationString);
+			for(OperationInvocation invocation : operationInvocations) {
+				if(extractMethodInvocationArguments.contains(invocation.getExpression())) {
+					invocationExpressionInExtractedMethodInvocationParameters.add(invocation);
+				}
+			}
+			if( invocationExpressionInExtractedMethodInvocationParameters.size() > 0) {
+				return true;
+			}
+		}
+		return false;
+	}
 	private boolean isLeafNodeExtraInvocationsExpressionsInOperationParameters(StatementObject notMappedNode , UMLOperation extractedOperation){
 		//checking extra invocations for extension
 		List<OperationInvocation > invocationOfParametersList = new ArrayList<OperationInvocation>();
