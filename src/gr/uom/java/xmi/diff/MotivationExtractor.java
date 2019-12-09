@@ -207,11 +207,23 @@ public class MotivationExtractor {
 		}
 		
 		postProcessingForIsExtractFacilitateExtension(listRef);
-		
+		postProcessingForIsDecomposeMethodToImroveReadability(listRef);
+
 		//Print All detected refactorings
 		printDetectedRefactoringMotivations();			
 	}
-	
+	private void postProcessingForIsDecomposeMethodToImroveReadability(List<Refactoring> listRef) {
+		/*Getter and setter methods are excluded from the decompose to improve readability case.
+		 * Example: drools:1bf28 setExpiringHandle
+		 */
+		for (Refactoring ref : listRef) {
+			ExtractOperationRefactoring extractOpRef = (ExtractOperationRefactoring)ref;
+			UMLOperation extractedOperation = extractOpRef.getExtractedOperation();
+			if((extractedOperation.isGetter() ||extractedOperation.isSetter())) {
+				removeRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY, ref);
+			}
+		}
+	}
 	private void postProcessingForIsExtractFacilitateExtension(List<Refactoring> listRef) {
 		//Post Processing  for facilitate extension
 		/*Removing facilitate extension from the cases where multiple extract operations with the same extracted operation
