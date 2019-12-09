@@ -835,8 +835,16 @@ public class MotivationExtractor {
 			List<CompositeStatementObject> listParentT2InnerNodeInT1InnerNodes = new ArrayList<CompositeStatementObject>();
 			List<StatementObject> listParentT2LeafNodeInT1LeafNodes = new ArrayList<StatementObject>();
 			List<StatementObject> listParentLeafWithInvocationsExpressionsInExtractOperationInvocationParameters = new ArrayList<StatementObject>();
+			List<StatementObject> listParentLeafWithDeclaredVariableInExtractOperationInvocationParameters = new ArrayList<StatementObject>();
 			List<CompositeStatementObject> listChildT2InnerNodeInT1InnerNodes = new ArrayList<CompositeStatementObject>();
 			List<StatementObject> listChildT2LeafNodeInT1LeafNodes = new ArrayList<StatementObject>();
+			
+			List<StatementObject> listParentT2LeafNodesInMappings = new ArrayList<StatementObject>();
+			List<StatementObject> listChildT2LeafNodesInMappings = new ArrayList<StatementObject>();
+			Set<AbstractCodeMapping> parentMappings = umlBodyMapper.getParentMapper().getMappings();
+			Set<AbstractCodeMapping> childMappings = umlBodyMapper.getMappings();
+
+
 					
 			List<String> addedOperationNames = getOperationNames(OperationType.ADDED);
 			List<String> allOperationNames = getOperationNames(OperationType.ALL);
@@ -870,15 +878,24 @@ public class MotivationExtractor {
 				if(isParentT2LeafNodeinT1leafNodes(notMappedNode.toString(), parentListNotMappedleafNodesT1)) {
 					listParentT2LeafNodeInT1LeafNodes.add(notMappedNode);
 				}
-				if(isParentLeafNodeExtraInvocationsExpressionsInExtractedMethodParameters(notMappedNode ,extractedOperation, sourceOperationAfterExtrction)) {
+				if(isParentLeafNodeExtraInvocationsExpressionsInExtractedMethodParameters(notMappedNode ,extractedOperation, sourceOperationAfterExtrction , refList)) {
 					listParentLeafWithInvocationsExpressionsInExtractOperationInvocationParameters.add(notMappedNode);
+					
+				}
+				if(isParentLeafNodeDeclaredVariableInExtractedMethodParameters(notMappedNode ,extractedOperation, sourceOperationAfterExtrction , refList)) {
+					listParentLeafWithDeclaredVariableInExtractOperationInvocationParameters.add(notMappedNode);
+				}
+				if(isParentT2LeafNodeInParentMappings(notMappedNode, parentMappings)) {
+					listParentT2LeafNodesInMappings.add(notMappedNode);
 				}
 			}
 			setParentMarkedT2Leaves.addAll(listParentNotMappedLeavesWithInvokationsToExtractedMethod);
 			setParentMarkedT2Leaves.addAll(listParentNeutralLeaves);
 			setParentMarkedT2Leaves.addAll(listParentT2LeafNodeInT1LeafNodes);
 			setParentMarkedT2Leaves.addAll(listParentLeafWithInvocationsExpressionsInExtractOperationInvocationParameters);
-
+			setParentMarkedT2Leaves.addAll(listParentT2LeafNodesInMappings);
+			setParentMarkedT2Leaves.addAll(listParentLeafWithDeclaredVariableInExtractOperationInvocationParameters);
+			
 			//Processing Child (Extracted Operation) T2 Inner(Composite)/Leaf Nodes to filter out  marked nodes
 			for(CompositeStatementObject  notMappedCompositeNode : listNotMappedInnerNodesT2) {
 				
@@ -914,12 +931,16 @@ public class MotivationExtractor {
 				if(isChildT2LeafNodeinT1leafNodes(notMappedNode.toString(), listNotMappedleafNodesT1)) {
 					listChildT2LeafNodeInT1LeafNodes.add(notMappedNode);
 				}
+				if(isChildT2LeafNodeInChildMappings(notMappedNode, childMappings)) {
+					listChildT2LeafNodesInMappings.add(notMappedNode);
+				}
 			}
 			setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithInvokationsToExtractedMethod);
 			setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithRecursive);
 			//setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithInvocationsExpressionsInOperationParameters);
 			setChildMarkedT2Leaves.addAll(listChildNeutralLeaves);
 			setChildMarkedT2Leaves.addAll(listChildT2LeafNodeInT1LeafNodes);
+			setChildMarkedT2Leaves.addAll(listChildT2LeafNodesInMappings);
 			
 			//Computing  filtered nodes (Nodes that facilitate extension)
 			int filterdListNotMappedInnerNodesT2 = listNotMappedInnerNodesT2.size()-setChildMarkedT2InnerNodes.size();
@@ -955,6 +976,24 @@ public class MotivationExtractor {
 		}
 		return false;
 	}
+	private boolean isParentT2LeafNodeInParentMappings(StatementObject notMappedNode , Set<AbstractCodeMapping> parentMappings) {
+		
+		for(AbstractCodeMapping parentMapping : parentMappings) {
+			if(notMappedNode.getString().equals(parentMapping.getFragment2().getString())) {
+				return true;
+			}
+		}
+		return false;
+	}
+	private boolean isChildT2LeafNodeInChildMappings(StatementObject notMappedNode , Set<AbstractCodeMapping> childMappings) {
+		for(AbstractCodeMapping childMapping : childMappings) {
+			if(notMappedNode.getString().equals(childMapping.getFragment2().getString())) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	private boolean isParentExtraNodeInExtractedScope (ExtractOperationRefactoring extractOpRefactoring,  List<CompositeStatementObject> parentListNotMappedInnerNodesT2 , Set<CompositeStatementObject> setParentMarkedT2InnerNodes ,
 			List<StatementObject> parentListNotMappedLeavesT2 , Set<StatementObject> setParentMarkedT2Leaves ){
 		parentListNotMappedLeavesT2.removeAll(setParentMarkedT2Leaves);
@@ -1087,16 +1126,41 @@ public class MotivationExtractor {
 		}
 		return false;
 	}
-	private boolean isParentLeafNodeExtraInvocationsExpressionsInExtractedMethodParameters(StatementObject notMappedNode ,UMLOperation extractedOperation, UMLOperation sourceOperationAfterExtraction) {
+	
+	private boolean isParentLeafNodeDeclaredVariableInExtractedMethodParameters(StatementObject notMappedNode ,UMLOperation extractedOperation, UMLOperation sourceOperationAfterExtraction ,List<Refactoring> refList) {
+		List<String> extractMethodInvocationArguments = new ArrayList<String>();
+		if(!notMappedNode.getLocationInfo().getCodeElementType().equals(CodeElementType.VARIABLE_DECLARATION_STATEMENT)) {
+			return false;
+		}
+		for(OperationInvocation invocation : sourceOperationAfterExtraction.getAllOperationInvocations()) {
+			for(Refactoring ref : refList) {
+				ExtractOperationRefactoring extractOpRef = (ExtractOperationRefactoring)ref;
+				if(invocation.matchesOperation(extractOpRef.getExtractedOperation(),sourceOperationAfterExtraction.variableTypeMap(),modelDiff)) {
+					extractMethodInvocationArguments.addAll(invocation.getArguments());
+					break;
+				}
+			}
+		}
+		for(VariableDeclaration declaration : notMappedNode.getVariableDeclarations()) {
+			if(extractMethodInvocationArguments.contains(declaration.getVariableName())) {
+				return true;
+			}
+		}
+		return false;
+	}
+	private boolean isParentLeafNodeExtraInvocationsExpressionsInExtractedMethodParameters(StatementObject notMappedNode ,UMLOperation extractedOperation, UMLOperation sourceOperationAfterExtraction ,List<Refactoring> refList) {
 		List<OperationInvocation > invocationExpressionInExtractedMethodInvocationParameters = new ArrayList<OperationInvocation>();
 		List<String> extractMethodInvocationArguments = new ArrayList<String>();
 		if(notMappedNode.getMethodInvocationMap().size() == 0) {
 			return false;
 		}
 		for(OperationInvocation invocation : sourceOperationAfterExtraction.getAllOperationInvocations()) {
-			if(invocation.matchesOperation(extractedOperation,sourceOperationAfterExtraction.variableTypeMap(),modelDiff)) {
-				extractMethodInvocationArguments.addAll(invocation.getArguments());
-				break;
+			for(Refactoring ref : refList) {
+				ExtractOperationRefactoring extractOpRef = (ExtractOperationRefactoring)ref;
+				if(invocation.matchesOperation(extractOpRef.getExtractedOperation(),sourceOperationAfterExtraction.variableTypeMap(),modelDiff)) {
+					extractMethodInvocationArguments.addAll(invocation.getArguments());
+					break;
+				}
 			}
 		}
 
@@ -1208,6 +1272,7 @@ public class MotivationExtractor {
 		}
 		return false;	
 	}
+
 	private boolean isParentT2LeafNodeinT1leafNodes(String strParentT2Leave,List<StatementObject> parentLeavesT1){
 		for(StatementObject  notMappedNode :  parentLeavesT1) {
 			if(notMappedNode.getString().equals(strParentT2Leave)) {
