@@ -11482,7 +11482,12 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match2"
-	} ]
+				
+	},
+	{
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
+	}	]
 },
 {
 	"type": "Rename Method",
