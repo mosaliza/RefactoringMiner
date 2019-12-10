@@ -2174,6 +2174,8 @@
 	"description": "Extract Method public displayInputFragment(showOpenDialog boolean) : void extracted from private handleActions(savedInstanceState Bundle, intent Intent) : void in class org.sufficientlysecure.keychain.ui.DecryptFilesActivity",
 	"motivations": [ 
 	{ 
+	                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
