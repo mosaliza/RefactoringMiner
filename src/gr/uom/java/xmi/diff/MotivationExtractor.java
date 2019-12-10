@@ -954,14 +954,60 @@ public class MotivationExtractor {
 			setChildMarkedT2Leaves.addAll(listChildT2LeafNodeInT1LeafNodes);
 			setChildMarkedT2Leaves.addAll(listChildT2LeafNodesInMappings);
 			
+			//Filtering parent nodes that are not in extracted method scope
+			 List<AbstractStatement> parentStatementsInExtractedScope = getParentExtraNodesInExtractedScope(extractOperationRefactoring, parentListNotMappedInnerNodesT2,setParentMarkedT2InnerNodes,
+					 parentListNotMappedLeavesT2, setParentMarkedT2Leaves);
+			
+			 Set<CompositeStatementObject> setParentMarkedT2InnerNodesBeforeScopeFilter = new HashSet<CompositeStatementObject>();
+			 setParentMarkedT2InnerNodesBeforeScopeFilter.addAll(setParentMarkedT2InnerNodes);
+			 
+			 for(AbstractStatement statement : parentListNotMappedInnerNodesT2) {
+				if(!parentStatementsInExtractedScope.contains(statement) ) {
+					setParentMarkedT2InnerNodes.add((CompositeStatementObject)statement);
+				}
+			}
+			List<CompositeStatementObject> compositeWithParentInExtractedScope = new ArrayList<CompositeStatementObject>();
+			for(CompositeStatementObject composite :setParentMarkedT2InnerNodes) {
+				CompositeStatementObject nonBlockParent = getNonBlockParentOfAbstractStatement(composite);
+				if(parentStatementsInExtractedScope.contains(nonBlockParent)) {
+					compositeWithParentInExtractedScope.add(composite);
+				}
+			}
+			//Remove composites with parents in Extract method scope if they were not marked before.
+			for(CompositeStatementObject composite: compositeWithParentInExtractedScope) {
+				if(!setParentMarkedT2InnerNodesBeforeScopeFilter.contains(composite)) {
+					setParentMarkedT2InnerNodes.remove(composite);
+				}
+			}			
+			for(AbstractStatement statement : parentListNotMappedLeavesT2) {
+				if(!parentStatementsInExtractedScope.contains(statement)) {
+					setParentMarkedT2Leaves.add((StatementObject)statement);
+				}
+			}
+			
 			//Computing  filtered nodes (Nodes that facilitate extension)
+
+			List<AbstractStatement> filteredChildNonMappedLeavesAndInnerNodesT2 = new ArrayList<AbstractStatement>();
+			List<AbstractStatement> filteredParentNonMappedLeavesAndInnerNodesT2 = new ArrayList<AbstractStatement>();
+
+		
 			int filterdListNotMappedInnerNodesT2 = listNotMappedInnerNodesT2.size()-setChildMarkedT2InnerNodes.size();
 			int filteredListNotMappedLeavesT2 = listNotMappedLeavesT2.size()-setChildMarkedT2Leaves.size();
 			countChildNonMappedLeavesAndInnerNodesT2 =  filterdListNotMappedInnerNodesT2+filteredListNotMappedLeavesT2;
 			
+			filteredChildNonMappedLeavesAndInnerNodesT2.addAll(listNotMappedInnerNodesT2);
+			filteredChildNonMappedLeavesAndInnerNodesT2.addAll(listNotMappedLeavesT2);
+			filteredChildNonMappedLeavesAndInnerNodesT2.removeAll(setChildMarkedT2InnerNodes);
+			filteredChildNonMappedLeavesAndInnerNodesT2.removeAll(setChildMarkedT2Leaves);
+			
 			int filterdParentListNotMappedInnerNodesT2 = parentListNotMappedInnerNodesT2.size()-setParentMarkedT2InnerNodes.size();
             int filteredParentListNotMappedLeavesT2 = parentListNotMappedLeavesT2.size()-setParentMarkedT2Leaves.size();
 			 countParentNonMappedLeavesAndInnerNodesT2 = filterdParentListNotMappedInnerNodesT2 + filteredParentListNotMappedLeavesT2;
+			 filteredParentNonMappedLeavesAndInnerNodesT2.addAll(parentListNotMappedInnerNodesT2);
+			 filteredParentNonMappedLeavesAndInnerNodesT2.addAll(parentListNotMappedLeavesT2);
+			 filteredParentNonMappedLeavesAndInnerNodesT2.removeAll(setParentMarkedT2InnerNodes);
+			 filteredParentNonMappedLeavesAndInnerNodesT2.removeAll(setParentMarkedT2Leaves);
+
 			 //CODE ANALYSYS
 			 codeAnalysisFaciliateExtension(ref, countChildNonMappedLeavesAndInnerNodesT2,
 					 countParentNonMappedLeavesAndInnerNodesT2, listNotMappedleafNodesT1, listNotMappedInnerNodesT1,
@@ -971,8 +1017,7 @@ public class MotivationExtractor {
 			 
 			 if(countParentNonMappedLeavesAndInnerNodesT2 > 0) {
 				 //Checking that the extension in the parent is in the "extraction scope" in source operation after extraction
-				if(isParentExtraNodeInExtractedScope(extractOperationRefactoring, parentListNotMappedInnerNodesT2,setParentMarkedT2InnerNodes,
-						 parentListNotMappedLeavesT2, setParentMarkedT2Leaves )) {
+				 if(parentStatementsInExtractedScope.size() > 0) {
 					 facilitateExtensionRefactoringsWithExtrensionInParent.add(extractOperationRefactoring);
 				}else {
 					if(countChildNonMappedLeavesAndInnerNodesT2 == 0 ) {
@@ -1006,11 +1051,14 @@ public class MotivationExtractor {
 		return false;
 	}
 	
-	private boolean isParentExtraNodeInExtractedScope (ExtractOperationRefactoring extractOpRefactoring,  List<CompositeStatementObject> parentListNotMappedInnerNodesT2 , Set<CompositeStatementObject> setParentMarkedT2InnerNodes ,
+	private List<AbstractStatement> getParentExtraNodesInExtractedScope (ExtractOperationRefactoring extractOpRefactoring,  List<CompositeStatementObject> parentListNotMappedInnerNodesT2 , Set<CompositeStatementObject> setParentMarkedT2InnerNodes ,
 			List<StatementObject> parentListNotMappedLeavesT2 , Set<StatementObject> setParentMarkedT2Leaves ){
-		List<StatementObject> newParentListNotMappedLeavesT2 = parentListNotMappedLeavesT2;
-		List<CompositeStatementObject> newParentListNotMappedInnerNodesT2 = parentListNotMappedInnerNodesT2;
-		newParentListNotMappedLeavesT2.removeAll(setParentMarkedT2Leaves);
+		List<AbstractStatement> statementsInSameScopeAsExtractedMethod = new ArrayList<AbstractStatement>();
+		List<StatementObject> newParentListNotMappedLeavesT2 = new ArrayList<StatementObject>();
+		newParentListNotMappedLeavesT2.addAll(parentListNotMappedLeavesT2);
+		List<CompositeStatementObject> newParentListNotMappedInnerNodesT2 = new ArrayList<CompositeStatementObject>();
+		newParentListNotMappedInnerNodesT2.addAll(parentListNotMappedInnerNodesT2);
+		//newParentListNotMappedLeavesT2.removeAll(setParentMarkedT2Leaves);
 		//newParentListNotMappedInnerNodesT2.removeAll(setParentMarkedT2InnerNodes);
 		Set<AbstractCodeMapping> abstractMappings = extractOpRefactoring.getBodyMapper().getMappings();
 		Set<CompositeStatementObject> codeFragment1sParents = new HashSet<CompositeStatementObject>();
@@ -1045,10 +1093,10 @@ public class MotivationExtractor {
 					}
 				}
 			}	
-			if( compositesInSameScopeAsExtractedCode.size() > 0 || leavesInSameScopeAsExtractedCode.size() > 0) {
-				return true;
-			}
-		return false;
+			statementsInSameScopeAsExtractedMethod.addAll(compositesInSameScopeAsExtractedCode);
+			statementsInSameScopeAsExtractedMethod.addAll(leavesInSameScopeAsExtractedCode);
+		
+		return statementsInSameScopeAsExtractedMethod;
 	}
 	
 	private CompositeStatementObject getAbstractStatementNonBlockParent(AbstractStatement abstractStatement) {
@@ -1077,7 +1125,18 @@ public class MotivationExtractor {
 		return parent;
 	}
 	
-	
+	private CompositeStatementObject getNonBlockParentOfAbstractStatement(AbstractStatement statement){
+		 CompositeStatementObject parent = statement.getParent();
+		while (parent.getLocationInfo().getCodeElementType().equals(CodeElementType.BLOCK)) {
+			if(parent.getParent() != null) {
+				parent = parent.getParent();	
+			}else {
+				return null;
+			}
+		}
+		
+		return parent;
+	}
 	private boolean isExtractedMethodMappingAddedTernaryOperator(ExtractOperationRefactoring extrctOpRefactoring){
 		Set<AbstractCodeMapping> codeMappings = extrctOpRefactoring.getBodyMapper().getMappings();
 		for(AbstractCodeMapping abstractCodeMapping: codeMappings) {
@@ -1367,13 +1426,20 @@ public class MotivationExtractor {
 							}	
 							if(!isStatementInvocationsInAllOperationNames(statement , allOperationNames)) {
 								return false;
-							}else {
-								return true;
 							}
+							return true;
 						}
 					}
 				}else {
 					if(extractedOperationInvocationCountInStatement == 0) {
+						if(extractedOperationInvocationCountInStatement == 0 && otherOperationInvocationCountInStatement > 0) {
+							if(!isStatementInvocationsInAllOperationNames(statement , allOperationNames)) {
+								return false;
+							}
+							if(isStatementInvocationsInAddedOperations(statement , statementOperation , addedOperationNames)) {
+								return false;
+							}
+						}
 						return true;
 					}
 				}
