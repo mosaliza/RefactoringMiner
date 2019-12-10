@@ -1008,42 +1008,46 @@ public class MotivationExtractor {
 	
 	private boolean isParentExtraNodeInExtractedScope (ExtractOperationRefactoring extractOpRefactoring,  List<CompositeStatementObject> parentListNotMappedInnerNodesT2 , Set<CompositeStatementObject> setParentMarkedT2InnerNodes ,
 			List<StatementObject> parentListNotMappedLeavesT2 , Set<StatementObject> setParentMarkedT2Leaves ){
-		parentListNotMappedLeavesT2.removeAll(setParentMarkedT2Leaves);
+		List<StatementObject> newParentListNotMappedLeavesT2 = parentListNotMappedLeavesT2;
+		List<CompositeStatementObject> newParentListNotMappedInnerNodesT2 = parentListNotMappedInnerNodesT2;
+		newParentListNotMappedLeavesT2.removeAll(setParentMarkedT2Leaves);
+		//newParentListNotMappedInnerNodesT2.removeAll(setParentMarkedT2InnerNodes);
 		Set<AbstractCodeMapping> abstractMappings = extractOpRefactoring.getBodyMapper().getMappings();
 		Set<CompositeStatementObject> codeFragment1sParents = new HashSet<CompositeStatementObject>();
+		List<CompositeStatementObject> compositesInSameScopeAsExtractedCode = new ArrayList<CompositeStatementObject>();
+		List<StatementObject> leavesInSameScopeAsExtractedCode = new ArrayList<StatementObject>();
 		for(AbstractCodeMapping abstractCodeMapping : abstractMappings) {
 			codeFragment1sParents.add(getNonBlockParentOfAbstractCodeFragment(abstractCodeMapping.getFragment1()));
 		}
-			for(CompositeStatementObject compositeStatement: parentListNotMappedInnerNodesT2) {				
+			for(CompositeStatementObject compositeStatement: newParentListNotMappedInnerNodesT2) {				
 				CompositeStatementObject compositeStatementParent = getAbstractStatementNonBlockParent(compositeStatement);
 				for(CompositeStatementObject parent : codeFragment1sParents) {
-					if(parent == null && compositeStatementParent == null) {
+					if((parent == null && compositeStatementParent == null)) {
 						//parents are either source operation before/after extraction
-						return true;
-					}
-					if (parent == null || compositeStatementParent == null) {
-						break;
-					}
-					if(parent.toString().equals(compositeStatementParent.toString())) {
-						return true;
+						compositesInSameScopeAsExtractedCode.add(compositeStatement);
+						//return true;
+					}else if(parent != null && compositeStatementParent != null) {
+						if(parent.toString().equals(compositeStatementParent.toString())) {
+							compositesInSameScopeAsExtractedCode.add(compositeStatement);
+						}
 					}
 				}
 			}
-			for(StatementObject statementObject: parentListNotMappedLeavesT2) {
+			for(StatementObject statementObject: newParentListNotMappedLeavesT2) {
 				CompositeStatementObject statementObjectParent = getAbstractStatementNonBlockParent(statementObject);
 				for(CompositeStatementObject parent : codeFragment1sParents) {
-					if(parent == null && statementObjectParent == null) {
-						//parents are either source operation before/after extraction
-						return true;
-					}
-					if (parent == null || statementObjectParent == null) {
-						break;
-					}
-					if(parent.toString().equals(statementObjectParent.toString())) {
-						return true;
+					if((parent == null && statementObjectParent == null)) {
+						leavesInSameScopeAsExtractedCode.add(statementObject);
+					}else if(parent != null && statementObjectParent != null) {
+						if(parent.toString().equals(statementObjectParent.toString())) {
+							leavesInSameScopeAsExtractedCode.add(statementObject);
+						}
 					}
 				}
 			}	
+			if( compositesInSameScopeAsExtractedCode.size() > 0 || leavesInSameScopeAsExtractedCode.size() > 0) {
+				return true;
+			}
 		return false;
 	}
 	
@@ -1900,6 +1904,8 @@ public class MotivationExtractor {
 					extractOperationRef, CodeElementType.RETURN_STATEMENT);
 			List<StatementObject> listVariableDeclarationStatementsWithCallsToExtractedOperation = getStatementsCallingExtractedOperation(
 					extractOperationRef, CodeElementType.VARIABLE_DECLARATION_STATEMENT);
+			List<StatementObject> listExpressioNStatementsWithCallsToExtractedOperation = getStatementsCallingExtractedOperation(
+					extractOperationRef, CodeElementType.EXPRESSION_STATEMENT);
 			List<AbstractExpression> expressionsUsingVariableInitializedWithExtracedOperationInvocation = new ArrayList<AbstractExpression>();
 			CompositeStatementObject sourceOperationAfterExtractionBody = sourceOperationAfterExtraction.getBody().getCompositeStatement();
 			for(StatementObject statement : listVariableDeclarationStatementsWithCallsToExtractedOperation) {
@@ -1915,11 +1921,12 @@ public class MotivationExtractor {
 				decomposeToImproveReadabilityFromSingleMethodByHavingCallToExtractedMethodInReturn.add((ExtractOperationRefactoring)ref);
 			}
 			List<AbstractExpression> expressionsInCompositesWithCallsToExtractedMethod = getAllCompositeStatementObjectExpressionsWithInvokationsToExtractedOperation(sourceOperationAfterExtractionBody, extratedOperation, sourceOperationAfterExtraction);
-			if(expressionsInCompositesWithCallsToExtractedMethod.size() > 0 ||
+			if(expressionsInCompositesWithCallsToExtractedMethod.size() > 0 || /*listExpressioNStatementsWithCallsToExtractedOperation.size() > 0 || */
 					expressionsUsingVariableInitializedWithExtracedOperationInvocation.size() > 0 || 
 					((listReturnStatementswithCallsToExtractedOperation.size() > 0) && (sourceOperationAfterExtraction.getBody().statementCount() > 1))) {
 				return true;
 			}
+			
 			OperationBody sourceOperationBody = extractOperationRef.getSourceOperationAfterExtraction().getBody();
 			CompositeStatementObject compositeStatement =  sourceOperationBody.getCompositeStatement();
 			//if(isCompositeStatementWithLeavesCallingExtractedOepration(compositeStatement , CodeElementType.CATCH_CLAUSE , extractOperationRef)) {
