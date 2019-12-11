@@ -368,7 +368,11 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match1"
-	} ]
+	},
+	{
+	            "label": "EM: Facilitate extension",
+                "status": "match1"
+	}	]
 },
 {
 	"type": "Extract Method",
@@ -377,7 +381,11 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match1"
-	} ]
+	},
+	{
+                "label": "EM: Facilitate extension",
+                "status": "match1"	
+	}	]
 },
 {
 	"type": "Extract Method",
@@ -386,7 +394,11 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match1"
-	} ]
+	},
+	{
+	            "label": "EM: Facilitate extension",
+                "status": "match1"
+	}	]
 },
 {
 	"type": "Extract Method",
@@ -395,7 +407,11 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match1"
-	} ]
+	},
+	{
+	            "label": "EM: Facilitate extension",
+                "status": "match1"
+	}	]
 }
 ]},{	"repository": "https://github.com/gradle/gradle.git",
 	"sha1": "79c66ceab11dae0b9fd1dade7bb4120028738705",
