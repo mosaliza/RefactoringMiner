@@ -7352,7 +7352,8 @@
 	"description": "Extract Method protected changeSignBasedOnFirstNoneZeroValue() : void extracted from public runIterations(maxNrIterations int) : int in class org.neo4j.graphalgo.impl.centrality.EigenvectorCentralityBase",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match1"
 	} ]
 },
 {
