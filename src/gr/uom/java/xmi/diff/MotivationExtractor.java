@@ -13,6 +13,8 @@ import org.eclipse.jdt.core.dom.Annotation;
 import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
 
+import com.sun.javafx.css.Declaration;
+
 import gr.uom.java.xmi.LocationInfo;
 import gr.uom.java.xmi.LocationInfo.CodeElementType;
 import gr.uom.java.xmi.UMLAnonymousClass;
@@ -870,7 +872,7 @@ public class MotivationExtractor {
 				if(isNeutralNodeForFacilitateExtension(notMappedCompositeNode , refList , sourceOperationAfterExtrction, addedOperationNames, allOperationNames )) {
 					listParentNeutralInnerNodes.add(notMappedCompositeNode);
 				}	
-				if(isParentT2InnerNodeinT1InnerNodes(notMappedCompositeNode.toString(), parentListNotMappedInnerNodesT1)) {
+				if(isParentT2InnerNodeinT1InnerNodes(notMappedCompositeNode, parentListNotMappedInnerNodesT1)) {
 					listParentT2InnerNodeInT1InnerNodes.add(notMappedCompositeNode);
 				}
 			}
@@ -887,7 +889,7 @@ public class MotivationExtractor {
 				if(isNeutralNodeForFacilitateExtension(notMappedNode , refList , sourceOperationAfterExtrction, addedOperationNames, allOperationNames )) {
 					listParentNeutralLeaves.add(notMappedNode);
 				}
-				if(isParentT2LeafNodeinT1leafNodes(notMappedNode.toString(), parentListNotMappedleafNodesT1)) {
+				if(isParentT2LeafNodeinT1leafNodes(notMappedNode, parentListNotMappedleafNodesT1)) {
 					listParentT2LeafNodeInT1LeafNodes.add(notMappedNode);
 				}
 				if(isParentLeafNodeExtraInvocationsExpressionsInExtractedMethodParameters(notMappedNode ,extractedOperation, sourceOperationAfterExtrction , refList)) {
@@ -917,7 +919,7 @@ public class MotivationExtractor {
 				if(isNeutralNodeForFacilitateExtension(notMappedCompositeNode ,refList, extractedOperation ,  addedOperationNames, allOperationNames)) {
 					listChildNeutralInnerNodes.add(notMappedCompositeNode);
 				}
-				if(isChildT2InnerNodeinT1InnerNodes(notMappedCompositeNode.toString(), listNotMappedInnerNodesT1)) {
+				if(isChildT2InnerNodeinT1InnerNodes(notMappedCompositeNode, listNotMappedInnerNodesT1)) {
 					listChildT2InnerNodeInT1InnerNodes.add(notMappedCompositeNode);
 				}
 			}
@@ -940,7 +942,7 @@ public class MotivationExtractor {
 				if(isNeutralNodeForFacilitateExtension(notMappedNode, refList, extractedOperation,  addedOperationNames, allOperationNames)){
 					listChildNeutralLeaves.add(notMappedNode);
 				}
-				if(isChildT2LeafNodeinT1leafNodes(notMappedNode.toString(), listNotMappedleafNodesT1)) {
+				if(isChildT2LeafNodeinT1leafNodes(notMappedNode, listNotMappedleafNodesT1)) {
 					listChildT2LeafNodeInT1LeafNodes.add(notMappedNode);
 				}
 				if(isChildT2LeafNodeInChildMappings(notMappedNode, childMappings)) {
@@ -1338,53 +1340,100 @@ public class MotivationExtractor {
 		}
 		return false;
 	}
-	private boolean isParentT2InnerNodeinT1InnerNodes(String strParentT2InnerNode,List<CompositeStatementObject> parentT1InnerNodes){
-
+	private boolean isParentT2InnerNodeinT1InnerNodes(AbstractStatement parentT2InnerNode,List<CompositeStatementObject> parentT1InnerNodes){
+		List<String> statementTokens = getAbstractStatementTokens(parentT2InnerNode);
 		for(CompositeStatementObject  notMappedCompositeNode :  parentT1InnerNodes) {
-			if(notMappedCompositeNode.getString().equals(strParentT2InnerNode)) {
+			if(notMappedCompositeNode.getString().equals(parentT1InnerNodes.toString())) {
 				return true;
+			}
+			if(notMappedCompositeNode.getString().indexOf(parentT2InnerNode.toString()) >= 0) {
+				return true;
+			}
+			if(notMappedCompositeNode.getString().startsWith(parentT2InnerNode.toString())) {
+				return true;
+			}
+			for(String token : statementTokens) {
+				if(notMappedCompositeNode.getString().indexOf(token) >= 0) {
+					return true;
+				}
 			}
 		}
 		return false;	
 	}
 
-	private boolean isParentT2LeafNodeinT1leafNodes(String strParentT2Leave,List<StatementObject> parentLeavesT1){
+	private boolean isParentT2LeafNodeinT1leafNodes(AbstractStatement parentT2Leave,List<StatementObject> parentLeavesT1){
+		List<String> statementTokens = getAbstractStatementTokens(parentT2Leave);
 		for(StatementObject  notMappedNode :  parentLeavesT1) {
-			if(notMappedNode.getString().equals(strParentT2Leave)) {
+			if(notMappedNode.getString().equals(parentT2Leave.toString())) {
 				return true;
 			}
-			if(notMappedNode.getString().indexOf(strParentT2Leave) >= 0) {
+			if(notMappedNode.getString().indexOf(parentT2Leave.toString()) >= 0) {
 				return true;
 			}
-			if(notMappedNode.getString().startsWith(strParentT2Leave)) {
+			if(notMappedNode.getString().startsWith(parentT2Leave.toString())) {
 				return true;
 			}
+			for(String token : statementTokens) {
+				if(notMappedNode.getString().indexOf(token) >= 0) {
+					return true;
+				}
+			}
+			
 		}
 		return false;
 	}
-	private boolean isChildT2InnerNodeinT1InnerNodes(String strChildT2InnerNode,List<CompositeStatementObject> childT1InnerNodes){
+	private boolean isChildT2InnerNodeinT1InnerNodes(AbstractStatement childT2InnerNode,List<CompositeStatementObject> childT1InnerNodes){
+		List<String> statementTokens = getAbstractStatementTokens(childT2InnerNode);
 		for(CompositeStatementObject  notMappedCompositeNode :  childT1InnerNodes) {
-			if(notMappedCompositeNode.getString().equals(strChildT2InnerNode)) {
+			if(notMappedCompositeNode.getString().equals(childT2InnerNode.toString())) {
 				return true;
+			}
+			if(notMappedCompositeNode.getString().indexOf(childT2InnerNode.toString()) >= 0) {
+				return true;
+			}
+			if(notMappedCompositeNode.getString().startsWith(childT2InnerNode.toString())) {
+				return true;
+			}
+			for(String token : statementTokens) {
+				if(notMappedCompositeNode.getString().indexOf(token) >= 0) {
+					return true;
+				}
 			}
 		}
 		return false;	
 	}
-	private boolean isChildT2LeafNodeinT1leafNodes(String strChildT2Leaf,List<StatementObject> childLeavesT1){
+	private boolean isChildT2LeafNodeinT1leafNodes(AbstractStatement childT2Leaf,List<StatementObject> childLeavesT1){
+		
+		List<String> statementTokens = getAbstractStatementTokens(childT2Leaf);
 		for(StatementObject  notMappedNode :  childLeavesT1) {
-			if(notMappedNode.getString().equals(strChildT2Leaf)) {
+			if(notMappedNode.getString().equals(childT2Leaf.toString())) {
 				return true;
 			}
-			if(notMappedNode.getString().indexOf(strChildT2Leaf) >= 0) {
+			if(notMappedNode.getString().indexOf(childT2Leaf.toString()) >= 0) {
 				return true;
 			}
-			if(notMappedNode.getString().startsWith(strChildT2Leaf)) {
+			if(notMappedNode.getString().startsWith(childT2Leaf.toString())) {
 				return true;
 			}
-		}
+			List<String> tokensInT1 = new ArrayList<String>();
+			for(String token : statementTokens) {
+				if(notMappedNode.getString().indexOf(token) >= 0) {
+					tokensInT1.add(token);
+				}
+			}
+			if(tokensInT1.size() == statementTokens.size()) {
+				return true;
+			}
+		}		
 		return false;
 	}
-	
+	private List<String> getAbstractStatementTokens(AbstractStatement statement ){
+		List<String> statementTokens = new ArrayList<String>();
+		//statementTokens.addAll(getStatementInvocationNames(statement));
+		 statementTokens.addAll(getStatementInvocationExpressions(statement));
+		//statementTokens.addAll(getStatementInvocationArguments(statement));		
+		return 	statementTokens;
+	}
 	private boolean isNeutralNodeForFacilitateExtension(AbstractStatement statement , List<Refactoring> refList , UMLOperation statementOperation , 
 			List<String> addedOperationNames , List<String> allOperationNames){
 		Set<CodeElementType> neutralCodeElements = new HashSet<CodeElementType>();
@@ -1519,6 +1568,32 @@ public class MotivationExtractor {
 		}
 		return methodNamesInvokedInStatement;
 	}
+	
+	private List<String> getStatementInvocationExpressions(AbstractStatement statement){
+		
+		List<String> statementInvocationExpressions = new ArrayList<String>();
+		for(String invocationString : statement.getMethodInvocationMap().keySet()) {
+			List<OperationInvocation> operationInvocations = statement.getMethodInvocationMap().get(invocationString);
+			for(OperationInvocation invocation : operationInvocations) {
+				if(invocation.getExpression() != null ) {
+					statementInvocationExpressions.add(invocation.getExpression());
+				}
+			}
+		}
+		return statementInvocationExpressions;
+	}
+	private List<String> getStatementInvocationArguments(AbstractStatement statement){
+		
+		List<String> statementInvocationArguments = new ArrayList<String>();
+		for(String invocationString : statement.getMethodInvocationMap().keySet()) {
+			List<OperationInvocation> operationInvocations = statement.getMethodInvocationMap().get(invocationString);
+			for(OperationInvocation invocation : operationInvocations) {
+				statementInvocationArguments.addAll(invocation.getArguments());
+			}
+		}
+		return statementInvocationArguments;
+	}
+	
 	private enum OperationType{
 		ADDED,
 		ALL;
