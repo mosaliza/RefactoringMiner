@@ -1115,7 +1115,10 @@ public class MotivationExtractor {
 	
 	
 	private CompositeStatementObject getNonBlockParentOfAbstractCodeFragment(AbstractCodeFragment fragment){
-		 CompositeStatementObject parent = fragment.getParent();
+		CompositeStatementObject parent = fragment.getParent();
+		 if(parent == null) {
+			 return null;
+		 }
 		while (parent.getLocationInfo().getCodeElementType().equals(CodeElementType.BLOCK)) {
 			if(parent.getParent() != null) {
 				parent = parent.getParent();	
@@ -1128,7 +1131,10 @@ public class MotivationExtractor {
 	}
 	
 	private CompositeStatementObject getNonBlockParentOfAbstractStatement(AbstractStatement statement){
-		 CompositeStatementObject parent = statement.getParent();
+		CompositeStatementObject parent = statement.getParent();
+		 if(parent == null) {
+			 return null;
+		 }
 		while (parent.getLocationInfo().getCodeElementType().equals(CodeElementType.BLOCK)) {
 			if(parent.getParent() != null) {
 				parent = parent.getParent();	
