@@ -1384,7 +1384,15 @@ public class MotivationExtractor {
 					return true;
 				}
 			}
-			
+			List<String> argumentsInT1 = new ArrayList<String>();
+			for(String token :getStatementInvocationArguments(parentT2Leave)) {
+				if(notMappedNode.getString().indexOf(token) >= 0) {
+					argumentsInT1.add(token);
+				}
+			}
+			if(argumentsInT1.size() > 0) {
+				return true;
+			}	
 		}
 		return false;
 	}
@@ -1428,6 +1436,15 @@ public class MotivationExtractor {
 				}
 			}
 			if(tokensInT1.size() == statementTokens.size()) {
+				return true;
+			}
+			List<String> argumentsInT1 = new ArrayList<String>();
+			for(String token :getStatementInvocationArguments(childT2Leaf)) {
+				if(notMappedNode.getString().indexOf(token) >= 0) {
+					argumentsInT1.add(token);
+				}
+			}
+			if(argumentsInT1.size() > 0) {
 				return true;
 			}
 		}		
