@@ -2,6 +2,7 @@ package gr.uom.java.xmi.diff;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -2077,6 +2078,11 @@ public class MotivationExtractor {
 					expressionsUsingVariableInitializedWithExtracedOperationInvocation.addAll(getAllCompositeStatementObjectExpressionsUsingVariable(sourceOperationAfterExtractionBody, declaration.getVariableName()));
 				}
 			}
+			if(listVariableDeclarationStatementsWithCallsToExtractedOperation.size()>0 || listExpressioNStatementsWithCallsToExtractedOperation.size() > 0  ) {
+				if(isMappingComplicatedStructure(extractOperationRef)) {
+					return true;
+				}
+			}
 			/*Check all expressions of the source operation after extraction to see if there is any calls to extracted operation
 			 *Check if any expression exists with Variables initialized with invokations to the extracted operation
 			 *Check if any return statements exists with calls to the extracted operation
@@ -2098,6 +2104,82 @@ public class MotivationExtractor {
 			//}
 		}	
 		return false;
+	}
+	
+	boolean isMappingComplicatedStructure(ExtractOperationRefactoring extractOperationRef){
+		Set<AbstractCodeMapping> codeMappings = extractOperationRef.getBodyMapper().getMappings();
+		Set<CodeElementType> compositeCodeElements = new HashSet<CodeElementType>();
+		compositeCodeElements.add(CodeElementType.FOR_STATEMENT);
+		compositeCodeElements.add(CodeElementType.ENHANCED_FOR_STATEMENT);
+		compositeCodeElements.add(CodeElementType.IF_STATEMENT);
+		for(AbstractCodeMapping mapping : codeMappings) {
+			AbstractCodeFragment fragment1 = mapping.getFragment1();
+			CodeElementType fragment1Type = fragment1.getLocationInfo().getCodeElementType();
+			if(compositeCodeElements.contains(fragment1Type)) {
+				List <CompositeStatementObject> fragment1CompositeParents = new ArrayList<CompositeStatementObject>();
+				fragment1CompositeParents = isAnyNonBlockParentComposite(fragment1 , compositeCodeElements);
+				List<CompositeStatementObject> compositeStatementsInMappings = getCompositeStatementsInMappingRange(fragment1CompositeParents, codeMappings);
+				if(fragment1CompositeParents != null && compositeStatementsInMappings.size() > 0 ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	private List<CompositeStatementObject> getCompositeStatementsInMappingRange(List<CompositeStatementObject> compositeStatements ,Set<AbstractCodeMapping> mappings ) {
+		List<CompositeStatementObject> compositeStatementsInMappings = new ArrayList<CompositeStatementObject>();
+		CodeRange mappingsCodeRange = getMappingsCodeRange(mappings);
+		if(compositeStatements != null) {
+			for(CompositeStatementObject composite : compositeStatements) {
+				if(mappingsCodeRange.getStartLine() <= composite.getLocationInfo().getEndLine() &&
+						mappingsCodeRange.getEndLine() >= composite.getLocationInfo().getEndLine()) {
+					compositeStatementsInMappings.add(composite);
+				}
+			}	
+		}
+		return compositeStatementsInMappings;
+	}
+	
+	private CodeRange getMappingsCodeRange(Set<AbstractCodeMapping> mappings) {
+		
+		List<Integer> startLines = new ArrayList<Integer>();
+		List<Integer> endLines = new ArrayList<Integer>();
+		List<Integer> startColumns = new ArrayList<Integer>();
+		List<Integer> endColumns = new ArrayList<Integer>();
+		for(AbstractCodeMapping abstractMapping : mappings) {
+			startLines.add(abstractMapping.getFragment1().getLocationInfo().codeRange().getStartLine());
+			endLines.add(abstractMapping.getFragment1().getLocationInfo().codeRange().getEndLine());
+			startColumns.add(abstractMapping.getFragment1().getLocationInfo().codeRange().getStartColumn());
+			endColumns.add(abstractMapping.getFragment1().getLocationInfo().codeRange().getEndColumn());
+		}
+		startLines.sort(Collections.reverseOrder());
+		endLines.sort(Collections.reverseOrder());
+		startColumns.sort(Collections.reverseOrder());
+		endColumns.sort(Collections.reverseOrder());
+		
+		return  new CodeRange("", startLines.get(startLines.size()-1), endLines.get(0),
+				startColumns.get(startColumns.size()-1), endColumns.get(0), CodeElementType.LIST_OF_STATEMENTS);
+	}
+	
+	
+	private List<CompositeStatementObject> isAnyNonBlockParentComposite(AbstractCodeFragment abstractCodeFragment , Set<CodeElementType> compositeCodeElements ){
+		CompositeStatementObject nonBlockParent = getNonBlockParentOfAbstractCodeFragment(abstractCodeFragment);
+		List<CompositeStatementObject> compositeParents = new ArrayList<CompositeStatementObject>();
+		if(nonBlockParent != null) {
+			if(compositeCodeElements.contains(nonBlockParent.getLocationInfo().getCodeElementType())) {
+				compositeParents.add(nonBlockParent);
+				CompositeStatementObject composite = getNonBlockParentOfAbstractStatement(nonBlockParent);
+				if(composite != null) {
+					compositeParents.add(composite);
+					if(isAnyNonBlockParentComposite(composite,compositeCodeElements) != null)
+					compositeParents.addAll(isAnyNonBlockParentComposite(composite,compositeCodeElements));						
+				}
+			}	
+		}
+		if(compositeParents.size() > 0 ) {
+			return compositeParents;
+		}
+		return null;
 	}
 	private boolean isCompositeStatementWithLeavesCallingExtractedOepration(CompositeStatementObject compositeStatement, CodeElementType codeElementType , ExtractOperationRefactoring extractOperationRef){
 		if(compositeStatement.getLocationInfo().getCodeElementType().equals(codeElementType)) {
