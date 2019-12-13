@@ -2346,23 +2346,36 @@ public class MotivationExtractor {
 			/*DETECTION RULE: if multiple source operations(Or the Extract Refactorings that contain them)
 			 *  have the same extractedOperation the extract operations motivations is Remove Duplication*/
 			if(listSourceOperations.size() > 1){
-				if(listSourceOperations.size() > 1) {
-					if(isExtractMethodRefactoringsEqual(listSourceOperations)) {
-						removeDuplicationFromSingleMethodRefactorings.addAll(listSourceOperations);
+				if(isRemoveDuplicationOneLine(listSourceOperations)) {
+					return false;
+				}
+				if(isExtractMethodRefactoringsEqual(listSourceOperations)) {
+					removeDuplicationFromSingleMethodRefactorings.addAll(listSourceOperations);
+				}
+				for(ExtractOperationRefactoring extractOp : listSourceOperations){
+					setRefactoringMotivation(MotivationType.EM_REMOVE_DUPLICATION, extractOp);
+					if(isMotivationDetected(extractOp , MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY) 
+							&& (!decomposeToImproveReadabilityFromSingleMethodRefactorings.contains(extractOp)||
+									decomposeToImproveReadabilityFromSingleMethodByHavingCallToExtractedMethodInReturn.contains(extractOp))) {
+						removeRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY, extractOp);
 					}
-					for(ExtractOperationRefactoring extractOp : listSourceOperations){
-						setRefactoringMotivation(MotivationType.EM_REMOVE_DUPLICATION, extractOp);
-						if(isMotivationDetected(extractOp , MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY) 
-								&& (!decomposeToImproveReadabilityFromSingleMethodRefactorings.contains(extractOp)||
-										decomposeToImproveReadabilityFromSingleMethodByHavingCallToExtractedMethodInReturn.contains(extractOp))) {
-							removeRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY, extractOp);
-						}
-						allRemoveDuplicationExtractRefactorings.add(extractOp);	
-					}
+					allRemoveDuplicationExtractRefactorings.add(extractOp);	
 				}
 			}				
 		}
 		if(allRemoveDuplicationExtractRefactorings.size() >= 2) {
+			return true;
+		}
+		return false;
+	}
+	private boolean isRemoveDuplicationOneLine(List<ExtractOperationRefactoring> extractOperations) {
+		if(extractOperations.size() < 3) {
+			for(ExtractOperationRefactoring extractOperation : extractOperations) {
+				Set<AbstractCodeMapping> abstractCodeMappings = extractOperation.getBodyMapper().getMappings();
+				if(abstractCodeMappings.size() != 1) {
+					return false;
+				}	
+			}
 			return true;
 		}
 		return false;

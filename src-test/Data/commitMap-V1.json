@@ -4696,10 +4696,6 @@
 	{ 
 	            "label": "EM: Facilitate extension",
                 "status": "match1"
-	},
-	{
-	            "label": "EM: Remove duplication",
-                "status": "match2"
 	}
 	]
 },
@@ -4710,11 +4706,7 @@
 	{ 
 	            "label": "EM: Facilitate extension",
                 "status": "match1"
-	},
-	{
-	            "label": "EM: Remove duplication",
-                "status": "match2"
-	} ]
+	}]
 },
 {
 	"type": "Extract Superclass",
