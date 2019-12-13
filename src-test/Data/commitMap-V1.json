@@ -13230,7 +13230,11 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match2"
-	} ]
+	},
+	{
+	            "label": "EM: Decompose method to improve readability",
+                "status": "match2"
+	}	]
 }
 ]},{	"repository": "https://github.com/apache/cassandra.git",
 	"sha1": "446e2537895c15b404a74107069a12f3fc404b15",
@@ -13509,15 +13513,25 @@
 	"description": "Extract Method public assertUdfsEnabled(language String) : void extracted from public create(name FunctionName, argNames List<ColumnIdentifier>, argTypes List<AbstractType<?>>, returnType AbstractType<?>, calledOnNullInput boolean, language String, body String) : UDFunction in class org.apache.cassandra.cql3.functions.UDFunction",
 	"motivations": [ 
 	{ 
-
-	} ]
+                "label": "EM: Facilitate extension",
+                "status": "match1"
+	},
+	{
+	         "label": "EM: Remove duplication",
+                "status": "match2"
+	}	]
 },
 {
 	"type": "Extract Method",
 	"description": "Extract Method public assertUdfsEnabled(language String) : void extracted from public execute(protocolVersion int, parameters List<ByteBuffer>) : ByteBuffer in class org.apache.cassandra.cql3.functions.UDFunction",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match1"
+	},
+	{
+	         "label": "EM: Remove duplication",
+                "status": "match2"
 	} ]
 },
 {
@@ -13525,7 +13539,12 @@
 	"description": "Extract And Move Method public assertUdfsEnabled(language String) : void extracted from public validate(state ClientState) : void in class org.apache.cassandra.cql3.statements.CreateFunctionStatement & moved to class org.apache.cassandra.cql3.functions.UDFunction",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match1"
+	},
+	{
+	         "label": "EM: Remove duplication",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/apache/cassandra.git",
@@ -14055,7 +14074,11 @@
             {
                 "label": "EM: Decompose method to improve readability",
                 "status": "match1"
-            } ]
+            },
+			{
+				"label": "EM: Facilitate extension",
+                "status": "match1"
+			} ]
 },
 {
 	"type": "Extract Method",
@@ -14114,7 +14137,16 @@
 	"description": "Extract Method private setupObjectStore(rdbms RawStore, roles String[], dbNames String[], tokenIds String[], tokens String[], masterKeys String[], now int) : void extracted from public doImport() : void in class org.apache.hadoop.hive.metastore.hbase.TestHBaseImport",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
+	},
+	{
+	            "label": "EM: Facilitate extension",
+                "status": "match1"
+	},
+	{
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -14146,7 +14178,8 @@
 	"description": "Extract Method private copyOneFunction(dbName String, funcName String) : void extracted from private copyFunctions() : void in class org.apache.hadoop.hive.metastore.hbase.HBaseImport",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/apache/hive.git",
@@ -14850,6 +14883,10 @@
 	{ 
                 "label": "EM: Decompose method to improve readability",
                 "status": "match2"
+	},
+	{
+	            "label": "EM: Facilitate extension",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/checkstyle/checkstyle.git",
@@ -16189,7 +16226,8 @@
 	"description": "Extract Method private emitInstrumentedAnn(mv MethodVisitor) : void extracted from public accept(mv MethodVisitor, hasAnnotation boolean) : void in class co.paralleluniverse.fibers.instrument.InstrumentMethod",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match1"
 	} ]
 },
 {
@@ -16412,6 +16450,14 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match2"
+	},
+	{
+	            "label": "EM: Facilitate extension",
+                "status": "match1"
+	},
+	{ 
+                "label": "EM: Decompose method to improve readability",
+                "status": "match2"
 	} ]
 },
 {
@@ -16440,7 +16486,15 @@
 	{ 
                "label": "EM: Decompose method to improve readability",
                 "status": "match2"
-	} ]
+	},
+	{
+	            "label": "EM: Facilitate extension",
+                "status": "match1"
+	},
+	{
+	            "label": "EM: Extract reusable method",
+                "status": "match2"
+	}	]
 }
 ]},{	"repository": "https://github.com/JetBrains/intellij-community.git",
 	"sha1": "8d7a26edd1fedb9505b4f2b4fe57b2d2958b4dd9",
@@ -16495,12 +16549,28 @@
 	"refactorings": [{
 	"type": "Extract Method",
 	"description": "Extract Method private canBinaryExpressionBeUnboxed(lhs PsiExpression, rhs PsiExpression) : boolean extracted from private canBeUnboxed(expression PsiExpression) : boolean in class com.siyeh.ig.migration.UnnecessaryBoxingInspection.UnnecessaryBoxingVisitor",
-	"motivations": [  ]
+	"motivations": [ 
+	{
+                "label": "EM: Facilitate extension",
+                "status": "match1"
+	},
+	{
+	            "label": "EM: Remove duplication",
+                "status": "match2"
+	}	]
 },
 {
 	"type": "Extract Method",
 	"description": "Extract Method private canBinaryExpressionBeUnboxed(lhs PsiExpression, rhs PsiExpression) : boolean extracted from private canBeUnboxed(expression PsiExpression) : boolean in class com.siyeh.ig.migration.UnnecessaryBoxingInspection.UnnecessaryBoxingVisitor",
-	"motivations": [  ]
+	"motivations": [ 
+	{
+                "label": "EM: Facilitate extension",
+                "status": "match1"
+	},
+	{
+	            "label": "EM: Remove duplication",
+                "status": "match2"
+	}	]
 }
 ]},{	"repository": "https://github.com/JetBrains/intellij-community.git",
 	"sha1": "1b70adbfd49e00194c4c1170ef65e8114d7a2e46",
@@ -17084,7 +17154,8 @@
 	"description": "Extract Method private processBindingConfiguration() : void extracted from public updated(config Dictionary<String,?>) : void in class org.openhab.binding.insteonplm.InsteonPLMActiveBinding",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Facilitate extension",
+                "status": "match1"
 	} ]
 },
 {
@@ -17100,7 +17171,6 @@
 	"description": "Replace Variable With Attribute mdbb : ModemDBBuilder to m_mdbb : ModemDBBuilder in method public start() : void in class org.openhab.binding.insteonplm.internal.driver.Port",
 	"motivations": [ 
 	{ 
-
 	} ]
 },
 {
@@ -17110,6 +17180,10 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match2"
+	},
+	{
+	            "label": "EM: Remove duplication",
+                "status": "match2"
 	} ]
 },
 {
@@ -17118,6 +17192,10 @@
 	"motivations": [ 
 	{ 
                 "label": "EM: Extract reusable method",
+                "status": "match2"
+	},
+	{
+	            "label": "EM: Remove duplication",
                 "status": "match2"
 	} ]
 }
