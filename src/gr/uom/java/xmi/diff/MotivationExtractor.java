@@ -2078,7 +2078,7 @@ public class MotivationExtractor {
 					expressionsUsingVariableInitializedWithExtracedOperationInvocation.addAll(getAllCompositeStatementObjectExpressionsUsingVariable(sourceOperationAfterExtractionBody, declaration.getVariableName()));
 				}
 			}
-			if(listVariableDeclarationStatementsWithCallsToExtractedOperation.size()>0 || listExpressioNStatementsWithCallsToExtractedOperation.size() > 0  ) {
+			if(listVariableDeclarationStatementsWithCallsToExtractedOperation.size()>0 || listExpressioNStatementsWithCallsToExtractedOperation.size() > 0 ) {
 				if(isMappingComplicatedStructure(extractOperationRef)) {
 					return true;
 				}
@@ -2118,13 +2118,44 @@ public class MotivationExtractor {
 			if(compositeCodeElements.contains(fragment1Type)) {
 				List <CompositeStatementObject> fragment1CompositeParents = new ArrayList<CompositeStatementObject>();
 				fragment1CompositeParents = isAnyNonBlockParentComposite(fragment1 , compositeCodeElements);
-				List<CompositeStatementObject> compositeStatementsInMappings = getCompositeStatementsInMappingRange(fragment1CompositeParents, codeMappings);
-				if(fragment1CompositeParents != null && compositeStatementsInMappings.size() > 0 ) {
-					return true;
+				List<CompositeStatementObject> compositeStatementsInMappingRange = getCompositeStatementsInMappingRange(fragment1CompositeParents, codeMappings);
+				List<CompositeStatementObject> compositeStatementsInMappings = new ArrayList<CompositeStatementObject>(); 
+				
+				for(CompositeStatementObject composite: compositeStatementsInMappingRange) {
+					if(isCompositeNodeInSourceOperation(composite,extractOperationRef)) {
+						compositeStatementsInMappings.add(composite);	
+					}
+				}			
+				if(fragment1CompositeParents != null && compositeStatementsInMappings != null ) {
+					if(compositeStatementsInMappings.size() > 0 ) {
+						return true;
+					}
 				}
 			}
 		}
 		return false;
+	}
+	private boolean isCompositeNodeInSourceOperation(CompositeStatementObject compositeStatement, ExtractOperationRefactoring extractOperationRef){
+		CompositeStatementObject sourceOperationBeforeExtraction = extractOperationRef.getSourceOperationBeforeExtraction().getBody().getCompositeStatement();
+		Set<CompositeStatementObject> allInnerNodes = new HashSet<CompositeStatementObject>();
+		allInnerNodes.addAll(getAllInnerNodes(sourceOperationBeforeExtraction));
+		if(allInnerNodes.contains(compositeStatement)) {
+			return true;
+		}
+		return false;
+	}
+	private Set<CompositeStatementObject> getAllInnerNodes(CompositeStatementObject composite) {
+		Set<CompositeStatementObject> allInnerNodes = new HashSet<CompositeStatementObject>();
+		allInnerNodes.addAll(composite.getInnerNodes());
+		for(CompositeStatementObject innerNode : allInnerNodes) {
+			if(composite.getLocationInfo().getCodeElementType().equals(CodeElementType.BLOCK)) {
+				break;
+			}else {
+				allInnerNodes.addAll(getAllInnerNodes(innerNode));					
+			}
+		}
+		return allInnerNodes;
+
 	}
 	private List<CompositeStatementObject> getCompositeStatementsInMappingRange(List<CompositeStatementObject> compositeStatements ,Set<AbstractCodeMapping> mappings ) {
 		List<CompositeStatementObject> compositeStatementsInMappings = new ArrayList<CompositeStatementObject>();
