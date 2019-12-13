@@ -154,6 +154,9 @@ public class MotivationExtractor {
 				if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
 					setRefactoringMotivation(MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE, ref);
 					removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+					if(decomposeToImproveReadabilityFromSingleMethodRefactorings.size() > 0) {
+						removeRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY, ref);
+					}
 				}
 			}
 			if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
