@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -2061,14 +2062,36 @@ public class UMLModelDiff {
    private boolean mappedElementsMoreThanNonMappedT1AndT2(int mappings, UMLOperationBodyMapper operationBodyMapper) {
         int nonMappedElementsT1 = operationBodyMapper.nonMappedElementsT1();
 		int nonMappedElementsT2 = operationBodyMapper.nonMappedElementsT2();
+		UMLClass addedClass = getAddedClass(operationBodyMapper.getOperation2().getClassName());
 		int nonMappedStatementsDeclaringSameVariable = 0;
-		for(StatementObject s1 : operationBodyMapper.getNonMappedLeavesT1()) {
+		for(ListIterator<StatementObject> leafIterator1 = operationBodyMapper.getNonMappedLeavesT1().listIterator(); leafIterator1.hasNext();) {
+			StatementObject s1 = leafIterator1.next();
 			for(StatementObject s2 : operationBodyMapper.getNonMappedLeavesT2()) {
 				if(s1.getVariableDeclarations().size() == 1 && s2.getVariableDeclarations().size() == 1) {
 					VariableDeclaration v1 = s1.getVariableDeclarations().get(0);
 					VariableDeclaration v2 = s2.getVariableDeclarations().get(0);
 					if(v1.getVariableName().equals(v2.getVariableName()) && v1.getType().equals(v2.getType())) {
 						nonMappedStatementsDeclaringSameVariable++;
+					}
+				}
+			}
+			if(addedClass != null && s1.getVariableDeclarations().size() == 1) {
+				VariableDeclaration v1 = s1.getVariableDeclarations().get(0);
+				for(UMLAttribute attribute : addedClass.getAttributes()) {
+					VariableDeclaration attributeDeclaration = attribute.getVariableDeclaration();
+					if(attributeDeclaration.getInitializer() != null && v1.getInitializer() != null) {
+						String attributeInitializer = attributeDeclaration.getInitializer().getString();
+						String variableInitializer = v1.getInitializer().getString();
+						if(attributeInitializer.equals(variableInitializer) && attribute.getType().equals(v1.getType()) &&
+								(attribute.getName().equals(v1.getVariableName()) ||
+								attribute.getName().toLowerCase().contains(v1.getVariableName().toLowerCase()) ||
+								v1.getVariableName().toLowerCase().contains(attribute.getName().toLowerCase()))) {
+							nonMappedStatementsDeclaringSameVariable++;
+							leafIterator1.remove();
+							LeafMapping mapping = new LeafMapping(v1.getInitializer(), attributeDeclaration.getInitializer(), operationBodyMapper.getOperation1(), operationBodyMapper.getOperation2());
+							operationBodyMapper.getMappings().add(mapping);
+							break;
+						}
 					}
 				}
 			}
@@ -2122,10 +2145,21 @@ public class UMLModelDiff {
 	   if(exactLeafMappings == 1 && normalizedEditDistance > 0.5 && (mapper.nonMappedElementsT1() > 0 || mapper.nonMappedElementsT2() > 0)) {
 		   return false;
 	   }
-	   if(addedOperation.equalReturnParameter(removedOperation) &&
-			   addedOperation.isAbstract() == removedOperation.isAbstract() &&
+	   if(mapper.mappingsWithoutBlocks() == 1) {
+		   for(AbstractCodeMapping mapping : mapper.getMappings()) {
+			   String fragment1 = mapping.getFragment1().getString();
+			   String fragment2 = mapping.getFragment2().getString();
+			   if(fragment1.startsWith("return true;") || fragment1.startsWith("return false;") || fragment1.startsWith("return this;") || fragment1.startsWith("return null;") || fragment1.startsWith("return;") ||
+					   fragment2.startsWith("return true;") || fragment2.startsWith("return false;") || fragment2.startsWith("return this;") || fragment2.startsWith("return null;") || fragment2.startsWith("return;")) {
+				   return false;
+			   }
+		   }
+	   }
+	   if(addedOperation.isAbstract() == removedOperation.isAbstract() &&
 			   addedOperation.getTypeParameters().equals(removedOperation.getTypeParameters())) {
-		   if(addedOperation.getParameters().equals(removedOperation.getParameters())) {
+		   List<UMLType> addedOperationParameterTypeList = addedOperation.getParameterTypeList();
+		   List<UMLType> removedOperationParameterTypeList = removedOperation.getParameterTypeList();
+		   if(addedOperationParameterTypeList.equals(removedOperationParameterTypeList) && addedOperationParameterTypeList.size() > 0) {
 			   return true;
 		   }
 		   else {
@@ -2152,8 +2186,10 @@ public class UMLModelDiff {
 			   }
 			   Set<String> intersection = new LinkedHashSet<String>(oldParameterNames);
 			   intersection.retainAll(newParameterNames);
-			   return oldParameters.equals(newParameters) || oldParameters.containsAll(newParameters) || newParameters.containsAll(oldParameters) || intersection.size() > 0 ||
+			   boolean parameterMatch = oldParameters.equals(newParameters) || oldParameters.containsAll(newParameters) || newParameters.containsAll(oldParameters) || intersection.size() > 0 ||
 					   removedOperation.isStatic() || addedOperation.isStatic();
+			   return (parameterMatch && oldParameters.size() > 0 && newParameters.size() > 0) ||
+					   (parameterMatch && addedOperation.equalReturnParameter(removedOperation) && (oldParameters.size() == 0 || newParameters.size() == 0));
 		   }
 	   }
 	   return false;
