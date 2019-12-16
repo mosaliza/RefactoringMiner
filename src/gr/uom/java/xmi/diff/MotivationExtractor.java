@@ -2130,6 +2130,11 @@ public class MotivationExtractor {
 					expressionsUsingVariableInitializedWithExtracedOperationInvocation.addAll(getAllCompositeStatementObjectExpressionsUsingVariable(sourceOperationAfterExtractionBody, declaration.getVariableName()));
 				}
 			}
+			//if notMapped T1 statements are 0 and everything is mapped there is no decomposition
+			if(isEverySourceOperationNodeMapped(extractOperationRef)) {
+				return false;
+			}
+			//Checking the structure of the mappings for nested composite statements
 			if(listVariableDeclarationStatementsWithCallsToExtractedOperation.size()>0 || listExpressioNStatementsWithCallsToExtractedOperation.size() > 0 ) {
 				if(isMappingComplicatedStructure(extractOperationRef)) {
 					return true;
@@ -2154,6 +2159,51 @@ public class MotivationExtractor {
 			//if(isCompositeStatementWithLeavesCallingExtractedOepration(compositeStatement , CodeElementType.CATCH_CLAUSE , extractOperationRef)) {
 			//	return true;
 			//}
+		}	
+		return false;
+	}
+	
+	private boolean isEverySourceOperationNodeMapped(ExtractOperationRefactoring extractOperationRef ) {	
+		Set<AbstractCodeMapping> mappings = extractOperationRef.getBodyMapper().getMappings();
+		CompositeStatementObject sourceOperationBeforeExtractionBody = extractOperationRef.getSourceOperationBeforeExtraction().getBody().getCompositeStatement();
+		CompositeStatementObject extractedOperationBody = extractOperationRef.getExtractedOperation().getBody().getCompositeStatement();
+		Set<String> mappingNodes = new HashSet<String>();
+		Set<String> sourceOperationBeforeExtractionNodes = new HashSet<String>();
+		Set<String> extractedOperationNodes = new HashSet<String>();
+		for(AbstractCodeMapping mapping : mappings) {
+			mappingNodes.add(mapping.getFragment2().toString());
+		}
+		
+		for(StatementObject sourceLeave :  sourceOperationBeforeExtractionBody.getLeaves()) {
+			sourceOperationBeforeExtractionNodes.add(sourceLeave.toString());
+		}
+		for(CompositeStatementObject innerNode : sourceOperationBeforeExtractionBody.getInnerNodes()) {
+			sourceOperationBeforeExtractionNodes.add(innerNode.toString());
+		}
+		
+		for(StatementObject sourceLeave :  extractedOperationBody.getLeaves()) {
+			extractedOperationNodes.add(sourceLeave.toString());
+		}
+		for(CompositeStatementObject innerNode : extractedOperationBody.getInnerNodes()) {
+			extractedOperationNodes.add(innerNode.toString());
+		}
+		List<String> identicalNodesInSourceAndExtractedOperation = new ArrayList<String>();
+		for(String extractedOperationNode : extractedOperationNodes) {
+			if(sourceOperationBeforeExtractionNodes.contains(extractedOperationNode)){
+				identicalNodesInSourceAndExtractedOperation.add(extractedOperationNode);
+			}
+		}
+		//Removing identical nodes from mappings and source operation before extraction
+		mappingNodes.removeAll(identicalNodesInSourceAndExtractedOperation);
+		sourceOperationBeforeExtractionNodes.removeAll(identicalNodesInSourceAndExtractedOperation);
+				
+		int notMappedLeavesT1Size = extractOperationRef.getBodyMapper().getNonMappedLeavesT1().size();
+		int notMappedInnerNodesT1Size = extractOperationRef.getBodyMapper().getNonMappedInnerNodesT1().size();
+		
+		if(notMappedLeavesT1Size == 0 && notMappedInnerNodesT1Size == 0) {
+			if(sourceOperationBeforeExtractionNodes.size() == mappingNodes.size()) {
+				return true;					
+			}
 		}	
 		return false;
 	}
