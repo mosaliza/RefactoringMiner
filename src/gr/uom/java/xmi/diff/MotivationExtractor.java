@@ -858,7 +858,8 @@ public class MotivationExtractor {
 			List<StatementObject> listChildT2LeafNodeInT1LeafNodes = new ArrayList<StatementObject>();
 			
 			List<StatementObject> listParentT2LeafNodesInMappings = new ArrayList<StatementObject>();
-			List<StatementObject> listChildT2LeafNodesInMappings = new ArrayList<StatementObject>();
+			List<StatementObject> listChildT2LeafNodesInChildMappings = new ArrayList<StatementObject>();
+			List<StatementObject> listChildT2LeafNodesInParentMappings = new ArrayList<StatementObject>();
 			Set<AbstractCodeMapping> parentMappings = umlBodyMapper.getParentMapper().getMappings();
 			Set<AbstractCodeMapping> childMappings = umlBodyMapper.getMappings();
 
@@ -950,7 +951,10 @@ public class MotivationExtractor {
 					listChildT2LeafNodeInT1LeafNodes.add(notMappedNode);
 				}
 				if(isChildT2LeafNodeInChildMappings(notMappedNode, childMappings)) {
-					listChildT2LeafNodesInMappings.add(notMappedNode);
+					listChildT2LeafNodesInChildMappings.add(notMappedNode);
+				}
+				if(isChildT2LeafNodeInParentMappings(notMappedNode, parentMappings)) {
+					listChildT2LeafNodesInParentMappings.add(notMappedNode);
 				}
 			}
 			setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithInvokationsToExtractedMethod);
@@ -958,7 +962,8 @@ public class MotivationExtractor {
 			//setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithInvocationsExpressionsInOperationParameters);
 			setChildMarkedT2Leaves.addAll(listChildNeutralLeaves);
 			setChildMarkedT2Leaves.addAll(listChildT2LeafNodeInT1LeafNodes);
-			setChildMarkedT2Leaves.addAll(listChildT2LeafNodesInMappings);
+			setChildMarkedT2Leaves.addAll(listChildT2LeafNodesInChildMappings);
+			setChildMarkedT2Leaves.addAll(listChildT2LeafNodesInParentMappings);
 			
 			//Filtering parent nodes that are not in extracted method scope
 			 List<AbstractStatement> parentStatementsInExtractedScope = getParentExtraNodesInExtractedScope(extractOperationRefactoring, parentListNotMappedInnerNodesT2,setParentMarkedT2InnerNodes,
@@ -1056,6 +1061,50 @@ public class MotivationExtractor {
 		}
 		return false;
 	}
+	private boolean isChildT2LeafNodeInParentMappings(StatementObject notMappedNode , Set<AbstractCodeMapping> parentMappings) {
+		for(AbstractCodeMapping parentMapping : parentMappings) {		
+			if(notMappedNode.getString().equals(parentMapping.getFragment2().getString())) {
+				return true;
+			}
+			List<String> fragment2Variables =  parentMapping.getFragment2().getVariables();
+			List<String> childLeafVariables = notMappedNode.getVariables();
+			if(fragment2Variables.size() > 0 && childLeafVariables.size()>0) {
+				if(fragment2Variables.containsAll(childLeafVariables)) {
+					if(notMappedNode.getVariableDeclarations().size() > 0 && parentMapping.getFragment2().getVariableDeclarations().size() > 0 ) {
+						if(notMappedNode.getVariableDeclarations().get(0).getVariableName().equals(parentMapping.getFragment2().getVariableDeclarations().get(0).getVariableName())) {
+							return true;						
+						}						
+					}else {
+						if(notMappedNode.getMethodInvocationMap().size() == parentMapping.getFragment2().getMethodInvocationMap().size()) {
+							return true;
+						}
+					}
+				}	
+				List<String> commonVariables = new ArrayList<String>();
+				List<String> differentVariables = new ArrayList<String>();
+				for(String childLeafVariable : childLeafVariables) {
+					if(fragment2Variables.contains(childLeafVariable)) {
+						commonVariables.add(childLeafVariable);
+					}else {
+						differentVariables.add(childLeafVariable);
+					}
+				}
+				if(differentVariables.size()*2 < commonVariables.size()) {
+					if(notMappedNode.getVariableDeclarations().size() > 0 && parentMapping.getFragment2().getVariableDeclarations().size() > 0 ) {
+						if(notMappedNode.getVariableDeclarations().get(0).getVariableName().equals(parentMapping.getFragment2().getVariableDeclarations().get(0).getVariableName())) {
+							return true;						
+						}	
+					}else {
+						if(notMappedNode.getMethodInvocationMap().size() == parentMapping.getFragment2().getMethodInvocationMap().size()) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+
 	
 	private List<AbstractStatement> getParentExtraNodesInExtractedScope (ExtractOperationRefactoring extractOpRefactoring,  List<CompositeStatementObject> parentListNotMappedInnerNodesT2 , Set<CompositeStatementObject> setParentMarkedT2InnerNodes ,
 			List<StatementObject> parentListNotMappedLeavesT2 , Set<StatementObject> setParentMarkedT2Leaves ){
