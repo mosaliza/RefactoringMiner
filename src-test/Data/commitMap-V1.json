@@ -9513,7 +9513,8 @@
 	"description": "Extract Method private installAppleBundleForSimulator(params CommandRunnerParams, appleBundle AppleBundle, projectFilesystem ProjectFilesystem, processExecutor ProcessExecutor) : InstallResult extracted from private installAppleBundle(params CommandRunnerParams, appleBundle AppleBundle, projectFilesystem ProjectFilesystem, processExecutor ProcessExecutor) : InstallResult in class com.facebook.buck.cli.InstallCommand",
 	"motivations": [ 
 	{ 
-
+	            "label": "EM: Facilitate extension",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/facebook/buck.git",
