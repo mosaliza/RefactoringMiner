@@ -219,6 +219,20 @@ public class MotivationExtractor {
 		printDetectedRefactoringMotivations();			
 	}
 	private void postProcessingForIsDecomposeMethodToImroveReadability(List<Refactoring> listRef) {
+		/*Checking source operation after Extraction calls to the extracted method to see if they improve readability
+		 *in case of calls inside expressions or inside return statements we consider the extraction is improving the readability
+		 * Example: mockito:2d036 , jedis:d4b4a , cassandra:9a3fa ,JetBrains/intellij-community/commit/7dd55
+		 */
+		int countDecomposeSingleMethodToImproveReadability = 0;
+		for (Refactoring ref : listRef) {
+			if(isExtractedOperationInvokationsToImproveReadability(ref)) {
+				codeAnalysisDecomposeToImproveRedability(Arrays.asList((ExtractOperationRefactoring)ref));
+				decomposeToImproveReadabilityFromSingleMethodRefactorings.add((ExtractOperationRefactoring)ref);
+				setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
+				countDecomposeSingleMethodToImproveReadability++;	
+			}
+		}
+		
 		/*Getter and setter methods are excluded from the decompose to improve readability case.
 		 * Example: drools:1bf28 setExpiringHandle
 		 */
@@ -1044,7 +1058,7 @@ public class MotivationExtractor {
 						 countFilteredComposites++;
 					 }
 				 }
-				 //Exclude all composite leaves in child when there is a recursive leave
+				 //Exclude all composite leaves in child(extracted operation) when there is a recursive leave
 				 countChildNonMappedLeavesAndInnerNodesT2 -= countFilteredComposites;
 			 }
 			 if( countChildNonMappedLeavesAndInnerNodesT2 > 0 || countParentNonMappedLeavesAndInnerNodesT2 > 0) {
@@ -2085,22 +2099,7 @@ public class MotivationExtractor {
 		if(countDecomposeMethodToImproveReadability >= 2) {
 			return true;
 		}
-		/*Checking source operation after Extraction calls to the extracted method to see if they improve readability
-		 *in case of calls inside expressions or inside return statements we consider the extraction is improving the readability
-		 * Example: mockito:2d036 , jedis:d4b4a , cassandra:9a3fa ,JetBrains/intellij-community/commit/7dd55
-		 */
-		int countDecomposeSingleMethodToImproveReadability = 0;
-		for (Refactoring ref : refList) {
-			if(isExtractedOperationInvokationsToImproveReadability(ref)) {
-				codeAnalysisDecomposeToImproveRedability(Arrays.asList((ExtractOperationRefactoring)ref));
-				decomposeToImproveReadabilityFromSingleMethodRefactorings.add((ExtractOperationRefactoring)ref);
-				setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
-				countDecomposeSingleMethodToImproveReadability++;	
-			}
-		}
-		if(countDecomposeSingleMethodToImproveReadability > 0 ) {
-			return true;
-		}
+
 		return false;	
 	}
 	
