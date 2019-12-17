@@ -1543,6 +1543,9 @@ public class MotivationExtractor {
 						}
 					if(extractedOperationInvocationCountInStatement == 0 && otherOperationInvocationCountInStatement > 0) {	
 						if(elementType.equals(CodeElementType.VARIABLE_DECLARATION_STATEMENT)||elementType.equals(CodeElementType.EXPRESSION_STATEMENT)) {
+							if(isStatementInvocationExpressionReturned(statement , statementOperation)) {
+								return true;
+							}
 							if(isInvocationExpressionsInOperationVariableNames(statement , statementOperation) ) {
 								return false;
 							}
@@ -1569,6 +1572,22 @@ public class MotivationExtractor {
 					}
 				}
 			}
+		}
+		return false;
+	}
+	private boolean isStatementInvocationExpressionReturned(AbstractStatement statement , UMLOperation statementOperation){
+		List<String> statementInvocations  = getStatementInvocationExpressions(statement);
+		for(StatementObject leaf : statementOperation.getBody().getCompositeStatement().getLeaves()) {
+			if(leaf.getLocationInfo().getCodeElementType().equals(CodeElementType.RETURN_STATEMENT)) {
+				for(String variable : leaf.getVariables()) {
+					if(statementInvocations.contains(variable)) {
+						return true;
+					}
+				}
+			}
+		}
+		if(statementInvocations.contains("")) {
+			return true;
 		}
 		return false;
 	}
