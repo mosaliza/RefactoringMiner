@@ -863,7 +863,7 @@ public class MotivationExtractor {
 			Set<AbstractCodeMapping> parentMappings = umlBodyMapper.getParentMapper().getMappings();
 			Set<AbstractCodeMapping> childMappings = umlBodyMapper.getMappings();
 
-
+			boolean hasRecursiveLeave = false;
 					
 			List<String> addedOperationNames = getOperationNames(OperationType.ADDED);
 			List<String> allOperationNames = getOperationNames(OperationType.ALL);
@@ -940,6 +940,7 @@ public class MotivationExtractor {
 				}			
 				if(isLeafNodeExtraInvocationsRecursive(notMappedNode, extractedOperation)) {
 					listChildNotMappedLeavesWithRecursive.add(notMappedNode);
+					hasRecursiveLeave = true;
 				}
 				if(isLeafNodeExtraInvocationsExpressionsInOperationParameters(notMappedNode, extractedOperation)) {
 					listChildNotMappedLeavesWithInvocationsExpressionsInOperationParameters.add(notMappedNode);
@@ -1035,6 +1036,16 @@ public class MotivationExtractor {
 						return false;
 					}
 				}
+			 }
+			 if(hasRecursiveLeave) {
+				 int countFilteredComposites = 0;
+				 for(AbstractStatement statement : filteredChildNonMappedLeavesAndInnerNodesT2) {
+					 if(statement instanceof CompositeStatementObject) {
+						 countFilteredComposites++;
+					 }
+				 }
+				 //Exclude all composite leaves in child when there is a recursive leave
+				 countChildNonMappedLeavesAndInnerNodesT2 -= countFilteredComposites;
 			 }
 			 if( countChildNonMappedLeavesAndInnerNodesT2 > 0 || countParentNonMappedLeavesAndInnerNodesT2 > 0) {
 				// if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE) && !isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {	
