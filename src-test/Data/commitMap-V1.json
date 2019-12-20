@@ -17289,6 +17289,8 @@
 	"description": "Extract Method private updateTextViews() : void extracted from public onCreate(savedInstanceState Bundle) : void in class com.novoda.demo.encryption.EncryptionActivity",
 	"motivations": [ 
 	{ 
+	            "label": "EM: Facilitate extension",
+                "status": "match1"
 
 	} ]
 }
