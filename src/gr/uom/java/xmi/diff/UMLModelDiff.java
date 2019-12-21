@@ -653,8 +653,8 @@ public class UMLModelDiff {
 			   PushDownAttributeRefactoring pushDownAttribute = new PushDownAttributeRefactoring(removedAttribute, addedAttribute);
 			   return pushDownAttribute;
 		   }
-		   else if(sourceClassImportsTargetClassAfterRefactoring(removedAttribute.getClassName(), addedAttribute.getClassName()) ||
-				   targetClassImportsSourceClassBeforeRefactoring(removedAttribute.getClassName(), addedAttribute.getClassName())) {
+		   else if(sourceClassImportsTargetClass(removedAttribute.getClassName(), addedAttribute.getClassName()) ||
+				   targetClassImportsSourceClass(removedAttribute.getClassName(), addedAttribute.getClassName())) {
 			   if(!initializerContainsTypeLiteral(addedAttribute, removedAttribute)) {
 				   MoveAttributeRefactoring moveAttribute = new MoveAttributeRefactoring(removedAttribute, addedAttribute);
 				   return moveAttribute;
@@ -721,24 +721,24 @@ public class UMLModelDiff {
 	   return count;
    }
 
-   private boolean sourceClassImportsSuperclassOfTargetClassAfterRefactoring(String sourceClassName, String targetClassName) {
+   private boolean sourceClassImportsSuperclassOfTargetClass(String sourceClassName, String targetClassName) {
 	   UMLClassBaseDiff targetClassDiff = getUMLClassDiff(targetClassName);
 	   if(targetClassDiff != null && targetClassDiff.getSuperclass() != null) {
 		   UMLClassBaseDiff superclassOfTargetClassDiff = getUMLClassDiff(targetClassDiff.getSuperclass());
 		   if(superclassOfTargetClassDiff != null) {
-			   return sourceClassImportsTargetClassAfterRefactoring(sourceClassName, superclassOfTargetClassDiff.getNextClassName());
+			   return sourceClassImportsTargetClass(sourceClassName, superclassOfTargetClassDiff.getNextClassName());
 		   }
 	   }
 	   return false;
    }
 
-   private boolean sourceClassImportsTargetClassAfterRefactoring(String sourceClassName, String targetClassName) {
+   private boolean sourceClassImportsTargetClass(String sourceClassName, String targetClassName) {
 	   UMLClassBaseDiff classDiff = getUMLClassDiff(sourceClassName);
 	   if(classDiff == null) {
 		   classDiff = getUMLClassDiff(UMLType.extractTypeObject(sourceClassName));
 	   }
 	   if(classDiff != null) {
-		   return classDiff.nextClassImportsType(targetClassName);
+		   return classDiff.nextClassImportsType(targetClassName) || classDiff.originalClassImportsType(targetClassName);
 	   }
 	   UMLClass removedClass = getRemovedClass(sourceClassName);
 	   if(removedClass == null) {
@@ -750,13 +750,13 @@ public class UMLModelDiff {
 	   return false;
    }
 
-   private boolean targetClassImportsSourceClassBeforeRefactoring(String sourceClassName, String targetClassName) {
+   private boolean targetClassImportsSourceClass(String sourceClassName, String targetClassName) {
 	   UMLClassBaseDiff classDiff = getUMLClassDiff(targetClassName);
 	   if(classDiff == null) {
 		   classDiff = getUMLClassDiff(UMLType.extractTypeObject(targetClassName));
 	   }
 	   if(classDiff != null) {
-		   return classDiff.originalClassImportsType(sourceClassName);
+		   return classDiff.originalClassImportsType(sourceClassName) || classDiff.nextClassImportsType(sourceClassName);
 	   }
 	   UMLClass addedClass = getAddedClass(targetClassName);
 	   if(addedClass == null) {
@@ -1741,8 +1741,9 @@ public class UMLModelDiff {
       	                  refactorings.add(extractOperationRefactoring);
       	                  deleteAddedOperation(addedOperation);
                 	  }
-                	  else if(sourceClassImportsTargetClassAfterRefactoring(className, addedOperation.getClassName()) ||
-                			  sourceClassImportsSuperclassOfTargetClassAfterRefactoring(className, addedOperation.getClassName())) {
+                	  else if(sourceClassImportsTargetClass(className, addedOperation.getClassName()) ||
+                			  sourceClassImportsSuperclassOfTargetClass(className, addedOperation.getClassName()) ||
+                			  targetClassImportsSourceClass(className, addedOperation.getClassName())) {
                 		  //extract and move
 	                      ExtractOperationRefactoring extractOperationRefactoring =
 	                           new ExtractOperationRefactoring(operationBodyMapper, mapper.getOperation2(), addedOperationInvocations);
