@@ -46,6 +46,7 @@ public class MotivationExtractor {
 	private Map<Refactoring , List<MotivationType>> mapRefactoringMotivations;
 	private List<ExtractOperationRefactoring> removeDuplicationFromSingleMethodRefactorings = new ArrayList<ExtractOperationRefactoring>();
 	private List<ExtractOperationRefactoring> decomposeToImproveReadabilityFromSingleMethodRefactorings = new ArrayList<ExtractOperationRefactoring>();
+	private int decomposeToImproveReadabilityFromMultipleMethodRefactorings = 0;
 	private List<ExtractOperationRefactoring> decomposeToImproveReadabilityFromSingleMethodByHavingCallToExtractedMethodInReturn = new ArrayList<ExtractOperationRefactoring>();
 	private List<ExtractOperationRefactoring> facilitateExtensionRefactoringsWithExtrensionInParent = new ArrayList<ExtractOperationRefactoring>();
 
@@ -143,7 +144,8 @@ public class MotivationExtractor {
 
 	private void detectExtractOperationMotivation(List<Refactoring> listRef) {		
 		//Motivation Detection algorithms that depends on other refactorings of the same type
-		isDecomposeMethodToImroveReadability(listRef);		
+		isDecomposeMethodToImroveReadability(listRef);
+		postProcessingForIsDecomposeMethodToImroveReadability(listRef);
 		isMethodExtractedToRemoveDuplication(listRef);
 		//Motivation Detection algorithms that can detect the motivation independently for each refactoring
 		for(Refactoring ref : listRef) {
@@ -182,6 +184,9 @@ public class MotivationExtractor {
 				if (!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {
 					setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
 					//removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+					if(decomposeToImproveReadabilityFromMultipleMethodRefactorings == 0 && decomposeToImproveReadabilityFromSingleMethodRefactorings.size() > 0) {
+						removeRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY, ref);
+					}
 				}
 			}
 			if(isExtractedtoEnableRecursion(ref)) {
@@ -213,7 +218,7 @@ public class MotivationExtractor {
 		}
 		
 		postProcessingForIsExtractFacilitateExtension(listRef);
-		postProcessingForIsDecomposeMethodToImroveReadability(listRef);
+	
 
 		//Print All detected refactorings
 		printDetectedRefactoringMotivations();			
@@ -223,13 +228,11 @@ public class MotivationExtractor {
 		 *in case of calls inside expressions or inside return statements we consider the extraction is improving the readability
 		 * Example: mockito:2d036 , jedis:d4b4a , cassandra:9a3fa ,JetBrains/intellij-community/commit/7dd55
 		 */
-		int countDecomposeSingleMethodToImproveReadability = 0;
 		for (Refactoring ref : listRef) {
 			if(isExtractedOperationInvokationsToImproveReadability(ref)) {
 				codeAnalysisDecomposeToImproveRedability(Arrays.asList((ExtractOperationRefactoring)ref));
 				decomposeToImproveReadabilityFromSingleMethodRefactorings.add((ExtractOperationRefactoring)ref);
 				setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
-				countDecomposeSingleMethodToImproveReadability++;	
 			}
 		}
 		
@@ -2131,8 +2134,10 @@ public class MotivationExtractor {
 					}	
 			 	}
 			}
-		}				
+		}	
+		
 		if(countDecomposeMethodToImproveReadability >= 2) {
+			decomposeToImproveReadabilityFromMultipleMethodRefactorings = countDecomposeMethodToImproveReadability;
 			return true;
 		}
 

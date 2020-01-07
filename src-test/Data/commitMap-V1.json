@@ -4923,11 +4923,7 @@
 	{ 
                "label": "EM: Extract reusable method",
                 "status": "match2"
-	},
-	{
-				"label": "EM: Decompose method to improve readability",
-                "status": "match2"
-	}	]
+	}]
 },
 {
 	"type": "Extract Variable",
@@ -9630,10 +9626,9 @@
                 "label": "EM: Remove duplication",
                 "status": "match2"
             },
-            {
-                "label": "EM: Decompose method to improve readability",
-                "status": "match1"
-            } ]
+			{   "label": "EM: Extract reusable method",
+                "status": "match2"
+			} ]
 },
 {
 	"type": "Extract Method",
@@ -9643,10 +9638,9 @@
                 "label": "EM: Remove duplication",
                 "status": "match2"
             },
-            {
-                "label": "EM: Decompose method to improve readability",
-                "status": "match1"
-            } ]
+			{   "label": "EM: Extract reusable method",
+                "status": "match2"
+			}  ]
 },
 {
 	"type": "Extract Method",
@@ -9656,10 +9650,9 @@
                 "label": "EM: Remove duplication",
                 "status": "match2"
             },
-            {
-                "label": "EM: Decompose method to improve readability",
-                "status": "match1"
-            } ]
+			{   "label": "EM: Extract reusable method",
+                "status": "match2"
+			} ]
 }
 ]},{	"repository": "https://github.com/droolsjbpm/jbpm.git",
 	"sha1": "83cfa21578e63956bca0715eefee2860c3b6d39a",
@@ -13227,10 +13220,6 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match2"
-	},
-	{
-	            "label": "EM: Decompose method to improve readability",
-                "status": "match2"
 	}	]
 }
 ]},{	"repository": "https://github.com/apache/cassandra.git",
@@ -14140,10 +14129,6 @@
 	{
 	            "label": "EM: Facilitate extension",
                 "status": "match1"
-	},
-	{
-                "label": "EM: Decompose method to improve readability",
-                "status": "match2"
 	} ]
 },
 {
@@ -16451,10 +16436,6 @@
 	{
 	            "label": "EM: Facilitate extension",
                 "status": "match1"
-	},
-	{ 
-                "label": "EM: Decompose method to improve readability",
-                "status": "match2"
 	} ]
 },
 {
@@ -16481,17 +16462,13 @@
 	"description": "Extract Method private createConfigurable(ep ConfigurableEP<T>, log boolean) : T extracted from public wrapConfigurable(ep ConfigurableEP<T>) : T in class com.intellij.openapi.options.ex.ConfigurableWrapper",
 	"motivations": [ 
 	{ 
-               "label": "EM: Decompose method to improve readability",
+                "label": "EM: Extract reusable method",
                 "status": "match2"
 	},
 	{
 	            "label": "EM: Facilitate extension",
                 "status": "match1"
-	},
-	{
-	            "label": "EM: Extract reusable method",
-                "status": "match2"
-	}	]
+	}]
 }
 ]},{	"repository": "https://github.com/JetBrains/intellij-community.git",
 	"sha1": "8d7a26edd1fedb9505b4f2b4fe57b2d2958b4dd9",
