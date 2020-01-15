@@ -10,7 +10,9 @@ import gr.uom.java.xmi.UMLParameter;
 import gr.uom.java.xmi.UMLRealization;
 import gr.uom.java.xmi.UMLType;
 import gr.uom.java.xmi.decomposition.AbstractCodeMapping;
+import gr.uom.java.xmi.decomposition.AbstractExpression;
 import gr.uom.java.xmi.decomposition.CompositeStatementObject;
+import gr.uom.java.xmi.decomposition.CompositeStatementObjectMapping;
 import gr.uom.java.xmi.decomposition.LeafMapping;
 import gr.uom.java.xmi.decomposition.OperationInvocation;
 import gr.uom.java.xmi.decomposition.StatementObject;
@@ -827,6 +829,20 @@ public class UMLModelDiff {
       }
       return removedOperations;
    }
+
+   private List<UMLOperation> getRemovedAndInlinedOperationsInCommonClasses() {
+      List<UMLOperation> removedOperations = new ArrayList<UMLOperation>();
+      for(UMLClassDiff classDiff : commonClassDiffList) {
+         removedOperations.addAll(classDiff.getRemovedOperations());
+         for(Refactoring ref : classDiff.getRefactorings()) {
+        	 if(ref instanceof InlineOperationRefactoring) {
+        		 InlineOperationRefactoring extractRef = (InlineOperationRefactoring)ref;
+        		 removedOperations.add(extractRef.getInlinedOperation());
+        	 }
+         }
+      }
+      return removedOperations;
+   }
    
    private List<UMLOperationBodyMapper> getOperationBodyMappersInCommonClasses() {
       List<UMLOperationBodyMapper> mappers = new ArrayList<UMLOperationBodyMapper>();
@@ -963,15 +979,16 @@ public class UMLModelDiff {
 			if(looksLikeSameType(supplier, addedClassName) && topLevelOrSameOuterClass(addedClass, addedRealization.getClient()) && getAddedClass(addedRealization.getClient().getName()) == null) {
                UMLClassBaseDiff clientClassDiff = getUMLClassDiff(addedRealization.getClient().getName());
                int implementedInterfaceOperations = 0;
+               boolean clientImplementsSupplier = false;
                if(clientClassDiff != null) {
                   for(UMLOperation interfaceOperation : addedClass.getOperations()) {
                      if(clientClassDiff.containsOperationWithTheSameSignatureInOriginalClass(interfaceOperation)) {
                         implementedInterfaceOperations++;
                      }
                   }
+                  clientImplementsSupplier = clientClassDiff.getOriginalClass().getImplementedInterfaces().contains(UMLType.extractTypeObject(supplier));
                }
-               if((implementedInterfaceOperations > 0 || addedClass.getOperations().size() == 0) &&
-            		   !clientClassDiff.getOriginalClass().getImplementedInterfaces().contains(UMLType.extractTypeObject(supplier)))
+               if((implementedInterfaceOperations > 0 || addedClass.getOperations().size() == 0) && !clientImplementsSupplier)
                   subclassSet.add(addedRealization.getClient());
             }
          }
@@ -1288,6 +1305,7 @@ public class UMLModelDiff {
 									ChangeAttributeTypeRefactoring refactoring = new ChangeAttributeTypeRefactoring(a1.getVariableDeclaration(), a2.getVariableDeclaration(),
 											diff.getOriginalClassName(), diff.getNextClassName(),
 											VariableReferenceExtractor.findReferences(a1.getVariableDeclaration(), a2.getVariableDeclaration(), diff.getOperationBodyMapperList()));
+									refactoring.addRelatedRefactoring(ref);
 									refactorings.add(refactoring);
 								}
 							 break;//it's not necessary to repeat the same process for all candidates in the set
@@ -1385,6 +1403,7 @@ public class UMLModelDiff {
       checkForOperationMovesIncludingRemovedClasses();
       checkForExtractedAndMovedOperations(getOperationBodyMappersInCommonClasses(), getAddedAndExtractedOperationsInCommonClasses());
       checkForExtractedAndMovedOperations(getOperationBodyMappersInMovedAndRenamedClasses(), getAddedOperationsInMovedAndRenamedClasses());
+      checkForMovedAndInlinedOperations(getOperationBodyMappersInCommonClasses(), getRemovedAndInlinedOperationsInCommonClasses());
       refactorings.addAll(checkForAttributeMovesBetweenCommonClasses());
       refactorings.addAll(checkForAttributeMovesIncludingAddedClasses());
       refactorings.addAll(checkForAttributeMovesIncludingRemovedClasses());
@@ -1640,6 +1659,86 @@ public class UMLModelDiff {
 	  }
    }
 
+   private void checkForMovedAndInlinedOperations(List<UMLOperationBodyMapper> mappers, List<UMLOperation> removedOperations) throws RefactoringMinerTimedOutException {
+	   for(Iterator<UMLOperation> removedOperationIterator = removedOperations.iterator(); removedOperationIterator.hasNext();) {
+		   UMLOperation removedOperation = removedOperationIterator.next();
+		   for(UMLOperationBodyMapper mapper : mappers) {
+			   if(!mapper.getNonMappedLeavesT2().isEmpty() || !mapper.getNonMappedInnerNodesT2().isEmpty() || !mapper.getReplacementsInvolvingMethodInvocation().isEmpty()) {
+				   List<OperationInvocation> operationInvocations = mapper.getOperation1().getAllOperationInvocations();
+				   List<OperationInvocation> removedOperationInvocations = new ArrayList<OperationInvocation>();
+				   for(OperationInvocation invocation : operationInvocations) {
+					   if(invocation.matchesOperation(removedOperation, mapper.getOperation1().variableTypeMap(), this)) {
+						   removedOperationInvocations.add(invocation);
+					   }
+				   }
+				   if(removedOperationInvocations.size() > 0 && !invocationMatchesWithAddedOperation(removedOperationInvocations.get(0), mapper.getOperation1().variableTypeMap(), mapper.getOperation2().getAllOperationInvocations())) {
+						OperationInvocation removedOperationInvocation = removedOperationInvocations.get(0);
+						List<String> arguments = removedOperationInvocation.getArguments();
+						List<String> parameters = removedOperation.getParameterNameList();
+						Map<String, String> parameterToArgumentMap = new LinkedHashMap<String, String>();
+						//special handling for methods with varargs parameter for which no argument is passed in the matching invocation
+						int size = Math.min(arguments.size(), parameters.size());
+						for(int i=0; i<size; i++) {
+							parameterToArgumentMap.put(parameters.get(i), arguments.get(i));
+						}
+						UMLOperationBodyMapper operationBodyMapper = new UMLOperationBodyMapper(removedOperation, mapper, parameterToArgumentMap, getUMLClassDiff(removedOperation.getClassName()));
+						if(moveAndInlineMatchCondition(operationBodyMapper, mapper)) {
+							InlineOperationRefactoring inlineOperationRefactoring =	new InlineOperationRefactoring(operationBodyMapper, mapper.getOperation1(), removedOperationInvocations);
+							refactorings.add(inlineOperationRefactoring);
+							deleteRemovedOperation(removedOperation);
+						}
+				   }
+			   }
+		   }
+	   }
+   }
+
+	private boolean moveAndInlineMatchCondition(UMLOperationBodyMapper operationBodyMapper, UMLOperationBodyMapper parentMapper) {
+		List<AbstractCodeMapping> mappingList = new ArrayList<AbstractCodeMapping>(operationBodyMapper.getMappings());
+		if((operationBodyMapper.getOperation1().isGetter() || operationBodyMapper.getOperation1().isDelegate() != null) && mappingList.size() == 1) {
+			List<AbstractCodeMapping> parentMappingList = new ArrayList<AbstractCodeMapping>(parentMapper.getMappings());
+			for(AbstractCodeMapping mapping : parentMappingList) {
+				if(mapping.getFragment2().equals(mappingList.get(0).getFragment2())) {
+					return false;
+				}
+				if(mapping instanceof CompositeStatementObjectMapping) {
+					CompositeStatementObjectMapping compositeMapping = (CompositeStatementObjectMapping)mapping;
+					CompositeStatementObject fragment2 = (CompositeStatementObject)compositeMapping.getFragment2();
+					for(AbstractExpression expression : fragment2.getExpressions()) {
+						if(expression.equals(mappingList.get(0).getFragment2())) {
+							return false;
+						}
+					}
+				}
+			}
+		}
+		int delegateStatements = 0;
+		for(StatementObject statement : operationBodyMapper.getNonMappedLeavesT1()) {
+			OperationInvocation invocation = statement.invocationCoveringEntireFragment();
+			if(invocation != null && invocation.matchesOperation(operationBodyMapper.getOperation1())) {
+				delegateStatements++;
+			}
+		}
+		int mappings = operationBodyMapper.mappingsWithoutBlocks();
+		int nonMappedElementsT1 = operationBodyMapper.nonMappedElementsT1()-delegateStatements;
+		List<AbstractCodeMapping> exactMatchList = operationBodyMapper.getExactMatches();
+		int exactMatches = exactMatchList.size();
+		return mappings > 0 && (mappings > nonMappedElementsT1 ||
+				(exactMatches == 1 && !exactMatchList.get(0).getFragment1().throwsNewException() && nonMappedElementsT1-exactMatches < 10) ||
+				(exactMatches > 1 && nonMappedElementsT1-exactMatches < 20));
+	}
+
+	private boolean invocationMatchesWithAddedOperation(OperationInvocation removedOperationInvocation, Map<String, UMLType> variableTypeMap, List<OperationInvocation> operationInvocationsInNewMethod) {
+		if(operationInvocationsInNewMethod.contains(removedOperationInvocation)) {
+			for(UMLOperation addedOperation : getAddedOperationsInCommonClasses()) {
+				if(removedOperationInvocation.matchesOperation(addedOperation, variableTypeMap, this)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
    private void checkForExtractedAndMovedOperations(List<UMLOperationBodyMapper> mappers, List<UMLOperation> addedOperations) throws RefactoringMinerTimedOutException {
       for(Iterator<UMLOperation> addedOperationIterator = addedOperations.iterator(); addedOperationIterator.hasNext();) {
     	  UMLOperation addedOperation = addedOperationIterator.next();
@@ -1799,6 +1898,15 @@ public class UMLModelDiff {
 		   for(AbstractCodeMapping mapping : parentMappingList) {
 			   if(mapping.getFragment1().equals(mappingList.get(0).getFragment1())) {
 				   return false;
+			   }
+			   if(mapping instanceof CompositeStatementObjectMapping) {
+				   CompositeStatementObjectMapping compositeMapping = (CompositeStatementObjectMapping)mapping;
+				   CompositeStatementObject fragment1 = (CompositeStatementObject)compositeMapping.getFragment1();
+				   for(AbstractExpression expression : fragment1.getExpressions()) {
+					   if(expression.equals(mappingList.get(0).getFragment1())) {
+						   return false;
+					   }
+				   }
 			   }
 		   }
 	   }

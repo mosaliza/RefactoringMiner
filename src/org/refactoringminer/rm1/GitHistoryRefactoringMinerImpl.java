@@ -125,7 +125,8 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 			RefactoringType.CHANGE_PARAMETER_TYPE,
 			RefactoringType.CHANGE_ATTRIBUTE_TYPE,
 			RefactoringType.EXTRACT_ATTRIBUTE,
-			RefactoringType.MOVE_AND_RENAME_OPERATION
+			RefactoringType.MOVE_AND_RENAME_OPERATION,
+			RefactoringType.MOVE_AND_INLINE_OPERATION
 		);
 	}
 
@@ -240,7 +241,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 					IOUtils.copy(loader.openStream(), writer);
 					fileContents.put(pathString, writer.toString());
 				}
-				if(pathString.endsWith(".java")) {
+				if(pathString.endsWith(".java") && pathString.contains("/")) {
 					String directory = pathString.substring(0, pathString.lastIndexOf("/"));
 					repositoryDirectories.add(directory);
 					//include sub-directories

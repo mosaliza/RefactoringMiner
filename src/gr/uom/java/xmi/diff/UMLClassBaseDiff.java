@@ -557,6 +557,7 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 									ChangeAttributeTypeRefactoring refactoring = new ChangeAttributeTypeRefactoring(a1.getVariableDeclaration(), a2.getVariableDeclaration(),
 											getOriginalClassName(), getNextClassName(),
 											VariableReferenceExtractor.findReferences(a1.getVariableDeclaration(), a2.getVariableDeclaration(), operationBodyMapperList));
+									refactoring.addRelatedRefactoring(ref);
 									refactorings.add(refactoring);
 								}
 								break;//it's not necessary to repeat the same process for all candidates in the set
@@ -584,6 +585,7 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 									!candidate.getOriginalVariableDeclaration().getType().equalsQualified(a2.getVariableDeclaration().getType())) {
 								ChangeVariableTypeRefactoring refactoring = new ChangeVariableTypeRefactoring(candidate.getOriginalVariableDeclaration(), a2.getVariableDeclaration(),
 										candidate.getOperationBefore(), candidate.getOperationAfter(), candidate.getAttributeReferences());
+								refactoring.addRelatedRefactoring(ref);
 								refactorings.add(refactoring);
 							}
 						}
@@ -1547,7 +1549,12 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 				if(!mapper.getNonMappedLeavesT2().isEmpty() || !mapper.getNonMappedInnerNodesT2().isEmpty() ||
 					!mapper.getReplacementsInvolvingMethodInvocation().isEmpty()) {
 					List<OperationInvocation> operationInvocations = getInvocationsInTargetOperationBeforeInline(mapper);
-					List<OperationInvocation> removedOperationInvocations = matchingInvocations(removedOperation, operationInvocations, mapper.getOperation1().variableTypeMap());
+					List<OperationInvocation> removedOperationInvocations = new ArrayList<OperationInvocation>();
+					for(OperationInvocation invocation : operationInvocations) {
+						if(invocation.matchesOperation(removedOperation, mapper.getOperation1().variableTypeMap(), modelDiff)) {
+							removedOperationInvocations.add(invocation);
+						}
+					}
 					if(removedOperationInvocations.size() > 0 && !invocationMatchesWithAddedOperation(removedOperationInvocations.get(0), mapper.getOperation1().variableTypeMap(), mapper.getOperation2().getAllOperationInvocations())) {
 						OperationInvocation removedOperationInvocation = removedOperationInvocations.get(0);
 						List<String> arguments = removedOperationInvocation.getArguments();
@@ -1593,8 +1600,15 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 	}
 
 	private boolean inlineMatchCondition(UMLOperationBodyMapper operationBodyMapper) {
+		int delegateStatements = 0;
+		for(StatementObject statement : operationBodyMapper.getNonMappedLeavesT1()) {
+			OperationInvocation invocation = statement.invocationCoveringEntireFragment();
+			if(invocation != null && invocation.matchesOperation(operationBodyMapper.getOperation1())) {
+				delegateStatements++;
+			}
+		}
 		int mappings = operationBodyMapper.mappingsWithoutBlocks();
-		int nonMappedElementsT1 = operationBodyMapper.nonMappedElementsT1();
+		int nonMappedElementsT1 = operationBodyMapper.nonMappedElementsT1()-delegateStatements;
 		List<AbstractCodeMapping> exactMatchList = operationBodyMapper.getExactMatches();
 		int exactMatches = exactMatchList.size();
 		return mappings > 0 && (mappings > nonMappedElementsT1 ||
@@ -1630,17 +1644,6 @@ public abstract class UMLClassBaseDiff implements Comparable<UMLClassBaseDiff> {
 			}
 		}
 		addedOperations.removeAll(operationsToBeRemoved);
-	}
-
-	private List<OperationInvocation> matchingInvocations(UMLOperation operation,
-			List<OperationInvocation> operationInvocations, Map<String, UMLType> variableTypeMap) {
-		List<OperationInvocation> addedOperationInvocations = new ArrayList<OperationInvocation>();
-		for(OperationInvocation invocation : operationInvocations) {
-			if(invocation.matchesOperation(operation, variableTypeMap, modelDiff)) {
-				addedOperationInvocations.add(invocation);
-			}
-		}
-		return addedOperationInvocations;
 	}
 
 	public boolean isEmpty() {
