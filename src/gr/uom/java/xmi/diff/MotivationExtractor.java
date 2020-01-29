@@ -31,6 +31,7 @@ import gr.uom.java.xmi.decomposition.AbstractExpression;
 import gr.uom.java.xmi.decomposition.AbstractStatement;
 import gr.uom.java.xmi.decomposition.AnonymousClassDeclarationObject;
 import gr.uom.java.xmi.decomposition.CompositeStatementObject;
+import gr.uom.java.xmi.decomposition.LeafMapping;
 import gr.uom.java.xmi.decomposition.ObjectCreation;
 import gr.uom.java.xmi.decomposition.OperationBody;
 import gr.uom.java.xmi.decomposition.OperationInvocation;
@@ -269,8 +270,6 @@ public class MotivationExtractor {
 		}
 		
 		postProcessingForIsExtractFacilitateExtension(listRef);
-	
-
 		//Print All detected refactorings
 		printDetectedRefactoringMotivations();			
 	}
@@ -281,9 +280,11 @@ public class MotivationExtractor {
 		 */
 		for (Refactoring ref : listRef) {
 			if(isExtractedOperationInvokationsToImproveReadability(ref)) {
-				codeAnalysisDecomposeToImproveRedability(Arrays.asList((ExtractOperationRefactoring)ref));
-				decomposeToImproveReadabilityFromSingleMethodRefactorings.add((ExtractOperationRefactoring)ref);
-				setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
+				if(getDecomposeNormalizedEditDistance((ExtractOperationRefactoring)ref) > 0.55) {
+					codeAnalysisDecomposeToImproveRedability(Arrays.asList((ExtractOperationRefactoring)ref));
+					decomposeToImproveReadabilityFromSingleMethodRefactorings.add((ExtractOperationRefactoring)ref);
+					setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
+				}
 			}
 		}
 		
@@ -2174,15 +2175,27 @@ public class MotivationExtractor {
 			/*DETECTION RULE: if multiple extract operations have the same source Operation
 			 *  the extract operations motivations is Decompose to Improve Readability
 			 */
+		
+			
 			if(list.size() > 1) {
-			 	if(!isExtractMethodRefactoringsEqual(list)) {
-					//CODE ANALYSYS
-					codeAnalysisDecomposeToImproveRedability(list);
+			 	if(!isExtractMethodRefactoringsEqual(list)) { 		
+					//Compute the Decompose Extract methods that with with Edit distance more than 15%
+					int countDecompose = 0 ;
 					for(ExtractOperationRefactoring ref : list) {
-						//Set Motivation for each refactoring with the same source 
-						setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
-						countDecomposeMethodToImproveReadability++;	
-					}	
+						double editDistance = getDecomposeNormalizedEditDistance(ref);
+						if(editDistance > 0.55) {
+							countDecompose ++;
+						}
+					}
+			 		if(countDecompose > 1) {
+						//CODE ANALYSYS
+						codeAnalysisDecomposeToImproveRedability(list);
+						for(ExtractOperationRefactoring ref : list) {
+							//Set Motivation for each refactoring with the same source 
+							setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
+							countDecomposeMethodToImproveReadability++;	
+						}				 			
+			 		}
 			 	}
 			}
 		}	
@@ -2193,6 +2206,54 @@ public class MotivationExtractor {
 		}
 
 		return false;	
+	}
+	private double getDecomposeNormalizedEditDistance(ExtractOperationRefactoring extractOperationRef) {
+		List<ExtractOperationRefactoring> excludedExtractOperations = new ArrayList<ExtractOperationRefactoring>();
+		 double normalizedEditDistance = 1.0;
+			Set<AbstractCodeMapping> mappings = extractOperationRef.getBodyMapper().getMappings();
+			//if there is only one leaf mapping compute the normalized distance between invocation string and fragment 1
+			//Otherwise return 1
+			if(mappings.size() == 1) {
+				if(mappings.iterator().next() instanceof LeafMapping ) {
+					String fragment1 = mappings.iterator().next().getFragment1().getString().toLowerCase();
+					String invocationStatement = new String();
+					String invocationExpression = new String();
+					List<OperationInvocation> extractedOperationInvocations = extractOperationRef.getExtractedOperationInvocations();
+					LocationInfo extractedOperationInvocationLocation = extractedOperationInvocations.get(0).getLocationInfo();
+					UMLOperation sourceOperationAfterExtraction = extractOperationRef.getSourceOperationAfterExtraction();
+					List<StatementObject> sourceOperationAfterExtractionLeaves = sourceOperationAfterExtraction.getBody().getCompositeStatement().getLeaves();
+					
+					List<AbstractExpression> allCompositeExpressions = getAllCompositeStatementObjectExpressionsWithInvokationsToExtractedOperation(sourceOperationAfterExtraction.getBody().getCompositeStatement(),
+							extractOperationRef.getExtractedOperation(), sourceOperationAfterExtraction);
+					
+					for(StatementObject leaf : sourceOperationAfterExtractionLeaves){
+						if(leaf.getLocationInfo().subsumes(extractedOperationInvocationLocation)) {
+							invocationStatement = leaf.getString();
+							break;
+						}
+					}
+					for(AbstractExpression expression : allCompositeExpressions){
+						if(expression.getLocationInfo().subsumes(extractedOperationInvocationLocation)) {
+							invocationExpression = expression.getString();
+							break;
+						}
+					}
+					
+					List<String> invocations =  new ArrayList<String>();
+					if(!invocationStatement.isEmpty()) {
+						invocations.add(invocationStatement);
+					}
+					if(!invocationExpression.isEmpty()) {
+						invocations.add(invocationExpression);
+					}
+			
+					if(invocations.size() > 0 ) {				
+						int distance = StringDistance.editDistance(fragment1, invocations.get(0));
+						normalizedEditDistance = (double)distance/(double)Math.max(fragment1.length(), invocationStatement.length());
+					}
+				}
+			}
+			return normalizedEditDistance;
 	}
 	
 	private boolean isExtractMethodRefactoringsEqual(List<ExtractOperationRefactoring> extractOperationRefactorings){
