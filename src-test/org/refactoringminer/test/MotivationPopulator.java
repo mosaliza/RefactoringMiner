@@ -69,6 +69,7 @@ public class MotivationPopulator {
 		ChangeAttributeType(new BigInteger("137438953472")),
 		ExtractAttribute(new BigInteger("274877906944")),
 		MoveAndRenameMethod(new BigInteger("549755813888")),
+		MoveAndInlineMethod(new BigInteger("1099511627776")),
 		All(new BigInteger("274877906943"));
 
 		private BigInteger value;
