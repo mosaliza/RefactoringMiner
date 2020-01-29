@@ -82,13 +82,29 @@ public class MotivationExtractor {
 	public Map<Refactoring, List<MotivationType>> getMapRefactoringMotivations() {
 		return mapRefactoringMotivations;
 	}
-
+	private void detectExtractMethodWithLoggingSatement(List<Refactoring> listRef) {
+		for(Refactoring ref : listRef){
+			if(ref instanceof ExtractOperationRefactoring) {
+				ExtractOperationRefactoring extractOpRef = (ExtractOperationRefactoring)ref;
+				UMLOperation extractedOperation= extractOpRef.getExtractedOperation();
+				isExtractedOperationConsistLoggingStatement(extractedOperation);
+			}
+		}	
+	}
+	private boolean isExtractedOperationConsistLoggingStatement(UMLOperation extractedOperation) {
+		List<StatementObject> extractedMethodLeaves = extractedOperation.getBody().getCompositeStatement().getLeaves();
+		for(StatementObject statement : extractedMethodLeaves) {
+			int i = 0;
+		}
+		return false;
+	}
 	private void detectMotivataion(RefactoringType type) {	
 		
 		List<Refactoring> listRef = mapClassifiedRefactorings.get(type);
 		switch (type) {
 		case EXTRACT_OPERATION :
 			detectExtractOperationMotivation(listRef);
+			detectExtractMethodWithLoggingSatement(listRef);
 			break;
 		case MOVE_CLASS:
 			detectMoveClassMotivation(listRef);
@@ -103,7 +119,7 @@ public class MotivationExtractor {
 			
 			break;
 		case INLINE_OPERATION:
-			
+			detectInlineOperationMotivation(listRef);
 			break;
 		case PULL_UP_OPERATION:
 			
@@ -126,7 +142,43 @@ public class MotivationExtractor {
 			break;
 		}	
 	}
-
+	
+	private void detectInlineOperationMotivation(List<Refactoring> listRef){
+		for(Refactoring ref : listRef){
+			if(isInlineMethodToEliminateUnncessaryMethod(ref)) {
+				setRefactoringMotivation(MotivationType.IM_ELIMINATE_UNNECESSARY_METHOD, ref);
+			}
+			if(isInlineMethodCallerBecomesTrivial(ref)) {
+				setRefactoringMotivation(MotivationType.IM_CALLER_BECOMES_TRIVIAL, ref);
+			}
+			if(IsInlineMethodToImproveReadability(ref)) {
+				setRefactoringMotivation(MotivationType.IM_IMPROVE_READABILITY, ref);
+			}	
+		}
+	}
+	
+	
+	private boolean isInlineMethodToEliminateUnncessaryMethod(Refactoring ref){
+		if(ref instanceof InlineOperationRefactoring) {
+			InlineOperationRefactoring inlineOperationRef = (InlineOperationRefactoring) ref;			
+		}
+		
+		return false;
+	}
+	
+	private boolean isInlineMethodCallerBecomesTrivial(Refactoring ref){
+		if(ref instanceof InlineOperationRefactoring) {
+			InlineOperationRefactoring inlineOperationRef = (InlineOperationRefactoring) ref;
+			UMLOperationBodyMapper bodyMapper  = inlineOperationRef.getBodyMapper();
+		}
+		return false;
+	}
+	
+	private boolean IsInlineMethodToImproveReadability(Refactoring ref){
+		return false;
+	}
+	
+	
 	private void detectMoveClassMotivation(List<Refactoring> listRef) {
 		for(Refactoring ref : listRef){
 			if(IsMoveClassToAppropriateContainer(ref)) {
@@ -134,8 +186,7 @@ public class MotivationExtractor {
 			}
 		}
 	}
-
-
+	
 	private boolean IsMoveClassToAppropriateContainer(Refactoring ref) {
 		if(ref instanceof MoveClassRefactoring) {
 		}
