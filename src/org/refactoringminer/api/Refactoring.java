@@ -1,9 +1,7 @@
 package org.refactoringminer.api;
 
 import java.io.Serializable;
-import java.util.Set;
-
-import org.apache.commons.lang3.tuple.ImmutablePair;
+import java.util.List;
 
 public interface Refactoring extends Serializable, CodeRangeProvider {
 
@@ -13,15 +11,9 @@ public interface Refactoring extends Serializable, CodeRangeProvider {
 
 	public String toString();
 	
-	/**
-	 * @return a Set of ImmutablePair where left is the file path of a program element, and right is the qualified name of the class containing the program element
-	 */
-	public Set<ImmutablePair<String, String>> getInvolvedClassesBeforeRefactoring();
+	public List<String> getInvolvedClassesBeforeRefactoring();
 	
-	/**
-	 * @return a Set of ImmutablePair where left is the file path of a program element, and right is the qualified name of the class containing the program element
-	 */
-	public Set<ImmutablePair<String, String>> getInvolvedClassesAfterRefactoring();
+	public List<String> getInvolvedClassesAfterRefactoring();
 	
 	default public String toJSON() {
 		StringBuilder sb = new StringBuilder();

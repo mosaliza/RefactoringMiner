@@ -5,24 +5,18 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
 
 import gr.uom.java.xmi.UMLAttribute;
-import gr.uom.java.xmi.UMLClass;
 import gr.uom.java.xmi.decomposition.AbstractCodeMapping;
 
 public class ExtractAttributeRefactoring implements Refactoring {
 	private UMLAttribute attributeDeclaration;
-	private UMLClass originalClass;
-	private UMLClass nextClass;
 	private Set<AbstractCodeMapping> references;
 
-	public ExtractAttributeRefactoring(UMLAttribute variableDeclaration, UMLClass originalClass, UMLClass nextClass) {
+	public ExtractAttributeRefactoring(UMLAttribute variableDeclaration) {
 		this.attributeDeclaration = variableDeclaration;
-		this.originalClass = originalClass;
-		this.nextClass = nextClass;
 		this.references = new LinkedHashSet<AbstractCodeMapping>();
 	}
 
@@ -62,14 +56,6 @@ public class ExtractAttributeRefactoring implements Refactoring {
 		return attributeDeclaration.codeRange();
 	}
 
-	public UMLClass getOriginalClass() {
-		return originalClass;
-	}
-
-	public UMLClass getNextClass() {
-		return nextClass;
-	}
-
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -95,24 +81,21 @@ public class ExtractAttributeRefactoring implements Refactoring {
 		return true;
 	}
 
-	public Set<ImmutablePair<String, String>> getInvolvedClassesBeforeRefactoring() {
-		Set<ImmutablePair<String, String>> pairs = new LinkedHashSet<ImmutablePair<String, String>>();
-		pairs.add(new ImmutablePair<String, String>(getOriginalClass().getLocationInfo().getFilePath(), getOriginalClass().getName()));
-		return pairs;
+	public List<String> getInvolvedClassesBeforeRefactoring() {
+		List<String> classNames = new ArrayList<String>();
+		classNames.add(attributeDeclaration.getClassName());
+		return classNames;
 	}
 
-	public Set<ImmutablePair<String, String>> getInvolvedClassesAfterRefactoring() {
-		Set<ImmutablePair<String, String>> pairs = new LinkedHashSet<ImmutablePair<String, String>>();
-		pairs.add(new ImmutablePair<String, String>(getNextClass().getLocationInfo().getFilePath(), getNextClass().getName()));
-		return pairs;
+	public List<String> getInvolvedClassesAfterRefactoring() {
+		List<String> classNames = new ArrayList<String>();
+		classNames.add(attributeDeclaration.getClassName());
+		return classNames;
 	}
 
 	@Override
 	public List<CodeRange> leftSide() {
 		List<CodeRange> ranges = new ArrayList<CodeRange>();
-		for(AbstractCodeMapping mapping : references) {
-			ranges.add(mapping.getFragment1().codeRange().setDescription("statement with the initializer of the extracted attribute"));
-		}
 		return ranges;
 	}
 
@@ -122,9 +105,6 @@ public class ExtractAttributeRefactoring implements Refactoring {
 		ranges.add(attributeDeclaration.codeRange()
 				.setDescription("extracted attribute declaration")
 				.setCodeElement(attributeDeclaration.toString()));
-		for(AbstractCodeMapping mapping : references) {
-			ranges.add(mapping.getFragment2().codeRange().setDescription("statement with the name of the extracted attribute"));
-		}
 		return ranges;
 	}
 }
