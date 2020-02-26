@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
 
@@ -14,12 +15,14 @@ import gr.uom.java.xmi.decomposition.VariableDeclaration;
 
 public class ExtractVariableRefactoring implements Refactoring {
 	private VariableDeclaration variableDeclaration;
-	private UMLOperation operation;
+	private UMLOperation operationBefore;
+	private UMLOperation operationAfter;
 	private Set<AbstractCodeMapping> references;
 
-	public ExtractVariableRefactoring(VariableDeclaration variableDeclaration, UMLOperation operation) {
+	public ExtractVariableRefactoring(VariableDeclaration variableDeclaration, UMLOperation operationBefore, UMLOperation operationAfter) {
 		this.variableDeclaration = variableDeclaration;
-		this.operation = operation;
+		this.operationBefore = operationBefore;
+		this.operationAfter = operationAfter;
 		this.references = new LinkedHashSet<AbstractCodeMapping>();
 	}
 
@@ -39,8 +42,12 @@ public class ExtractVariableRefactoring implements Refactoring {
 		return variableDeclaration;
 	}
 
-	public UMLOperation getOperation() {
-		return operation;
+	public UMLOperation getOperationBefore() {
+		return operationBefore;
+	}
+
+	public UMLOperation getOperationAfter() {
+		return operationAfter;
 	}
 
 	public Set<AbstractCodeMapping> getReferences() {
@@ -52,9 +59,9 @@ public class ExtractVariableRefactoring implements Refactoring {
 		sb.append(getName()).append("\t");
 		sb.append(variableDeclaration);
 		sb.append(" in method ");
-		sb.append(operation);
+		sb.append(operationAfter);
 		sb.append(" from class ");
-		sb.append(operation.getClassName());
+		sb.append(operationAfter.getClassName());
 		return sb.toString();
 	}
 
@@ -69,7 +76,7 @@ public class ExtractVariableRefactoring implements Refactoring {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((operation == null) ? 0 : operation.hashCode());
+		result = prime * result + ((operationAfter == null) ? 0 : operationAfter.hashCode());
 		result = prime * result + ((variableDeclaration == null) ? 0 : variableDeclaration.hashCode());
 		return result;
 	}
@@ -83,10 +90,10 @@ public class ExtractVariableRefactoring implements Refactoring {
 		if (getClass() != obj.getClass())
 			return false;
 		ExtractVariableRefactoring other = (ExtractVariableRefactoring) obj;
-		if (operation == null) {
-			if (other.operation != null)
+		if (operationAfter == null) {
+			if (other.operationAfter != null)
 				return false;
-		} else if (!operation.equals(other.operation))
+		} else if (!operationAfter.equals(other.operationAfter))
 			return false;
 		if (variableDeclaration == null) {
 			if (other.variableDeclaration != null)
@@ -96,21 +103,24 @@ public class ExtractVariableRefactoring implements Refactoring {
 		return true;
 	}
 
-	public List<String> getInvolvedClassesBeforeRefactoring() {
-		List<String> classNames = new ArrayList<String>();
-		classNames.add(operation.getClassName());
-		return classNames;
+	public Set<ImmutablePair<String, String>> getInvolvedClassesBeforeRefactoring() {
+		Set<ImmutablePair<String, String>> pairs = new LinkedHashSet<ImmutablePair<String, String>>();
+		pairs.add(new ImmutablePair<String, String>(getOperationBefore().getLocationInfo().getFilePath(), getOperationBefore().getClassName()));
+		return pairs;
 	}
 
-	public List<String> getInvolvedClassesAfterRefactoring() {
-		List<String> classNames = new ArrayList<String>();
-		classNames.add(operation.getClassName());
-		return classNames;
+	public Set<ImmutablePair<String, String>> getInvolvedClassesAfterRefactoring() {
+		Set<ImmutablePair<String, String>> pairs = new LinkedHashSet<ImmutablePair<String, String>>();
+		pairs.add(new ImmutablePair<String, String>(getOperationAfter().getLocationInfo().getFilePath(), getOperationAfter().getClassName()));
+		return pairs;
 	}
 
 	@Override
 	public List<CodeRange> leftSide() {
 		List<CodeRange> ranges = new ArrayList<CodeRange>();
+		for(AbstractCodeMapping mapping : references) {
+			ranges.add(mapping.getFragment1().codeRange().setDescription("statement with the initializer of the extracted variable"));
+		}
 		return ranges;
 	}
 
@@ -120,6 +130,9 @@ public class ExtractVariableRefactoring implements Refactoring {
 		ranges.add(variableDeclaration.codeRange()
 				.setDescription("extracted variable declaration")
 				.setCodeElement(variableDeclaration.toString()));
+		for(AbstractCodeMapping mapping : references) {
+			ranges.add(mapping.getFragment2().codeRange().setDescription("statement with the name of the extracted variable"));
+		}
 		return ranges;
 	}
 }
