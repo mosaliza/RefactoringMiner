@@ -158,27 +158,95 @@ public class MotivationExtractor {
 		}
 	}
 	
+	private boolean IsInlineMethodToImproveReadability(Refactoring ref){
+		InlineOperationRefactoring inlineOperationRef = (InlineOperationRefactoring) ref;
+		Set<AbstractCodeMapping> mappings = inlineOperationRef.getBodyMapper().getMappings();
+		boolean hasTestAnnotation = inlineOperationRef.getTargetOperationAfterInline().hasTestAnnotation();
+		if(mappings.size() == 1 || hasTestAnnotation) {
+			return true;
+		}
+		return false;
+	}
 	
 	private boolean isInlineMethodToEliminateUnncessaryMethod(Refactoring ref){
 		if(ref instanceof InlineOperationRefactoring) {
-			InlineOperationRefactoring inlineOperationRef = (InlineOperationRefactoring) ref;			
-		}
-		
+			int targetOperationBeforeInlineStatementCount = 0;
+			InlineOperationRefactoring inlineOperationRef = (InlineOperationRefactoring) ref;
+			UMLOperation targetOperationBeforeInline = inlineOperationRef.getTargetOperationBeforeInline();
+			targetOperationBeforeInlineStatementCount = targetOperationBeforeInline.getBody().getCompositeStatement().statementCount();
+			if(targetOperationBeforeInlineStatementCount == 1) {
+				return true;
+			}
+		}	
 		return false;
 	}
 	
 	private boolean isInlineMethodCallerBecomesTrivial(Refactoring ref){
 		if(ref instanceof InlineOperationRefactoring) {
 			InlineOperationRefactoring inlineOperationRef = (InlineOperationRefactoring) ref;
-			UMLOperationBodyMapper bodyMapper  = inlineOperationRef.getBodyMapper();
+			int targetOperationBeforeInlineStatementCount = 0;
+			UMLOperation targetOperationAfterInline = inlineOperationRef.getTargetOperationAfterInline();
+			UMLOperation targetOperationBeforeInline = inlineOperationRef.getTargetOperationBeforeInline();
+			targetOperationBeforeInlineStatementCount = targetOperationBeforeInline.getBody().getCompositeStatement().statementCount();
+			CompositeStatementObject targetBody = targetOperationAfterInline.getBody().getCompositeStatement();
+			for(StatementObject leaf: targetBody.getLeaves()) {
+				if(!isTargetOperationLeavesInAddedT2OrBodyMappings(leaf, inlineOperationRef)) {
+					return false;
+				}
+			}
+			
+			for(CompositeStatementObject innerNode: getAllInnerNodes(targetBody)) {
+				if(!isTargetOperationInnerNodesInAddedT2OrBodyMappings(innerNode, inlineOperationRef)) {
+					return false;
+				}
+			}
+			if(targetOperationBeforeInlineStatementCount == 1) {
+				return false;
+			}
+		}
+		return true;
+	}
+	private boolean isTargetOperationLeavesInAddedT2OrBodyMappings(StatementObject statement ,InlineOperationRefactoring inlineOperationRef){
+		if(isInlineTargetClassLeafInAddedT2Leaves(statement.getString(), inlineOperationRef) || isStatementInlineBodyMappings(statement.getString(), inlineOperationRef)){	
+			return true;	
+		}
+		return false;
+	}
+	private boolean isTargetOperationInnerNodesInAddedT2OrBodyMappings(CompositeStatementObject statement ,InlineOperationRefactoring inlineOperationRef){
+		if(isInlineTargetClassInnerNodeInAddedT2InnerNodes(statement.getString(), inlineOperationRef) || isStatementInlineBodyMappings(statement.getString(), inlineOperationRef)){	
+			return true;	
+		}
+		return false;
+	}
+	boolean isInlineTargetClassLeafInAddedT2Leaves(String leafString ,InlineOperationRefactoring inlineOperationRef) {
+		List<StatementObject> addedT2Leaves = inlineOperationRef.getBodyMapper().getNonMappedLeavesT2();
+		for(StatementObject statement : addedT2Leaves) {
+			if(statement.getString().equals(leafString)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	boolean isInlineTargetClassInnerNodeInAddedT2InnerNodes(String innerNodeString ,InlineOperationRefactoring inlineOperationRef) {
+		List<CompositeStatementObject> addedT2InnerNodes = inlineOperationRef.getBodyMapper().getNonMappedInnerNodesT2();
+			for(CompositeStatementObject composite : addedT2InnerNodes) {
+			if(composite.getString().equals(innerNodeString)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	private boolean isStatementInlineBodyMappings(String statementString , InlineOperationRefactoring inlineOperationRef) {
+		Set<AbstractCodeMapping> codeMappings = inlineOperationRef.getBodyMapper().getMappings();
+		for(AbstractCodeMapping mapping :codeMappings) {
+			if(mapping.getFragment2().getString().equals(statementString)) {
+				return true;
+			}
 		}
 		return false;
 	}
 	
-	private boolean IsInlineMethodToImproveReadability(Refactoring ref){
-		return false;
-	}
-	
+
 	
 	private void detectMoveClassMotivation(List<Refactoring> listRef) {
 		for(Refactoring ref : listRef){
