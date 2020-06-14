@@ -21,7 +21,8 @@ public class ObjectCreation extends AbstractCall {
 	
 	public ObjectCreation(CompilationUnit cu, String filePath, ClassInstanceCreation creation) {
 		this.locationInfo = new LocationInfo(cu, filePath, creation, CodeElementType.CLASS_INSTANCE_CREATION);
-		this.type = UMLType.extractTypeObject(cu, filePath, creation.getType(), 0);
+		this.type = UMLType.extractTypeObject(creation.getType().toString(),
+				new LocationInfo(cu, filePath, creation.getType(), CodeElementType.TYPE));
 		this.typeArguments = creation.arguments().size();
 		this.arguments = new ArrayList<String>();
 		List<Expression> args = creation.arguments();
@@ -39,7 +40,8 @@ public class ObjectCreation extends AbstractCall {
 	public ObjectCreation(CompilationUnit cu, String filePath, ArrayCreation creation) {
 		this.locationInfo = new LocationInfo(cu, filePath, creation, CodeElementType.ARRAY_CREATION);
 		this.isArray = true;
-		this.type = UMLType.extractTypeObject(cu, filePath, creation.getType(), 0);
+		this.type = UMLType.extractTypeObject(creation.getType().toString(),
+				new LocationInfo(cu, filePath, creation.getType(), CodeElementType.TYPE));
 		this.typeArguments = creation.dimensions().size();
 		this.arguments = new ArrayList<String>();
 		List<Expression> args = creation.dimensions();

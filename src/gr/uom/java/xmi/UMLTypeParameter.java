@@ -6,12 +6,10 @@ import java.util.List;
 public class UMLTypeParameter {
 	private String name;
 	private List<UMLType> typeBounds;
-	private List<UMLAnnotation> annotations;
 
 	public UMLTypeParameter(String name) {
 		this.name = name;
 		this.typeBounds = new ArrayList<UMLType>();
-		this.annotations = new ArrayList<UMLAnnotation>();
 	}
 
 	public String getName() {
@@ -24,14 +22,6 @@ public class UMLTypeParameter {
 
 	public void addTypeBound(UMLType type) {
 		typeBounds.add(type);
-	}
-
-	public List<UMLAnnotation> getAnnotations() {
-		return annotations;
-	}
-
-	public void addAnnotation(UMLAnnotation annotation) {
-		annotations.add(annotation);
 	}
 
 	@Override

@@ -186,10 +186,7 @@ public class LocationInfo {
 		BLOCK("{"),
 		FINALLY_BLOCK("finally"),
 		TYPE,
-		LIST_OF_STATEMENTS,
-		ANNOTATION,
-		SINGLE_MEMBER_ANNOTATION_VALUE,
-		NORMAL_ANNOTATION_MEMBER_VALUE_PAIR;
+		LIST_OF_STATEMENTS;
 		
 		private String name;
 		
