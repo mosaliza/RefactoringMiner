@@ -34,11 +34,11 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 	private boolean isStatic;
 	private boolean emptyBody;
 	private OperationBody operationBody;
-	private boolean testAnnotation;
 	private List<UMLAnonymousClass> anonymousClassList;
 	private List<UMLTypeParameter> typeParameters;
 	private List<Annotation> operationAnnotations;
 	private UMLJavadoc javadoc;
+	private List<UMLAnnotation> annotations;
 	
 	public UMLOperation(String name, LocationInfo locationInfo) {
 		this.locationInfo = locationInfo;
@@ -46,6 +46,7 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
         this.parameters = new ArrayList<UMLParameter>();
         this.anonymousClassList = new ArrayList<UMLAnonymousClass>();
         this.typeParameters = new ArrayList<UMLTypeParameter>();
+        this.annotations = new ArrayList<UMLAnnotation>();
         this.operationAnnotations = new ArrayList<Annotation>();
     }
 
@@ -60,6 +61,14 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 	
 	public void addTypeParameter(UMLTypeParameter typeParameter) {
 		typeParameters.add(typeParameter);
+	}
+
+	public List<UMLAnnotation> getAnnotations() {
+		return annotations;
+	}
+
+	public void addAnnotation(UMLAnnotation annotation) {
+		annotations.add(annotation);
 	}
 
 	public LocationInfo getLocationInfo() {
@@ -123,11 +132,12 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 	}
 
 	public boolean hasTestAnnotation() {
-		return testAnnotation;
-	}
-
-	public void setTestAnnotation(boolean testAnnotation) {
-		this.testAnnotation = testAnnotation;
+		for(UMLAnnotation annotation : annotations) {
+			if(annotation.getTypeName().equals("Test")) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public UMLJavadoc getJavadoc() {
@@ -294,6 +304,29 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 
 	public boolean equalSignatureIgnoringChangedTypes(UMLOperation operation) {
 		if(!(this.isConstructor && operation.isConstructor || equivalentName(operation)))
+			return false;
+		if(this.isAbstract != operation.isAbstract)
+			return false;
+		/*if(this.isStatic != operation.isStatic)
+			return false;
+		if(this.isFinal != operation.isFinal)
+			return false;*/
+		if(this.parameters.size() != operation.parameters.size())
+			return false;
+		if(!equalTypeParameters(operation))
+			return false;
+		int i=0;
+		for(UMLParameter thisParameter : this.parameters) {
+			UMLParameter otherParameter = operation.parameters.get(i);
+			if(!thisParameter.equals(otherParameter) && !thisParameter.equalsExcludingType(otherParameter))
+				return false;
+			i++;
+		}
+		return true;
+	}
+
+	public boolean equalSignatureWithIdenticalNameIgnoringChangedTypes(UMLOperation operation) {
+		if(!(this.isConstructor && operation.isConstructor || this.name.equals(operation.name)))
 			return false;
 		if(this.isAbstract != operation.isAbstract)
 			return false;

@@ -152,10 +152,11 @@ public class InlineOperationRefactoring implements Refactoring {
 		return codeRanges;
 	}
 
-	public List<String> getInvolvedClassesBeforeRefactoring() {
-		List<String> classNames = new ArrayList<String>();
-		classNames.add(getTargetOperationBeforeInline().getClassName());
-		return classNames;
+	public Set<ImmutablePair<String, String>> getInvolvedClassesBeforeRefactoring() {
+		Set<ImmutablePair<String, String>> pairs = new LinkedHashSet<ImmutablePair<String, String>>();
+		pairs.add(new ImmutablePair<String, String>(getInlinedOperation().getLocationInfo().getFilePath(), getInlinedOperation().getClassName()));
+		pairs.add(new ImmutablePair<String, String>(getTargetOperationBeforeInline().getLocationInfo().getFilePath(), getTargetOperationBeforeInline().getClassName()));
+		return pairs;
 	}
 
 	public List<String> getInvolvedClassesAfterRefactoring() {

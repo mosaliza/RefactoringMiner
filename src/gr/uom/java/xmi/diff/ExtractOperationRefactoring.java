@@ -176,10 +176,11 @@ public class ExtractOperationRefactoring implements Refactoring {
 		return classNames;
 	}
 
-	public List<String> getInvolvedClassesAfterRefactoring() {
-		List<String> classNames = new ArrayList<String>();
-		classNames.add(getSourceOperationAfterExtraction().getClassName());
-		return classNames;
+	public Set<ImmutablePair<String, String>> getInvolvedClassesAfterRefactoring() {
+		Set<ImmutablePair<String, String>> pairs = new LinkedHashSet<ImmutablePair<String, String>>();
+		pairs.add(new ImmutablePair<String, String>(getSourceOperationAfterExtraction().getLocationInfo().getFilePath(), getSourceOperationAfterExtraction().getClassName()));
+		pairs.add(new ImmutablePair<String, String>(getExtractedOperation().getLocationInfo().getFilePath(), getExtractedOperation().getClassName()));
+		return pairs;
 	}
 
 	@Override

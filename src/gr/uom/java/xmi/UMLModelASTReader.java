@@ -1,12 +1,18 @@
 package gr.uom.java.xmi;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
@@ -24,7 +30,6 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.FileASTRequestor;
-import org.eclipse.jdt.core.dom.IDocElement;
 import org.eclipse.jdt.core.dom.IExtendedModifier;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.Javadoc;
@@ -74,11 +79,37 @@ public class UMLModelASTReader {
 		}
 	}
 
-	public UMLModelASTReader(File rootFolder, List<String> javaFiles, Set<String> repositoryDirectories) {
-		this(rootFolder, buildAstParser(rootFolder), javaFiles, repositoryDirectories);
+	public UMLModelASTReader(File rootFolder) throws IOException {
+		this(rootFolder, getJavaFilePaths(rootFolder));
 	}
 
-	public UMLModelASTReader(File rootFolder, ASTParser parser, List<String> javaFiles, Set<String> repositoryDirectories) {
+	public UMLModelASTReader(File rootFolder, List<String> javaFiles) throws IOException {
+		this(rootFolder, buildAstParser(rootFolder), javaFiles, getDirectories(rootFolder, javaFiles));
+	}
+
+	private static List<String> getJavaFilePaths(File folder) throws IOException {
+		Stream<Path> walk = Files.walk(Paths.get(folder.toURI()));
+		List<String> paths = walk.map(x -> x.toString())
+				.filter(f -> f.endsWith(".java"))
+				.map(x -> x.substring(folder.getPath().length()+1).replaceAll(systemFileSeparator, "/"))
+				.collect(Collectors.toList());
+		walk.close();
+		return paths;
+	}
+
+	private static Set<String> getDirectories(File folder, List<String> paths) {
+		Set<String> repositoryDirectories = new LinkedHashSet<String>();
+		for(String path : paths) {
+			String directory = new String(path);
+			while(directory.contains("/")) {
+				directory = directory.substring(0, directory.lastIndexOf("/"));
+				repositoryDirectories.add(directory);
+			}
+		}
+		return repositoryDirectories;
+	}
+
+	private UMLModelASTReader(File rootFolder, ASTParser parser, List<String> javaFiles, Set<String> repositoryDirectories) {
 		this.umlModel = new UMLModel(repositoryDirectories);
 		this.projectRoot = rootFolder.getPath();
 		this.parser = parser;
@@ -148,8 +179,8 @@ public class UMLModelASTReader {
 			List<TagElement> tags = javaDoc.tags();
 			for(TagElement tag : tags) {
 				UMLTagElement tagElement = new UMLTagElement(tag.getTagName());
-				List<IDocElement> fragments = tag.fragments();
-				for(IDocElement docElement : fragments) {
+				List fragments = tag.fragments();
+				for(Object docElement : fragments) {
 					tagElement.addFragment(docElement.toString());
 				}
 				doc.addTag(tagElement);
@@ -170,7 +201,7 @@ public class UMLModelASTReader {
 		umlClass.setJavadoc(javadoc);
 		
 		umlClass.setEnum(true);
-		processModifiers(enumDeclaration, umlClass);
+		processModifiers(cu, sourceFile, enumDeclaration, umlClass);
 		
 		processBodyDeclarations(cu, enumDeclaration, packageName, sourceFile, importedTypes, umlClass);
 		
@@ -223,23 +254,28 @@ public class UMLModelASTReader {
 			umlClass.setInterface(true);
     	}
     	
-    	processModifiers(typeDeclaration, umlClass);
+    	processModifiers(cu, sourceFile, typeDeclaration, umlClass);
 		
     	List<TypeParameter> typeParameters = typeDeclaration.typeParameters();
 		for(TypeParameter typeParameter : typeParameters) {
 			UMLTypeParameter umlTypeParameter = new UMLTypeParameter(typeParameter.getName().getFullyQualifiedName());
 			List<Type> typeBounds = typeParameter.typeBounds();
 			for(Type type : typeBounds) {
-				umlTypeParameter.addTypeBound(UMLType.extractTypeObject(type.toString(),
-						generateLocationInfo(cu, sourceFile, type, CodeElementType.TYPE)));
+				umlTypeParameter.addTypeBound(UMLType.extractTypeObject(cu, sourceFile, type, 0));
+			}
+			List<IExtendedModifier> typeParameterExtendedModifiers = typeParameter.modifiers();
+			for(IExtendedModifier extendedModifier : typeParameterExtendedModifiers) {
+				if(extendedModifier.isAnnotation()) {
+					Annotation annotation = (Annotation)extendedModifier;
+					umlTypeParameter.addAnnotation(new UMLAnnotation(cu, sourceFile, annotation));
+				}
 			}
     		umlClass.addTypeParameter(umlTypeParameter);
     	}
     	
     	Type superclassType = typeDeclaration.getSuperclassType();
     	if(superclassType != null) {
-    		UMLType umlType = UMLType.extractTypeObject(UMLType.getTypeName(superclassType, 0),
-    				generateLocationInfo(cu, sourceFile, superclassType, CodeElementType.TYPE));
+    		UMLType umlType = UMLType.extractTypeObject(cu, sourceFile, superclassType, 0);
     		UMLGeneralization umlGeneralization = new UMLGeneralization(umlClass, umlType.getClassType());
     		umlClass.setSuperclass(umlType);
     		getUmlModel().addGeneralization(umlGeneralization);
@@ -247,8 +283,7 @@ public class UMLModelASTReader {
     	
     	List<Type> superInterfaceTypes = typeDeclaration.superInterfaceTypes();
     	for(Type interfaceType : superInterfaceTypes) {
-    		UMLType umlType = UMLType.extractTypeObject(UMLType.getTypeName(interfaceType, 0),
-    				generateLocationInfo(cu, sourceFile, interfaceType, CodeElementType.TYPE));
+    		UMLType umlType = UMLType.extractTypeObject(cu, sourceFile, interfaceType, 0);
     		UMLRealization umlRealization = new UMLRealization(umlClass, umlType.getClassType());
     		umlClass.addImplementedInterface(umlType);
     		getUmlModel().addRealization(umlRealization);
@@ -326,7 +361,7 @@ public class UMLModelASTReader {
     	}
 	}
 
-	private void processModifiers(AbstractTypeDeclaration typeDeclaration, UMLClass umlClass) {
+	private void processModifiers(CompilationUnit cu, String sourceFile, AbstractTypeDeclaration typeDeclaration, UMLClass umlClass) {
 		int modifiers = typeDeclaration.getModifiers();
     	if((modifiers & Modifier.ABSTRACT) != 0)
     		umlClass.setAbstract(true);
@@ -339,6 +374,14 @@ public class UMLModelASTReader {
     		umlClass.setVisibility("private");
     	else
     		umlClass.setVisibility("package");
+    	
+    	List<IExtendedModifier> extendedModifiers = typeDeclaration.modifiers();
+		for(IExtendedModifier extendedModifier : extendedModifiers) {
+			if(extendedModifier.isAnnotation()) {
+				Annotation annotation = (Annotation)extendedModifier;
+				umlClass.addAnnotation(new UMLAnnotation(cu, sourceFile, annotation));
+			}
+		}
 	}
 
 	private UMLOperation processMethodDeclaration(CompilationUnit cu, MethodDeclaration methodDeclaration, String packageName, boolean isInterfaceMethod, String sourceFile) {
@@ -376,10 +419,7 @@ public class UMLModelASTReader {
 		for(IExtendedModifier extendedModifier : extendedModifiers) {
 			if(extendedModifier.isAnnotation()) {
 				Annotation annotation = (Annotation)extendedModifier;
-				if(annotation.getTypeName().getFullyQualifiedName().equals("Test")) {
-					umlOperation.setTestAnnotation(true);
-					break;
-				}
+				umlOperation.addAnnotation(new UMLAnnotation(cu, sourceFile, annotation));
 			}
 		}
 		
@@ -396,8 +436,14 @@ public class UMLModelASTReader {
 			UMLTypeParameter umlTypeParameter = new UMLTypeParameter(typeParameter.getName().getFullyQualifiedName());
 			List<Type> typeBounds = typeParameter.typeBounds();
 			for(Type type : typeBounds) {
-				umlTypeParameter.addTypeBound(UMLType.extractTypeObject(type.toString(),
-						generateLocationInfo(cu, sourceFile, type, CodeElementType.TYPE)));
+				umlTypeParameter.addTypeBound(UMLType.extractTypeObject(cu, sourceFile, type, 0));
+			}
+			List<IExtendedModifier> typeParameterExtendedModifiers = typeParameter.modifiers();
+			for(IExtendedModifier extendedModifier : typeParameterExtendedModifiers) {
+				if(extendedModifier.isAnnotation()) {
+					Annotation annotation = (Annotation)extendedModifier;
+					umlTypeParameter.addAnnotation(new UMLAnnotation(cu, sourceFile, annotation));
+				}
 			}
 			umlOperation.addTypeParameter(umlTypeParameter);
 		}
@@ -416,8 +462,7 @@ public class UMLModelASTReader {
 		
 		Type returnType = methodDeclaration.getReturnType2();
 		if(returnType != null) {
-			UMLType type = UMLType.extractTypeObject(UMLType.getTypeName(returnType, 0),
-					generateLocationInfo(cu, sourceFile, returnType, CodeElementType.TYPE));
+			UMLType type = UMLType.extractTypeObject(cu, sourceFile, returnType, methodDeclaration.getExtraDimensions());
 			UMLParameter returnParameter = new UMLParameter("return", type, "return", false);
 			umlOperation.addParameter(returnParameter);
 		}
@@ -425,12 +470,7 @@ public class UMLModelASTReader {
 		for(SingleVariableDeclaration parameter : parameters) {
 			Type parameterType = parameter.getType();
 			String parameterName = parameter.getName().getFullyQualifiedName();
-			String typeName = UMLType.getTypeName(parameterType, parameter.getExtraDimensions());
-			if (parameter.isVarargs()) {
-				typeName = typeName + "[]";
-			}
-			UMLType type = UMLType.extractTypeObject(typeName,
-					generateLocationInfo(cu, sourceFile, parameterType, CodeElementType.TYPE));
+			UMLType type = UMLType.extractTypeObject(cu, sourceFile, parameterType, parameter.getExtraDimensions());
 			UMLParameter umlParameter = new UMLParameter(parameterName, type, "in", parameter.isVarargs());
 			VariableDeclaration variableDeclaration = new VariableDeclaration(cu, sourceFile, parameter, parameter.isVarargs());
 			variableDeclaration.setParameter(true);
@@ -447,8 +487,7 @@ public class UMLModelASTReader {
 		Type fieldType = fieldDeclaration.getType();
 		List<VariableDeclarationFragment> fragments = fieldDeclaration.fragments();
 		for(VariableDeclarationFragment fragment : fragments) {
-			UMLType type = UMLType.extractTypeObject(UMLType.getTypeName(fieldType, fragment.getExtraDimensions()),
-					generateLocationInfo(cu, sourceFile, fieldType, CodeElementType.TYPE));
+			UMLType type = UMLType.extractTypeObject(cu, sourceFile, fieldType, fragment.getExtraDimensions());
 			String fieldName = fragment.getName().getFullyQualifiedName();
 			LocationInfo locationInfo = generateLocationInfo(cu, sourceFile, fragment, CodeElementType.FIELD_DECLARATION);
 			UMLAttribute umlAttribute = new UMLAttribute(fieldName, type, locationInfo);

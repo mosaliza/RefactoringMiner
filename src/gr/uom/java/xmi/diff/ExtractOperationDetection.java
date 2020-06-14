@@ -15,6 +15,7 @@ import gr.uom.java.xmi.UMLType;
 import gr.uom.java.xmi.decomposition.AbstractCodeFragment;
 import gr.uom.java.xmi.decomposition.AbstractCodeMapping;
 import gr.uom.java.xmi.decomposition.CompositeStatementObject;
+import gr.uom.java.xmi.decomposition.LambdaExpressionObject;
 import gr.uom.java.xmi.decomposition.OperationInvocation;
 import gr.uom.java.xmi.decomposition.StatementObject;
 import gr.uom.java.xmi.decomposition.UMLOperationBodyMapper;
@@ -140,6 +141,26 @@ public class ExtractOperationDetection {
 			for(OperationInvocation statementInvocation : statementMethodInvocationMap.get(key)) {
 				if(!containsInvocation(operationInvocations, statementInvocation)) {
 					operationInvocations.add(statementInvocation);
+				}
+			}
+		}
+		List<LambdaExpressionObject> lambdas = statement.getLambdas();
+		for(LambdaExpressionObject lambda : lambdas) {
+			if(lambda.getBody() != null) {
+				for(OperationInvocation statementInvocation : lambda.getBody().getAllOperationInvocations()) {
+					if(!containsInvocation(operationInvocations, statementInvocation)) {
+						operationInvocations.add(statementInvocation);
+					}
+				}
+			}
+			if(lambda.getExpression() != null) {
+				Map<String, List<OperationInvocation>> methodInvocationMap = lambda.getExpression().getMethodInvocationMap();
+				for(String key : methodInvocationMap.keySet()) {
+					for(OperationInvocation statementInvocation : methodInvocationMap.get(key)) {
+						if(!containsInvocation(operationInvocations, statementInvocation)) {
+							operationInvocations.add(statementInvocation);
+						}
+					}
 				}
 			}
 		}

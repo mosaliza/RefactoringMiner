@@ -67,6 +67,18 @@ Currently, it supports the detection of the following refactorings:
 38. Extract Attribute
 39. Move and Rename Method
 40. Move and Inline Method
+41. Add Method Annotation
+42. Remove Method Annotation
+43. Modify Method Annotation
+44. Add Attribute Annotation
+45. Remove Attribute Annotation
+46. Modify Attribute Annotation
+47. Add Class Annotation
+48. Remove Class Annotation
+49. Modify Class Annotation
+50. Add Parameter
+51. Remove Parameter
+52. Reorder Parameter
 
 # How to build RefactoringMiner
 
@@ -92,6 +104,8 @@ you can install our [Refactoring Aware Commit Review](https://chrome.google.com/
 The Chrome extension can detect refactorings for **public** projects and commits matching the following URL patterns:
 * `https://github.com/user/project/commit/id`
 * `https://github.com/user/project/pull/id/commits/id`
+
+![Refactoring Aware Commit Review Chrome Extension](https://user-images.githubusercontent.com/1483516/80326324-62fab400-8806-11ea-9595-4906018b831a.png)
 
 # Research
 ## How to cite RefactoringMiner
@@ -142,12 +156,20 @@ RefactoringMiner has been used in the following studies:
 Refactorings and Commit Messages](https://doi.org/10.1109/SCAM.2019.00017)," *19th IEEE International Working Conference on Source Code Analysis and Manipulation* (SCAM 2019), Cleveland, OH, USA, September 30-October 1, 2019.
 21. Soumaya Rebai, Oussama Ben Sghaier, Vahid Alizadeh, Marouane Kessentini, and Meriem Chater, "[Interactive Refactoring Documentation Bot](https://doi.org/10.1109/SCAM.2019.00026)," *19th IEEE International Working Conference on Source Code Analysis and Manipulation* (SCAM 2019), Cleveland, OH, USA, September 30-October 1, 2019.
 22. Matheus Paixao, and Paulo Henrique Maia, "[Rebasing in Code Review Considered Harmful: A Large-Scale Empirical Investigation](https://doi.org/10.1109/SCAM.2019.00014)," *19th IEEE International Working Conference on Source Code Analysis and Manipulation* (SCAM 2019), Cleveland, OH, USA, September 30-October 1, 2019.
-23. Willian Oizumi, Leonardo Da Silva Sousa, Anderson Oliveira, Luiz Matheus Alencar, Alessandro Garcia, Thelma E. Colanzi and Roberto Oliveira, "On the density and diversity of degradation symptoms in refactored classes: A multi-case study," *30th International Symposium on Software Reliability Engineering* (ISSRE 2019), Berlin, Germany, October 28-31, 2019.
+23. Willian Oizumi, Leonardo Da Silva Sousa, Anderson Oliveira, Luiz Matheus Alencar, Alessandro Garcia, Thelma E. Colanzi and Roberto Oliveira, "[On the density and diversity of degradation symptoms in refactored classes: A multi-case study](https://doi.org/10.1109/ISSRE.2019.00042)," *30th International Symposium on Software Reliability Engineering* (ISSRE 2019), Berlin, Germany, October 28-31, 2019.
 24. Marcos César de Oliveira, Davi Freitas, Rodrigo Bonifácio, Gustavo Pinto, and David Lo, "[Finding Needles in a Haystack: Leveraging Co-change Dependencies to Recommend Refactorings](https://doi.org/10.1016/j.jss.2019.110420)," *Journal of Systems and Software*, Volume 158, December 2019.
 25. Walter Lucas, Rodrigo Bonifácio, Edna Dias Canedo, Diego Marcílio, and Fernanda Lima, "[Does the Introduction of Lambda Expressions Improve the Comprehension of Java Programs?](https://doi.org/10.1145/3350768.3350791)," *XXXIII Brazilian Symposium on Software Engineering* (SBES 2019), Salvador, Brazil, September 23-27, 2019.
 26. Bo Shen, Wei Zhang, Haiyan Zhao, Guangtai Liang, Zhi Jin, and Qianxiang Wang, "[IntelliMerge: A Refactoring-Aware Software Merging Technique](https://doi.org/10.1145/3360596)," *Proceedings of the ACM on Programming Languages*, vol. 3, OOPSLA, Article 170, October 2019.
 27. Martina Iammarino, Fiorella Zampetti, Lerina Aversano, and Massimiliano Di Penta, "[Self-Admitted Technical Debt Removal and Refactoring Actions: Co-Occurrence or More?](https://doi.org/10.1109/ICSME.2019.00029)," *35th IEEE International Conference on Software Maintenance and Evolution* (ICSME 2019), Cleveland, OH, USA, September 29-October 4, 2019.
 28. Ally S. Nyamawe, Hui Liu, Nan Niu, Qasim Umer, and Zhendong Niu, "[Automated Recommendation of Software Refactorings based on Feature Requests](https://doi.org/10.1109/RE.2019.00029)," *27th IEEE International Requirements Engineering Conference* (RE 2019), Jeju Island, South Korea, September 23-27, 2019.
+29. Maurício Aniche, Erick Maziero, Rafael Durelli, and Vinicius Durelli, "[The Effectiveness of Supervised Machine Learning Algorithms in Predicting Software Refactoring](https://arxiv.org/abs/2001.03338)," arXiv:2001.03338, January 10, 2020.
+30. Ana Bibiano, Vinicius Soares, Daniel Coutinho, Eduardo Fernandes, João Correia, Kleber Tarcísio, Anderson Oliveira, Alessandro Garcia, Rohit Gheyi, Marcio Ribeiro, Baldoino Fonseca, Caio Barbosa, and Daniel Oliveira, "How Does Incomplete Composite Refactoring Affect Internal Quality Attributes?," *28th IEEE International Conference on Program Comprehension* (ICPC 2020), Seoul, South Korea, 2020.
+31. Leonardo Sousa, Willian Oizumi, Alessandro Garcia, Anderson Oliveira, Diego Cedrim, and Carlos Lucena, "When Are Smells Indicators of Architectural Refactoring Opportunities? A Study of 50 Software Projects," *28th IEEE International Conference on Program Comprehension* (ICPC 2020), Seoul, South Korea, 2020.
+32. Matheus Paixão, Anderson Uchôa, Ana Carla Bibiano, Daniel Oliveira, Alessandro Garcia, Jens Krinke, and Emilio Arvonio, "Behind the Intents: An In-depth Empirical Study on Software Refactoring in Modern Code Review," *17th International Conference on Mining Software Repositories* (MSR 2020), Seoul, South Korea, 2020.
+33. Leonardo da Silva Sousa, Diego Cedrim, Alessandro Garcia, Willian Oizumi, Ana Carla Bibiano, Daniel Oliveira, Miryung Kim, and Anderson Oliveira, "Characterizing and Identifying Composite Refactorings: Concepts, Heuristics and Patterns," *17th International Conference on Mining Software Repositories* (MSR 2020), Seoul, South Korea, 2020.
+34. Anthony Peruma, Christian D. Newman, Mohamed Wiem Mkaouer, Ali Ouni, and Fabio Palomba, "An Exploratory Study on the Refactoring of Unit Test Files in Android Applications," *4th International Workshop on Refactoring* (IWoR 2020), Seoul, South Korea, 2020.
+35. Yoshiki Higo, Shinpei Hayashi, and Shinji Kusumoto, "[On Tracking Java Methods with Git Mechanisms](https://doi.org/10.1016/j.jss.2020.110571)," *Journal of Systems and Software*, Volume 165, July 2020.
+36. Eduardo Fernandes, Alexander Chávez, Alessandro Garcia, Isabella Ferreira, Diego Cedrim, Leonardo Sousa, and Willian Oizumi, "[Refactoring Effect on Internal Quality Attributes: What Haven't They Told You Yet?](https://doi.org/10.1016/j.infsof.2020.106347)," *Information and Software Technology*, 2020.
 
 # Contributors
 The code in package **gr.uom.java.xmi.*** has been developed by [Nikolaos Tsantalis](https://github.com/tsantalis).
@@ -233,22 +255,12 @@ Churn churn = miner.churnAtCommit(repo, "05c1e773878bbacae64112f70964f4f2f794439
 ```
 ## With two directories containing Java source code
 
-There is also a lower level API that works comparing the source code from two
-folders that contain the code before and after the code changes:  
+There is also a lower level API that compares the Java files in two directories
+containing the code before and after some changes:  
 
 ```java
-// Assuming you have a List<String> of the changed/added/removed file paths from version1 to version2
-// filename format example: /src/gr/uom/java/xmi/UMLModelASTReader.java
-
-File rootFolder1 = new File("/path/to/version1/");
-File rootFolder2 = new File("/path/to/version2/");
-List<String> filePaths1 = new ArrayList<String>();
-filePaths1.add("/src/package/Foo.java");
-List<String> filePaths2 = new ArrayList<String>();
-filePaths2.add("/src/package/Foo.java");
-
-UMLModel model1 = new UMLModelASTReader(rootFolder1, filePaths1).getUmlModel();
-UMLModel model2 = new UMLModelASTReader(rootFolder2, filePaths2).getUmlModel();
+UMLModel model1 = new UMLModelASTReader(new File("/path/to/version1")).getUmlModel();
+UMLModel model2 = new UMLModelASTReader(new File("/path/to/version2")).getUmlModel();
 UMLModelDiff modelDiff = model1.diff(model2);
 List<Refactoring> refactorings = modelDiff.getRefactorings();
 ```
