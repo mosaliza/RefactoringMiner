@@ -18,6 +18,7 @@ import com.sun.javafx.css.Declaration;
 
 import gr.uom.java.xmi.LocationInfo;
 import gr.uom.java.xmi.LocationInfo.CodeElementType;
+import gr.uom.java.xmi.UMLAnnotation;
 import gr.uom.java.xmi.UMLAnonymousClass;
 import gr.uom.java.xmi.UMLClass;
 import gr.uom.java.xmi.UMLJavadoc;
@@ -789,8 +790,8 @@ public class MotivationExtractor {
 		boolean isDeprecatedInClass = false;
 		boolean isDeprecatedInImplementedInterface = false;
 		//Check the operation annotation in operation Class
-		List<Annotation> sourceOperationAnnotations = umlOperation.getAnnotations();
-		for(Annotation annotation : sourceOperationAnnotations) {
+		List<UMLAnnotation> sourceOperationAnnotations = umlOperation.getAnnotations();
+		for(UMLAnnotation annotation : sourceOperationAnnotations) {
 				if(annotation.getTypeName().toString().equals("Deprecated")) {
 					isDeprecatedInClass = true;
 					break;
@@ -808,7 +809,7 @@ public class MotivationExtractor {
 					if(interfaceClass != null) {
 						for( UMLOperation operation : interfaceClass.getOperations()){
 							if(operation.equalSignature(umlOperation)) {
-								for(Annotation annotation : operation.getAnnotations()) {
+								for(UMLAnnotation annotation : operation.getAnnotations()) {
 									if(annotation.getTypeName().toString().equals("Deprecated")) {
 										isDeprecatedInImplementedInterface = true;
 										break;

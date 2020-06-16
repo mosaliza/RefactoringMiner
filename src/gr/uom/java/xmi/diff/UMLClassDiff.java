@@ -44,14 +44,12 @@ public class UMLClassDiff extends UMLClassBaseDiff {
     		if(matchingAttribute == null) {
     			this.reportRemovedAttribute(attribute);
     		}
-    		else if(!attribute.equalsQualified(matchingAttribute)) {
-    			UMLAttributeDiff attributeDiff = new UMLAttributeDiff(attribute, matchingAttribute);
-				if(attributeDiff.isTypeChanged() || attributeDiff.isQualifiedTypeChanged()) {
-					ChangeAttributeTypeRefactoring ref = new ChangeAttributeTypeRefactoring(attribute.getVariableDeclaration(), matchingAttribute.getVariableDeclaration(), originalClass.getName(), nextClass.getName(),
-							VariableReferenceExtractor.findReferences(attribute.getVariableDeclaration(), matchingAttribute.getVariableDeclaration(), getOperationBodyMapperList()));
-					refactorings.add(ref);
-				}
-				this.attributeDiffList.add(attributeDiff);
+    		else {
+    			UMLAttributeDiff attributeDiff = new UMLAttributeDiff(attribute, matchingAttribute, getOperationBodyMapperList());
+    			if(!attributeDiff.isEmpty()) {
+	    			refactorings.addAll(attributeDiff.getRefactorings());
+	    			this.attributeDiffList.add(attributeDiff);
+    			}
     		}
     	}
     	for(UMLAttribute attribute : nextClass.getAttributes()) {
@@ -59,14 +57,12 @@ public class UMLClassDiff extends UMLClassBaseDiff {
     		if(matchingAttribute == null) {
     			this.reportAddedAttribute(attribute);
     		}
-    		else if(!attribute.equalsQualified(matchingAttribute)) {
-    			UMLAttributeDiff attributeDiff = new UMLAttributeDiff(matchingAttribute, attribute);
-				if(attributeDiff.isTypeChanged() || attributeDiff.isQualifiedTypeChanged()) {
-					ChangeAttributeTypeRefactoring ref = new ChangeAttributeTypeRefactoring(matchingAttribute.getVariableDeclaration(), attribute.getVariableDeclaration(), originalClass.getName(), nextClass.getName(),
-							VariableReferenceExtractor.findReferences(matchingAttribute.getVariableDeclaration(), attribute.getVariableDeclaration(), getOperationBodyMapperList()));
-					refactorings.add(ref);
-				}
-				this.attributeDiffList.add(attributeDiff);
+    		else {
+    			UMLAttributeDiff attributeDiff = new UMLAttributeDiff(matchingAttribute, attribute, getOperationBodyMapperList());
+    			if(!attributeDiff.isEmpty()) {
+	    			refactorings.addAll(attributeDiff.getRefactorings());
+					this.attributeDiffList.add(attributeDiff);
+    			}
     		}
     	}
 	}
@@ -172,12 +168,8 @@ public class UMLClassDiff extends UMLClassBaseDiff {
 			for(Iterator<UMLAttribute> addedAttributeIterator = addedAttributes.iterator(); addedAttributeIterator.hasNext();) {
 				UMLAttribute addedAttribute = addedAttributeIterator.next();
 				if(removedAttribute.getName().equals(addedAttribute.getName())) {
-					UMLAttributeDiff attributeDiff = new UMLAttributeDiff(removedAttribute, addedAttribute);
-					if(attributeDiff.isTypeChanged() || attributeDiff.isQualifiedTypeChanged()) {
-						ChangeAttributeTypeRefactoring ref = new ChangeAttributeTypeRefactoring(removedAttribute.getVariableDeclaration(), addedAttribute.getVariableDeclaration(), originalClass.getName(), nextClass.getName(),
-								VariableReferenceExtractor.findReferences(removedAttribute.getVariableDeclaration(), addedAttribute.getVariableDeclaration(), getOperationBodyMapperList()));
-						refactorings.add(ref);
-					}
+					UMLAttributeDiff attributeDiff = new UMLAttributeDiff(removedAttribute, addedAttribute, getOperationBodyMapperList());
+					refactorings.addAll(attributeDiff.getRefactorings());
 					addedAttributeIterator.remove();
 					removedAttributeIterator.remove();
 					attributeDiffList.add(attributeDiff);

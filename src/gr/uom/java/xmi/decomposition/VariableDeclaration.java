@@ -1,8 +1,13 @@
 package gr.uom.java.xmi.decomposition;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.IExtendedModifier;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
@@ -12,6 +17,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import gr.uom.java.xmi.LocationInfo;
 import gr.uom.java.xmi.LocationInfo.CodeElementType;
 import gr.uom.java.xmi.LocationInfoProvider;
+import gr.uom.java.xmi.UMLAnnotation;
 import gr.uom.java.xmi.UMLType;
 import gr.uom.java.xmi.VariableDeclarationProvider;
 import gr.uom.java.xmi.diff.CodeRange;
@@ -25,14 +31,36 @@ public class VariableDeclaration implements LocationInfoProvider, VariableDeclar
 	private boolean isParameter;
 	private boolean isAttribute;
 	private VariableScope scope;
+	private List<UMLAnnotation> annotations;
 	
 	public VariableDeclaration(CompilationUnit cu, String filePath, VariableDeclarationFragment fragment) {
+		this.annotations = new ArrayList<UMLAnnotation>();
+		List<IExtendedModifier> extendedModifiers = null;
+		if(fragment.getParent() instanceof VariableDeclarationStatement) {
+			VariableDeclarationStatement parent = (VariableDeclarationStatement)fragment.getParent();
+			extendedModifiers = parent.modifiers();
+		}
+		else if(fragment.getParent() instanceof VariableDeclarationExpression) {
+			VariableDeclarationExpression parent = (VariableDeclarationExpression)fragment.getParent();
+			extendedModifiers = parent.modifiers();
+		}
+		else if(fragment.getParent() instanceof FieldDeclaration) {
+			FieldDeclaration parent = (FieldDeclaration)fragment.getParent();
+			extendedModifiers = parent.modifiers();
+		}
+		if(extendedModifiers != null) {
+			for(IExtendedModifier extendedModifier : extendedModifiers) {
+				if(extendedModifier.isAnnotation()) {
+					Annotation annotation = (Annotation)extendedModifier;
+					this.annotations.add(new UMLAnnotation(cu, filePath, annotation));
+				}
+			}
+		}
 		this.locationInfo = new LocationInfo(cu, filePath, fragment, extractVariableDeclarationType(fragment));
 		this.variableName = fragment.getName().getIdentifier();
 		this.initializer = fragment.getInitializer() != null ? new AbstractExpression(cu, filePath, fragment.getInitializer(), CodeElementType.VARIABLE_DECLARATION_INITIALIZER) : null;
 		Type astType = extractType(fragment);
-		this.type = UMLType.extractTypeObject(UMLType.getTypeName(astType, fragment.getExtraDimensions()),
-				new LocationInfo(cu, filePath, astType, CodeElementType.TYPE));
+		this.type = UMLType.extractTypeObject(cu, filePath, astType, fragment.getExtraDimensions());
 		ASTNode scopeNode = getScopeNode(fragment);
 		int startOffset = 0;
 		if(locationInfo.getCodeElementType().equals(CodeElementType.FIELD_DECLARATION)) {
@@ -47,12 +75,19 @@ public class VariableDeclaration implements LocationInfoProvider, VariableDeclar
 	}
 
 	public VariableDeclaration(CompilationUnit cu, String filePath, SingleVariableDeclaration fragment) {
+		this.annotations = new ArrayList<UMLAnnotation>();
+		List<IExtendedModifier> extendedModifiers = fragment.modifiers();
+		for(IExtendedModifier extendedModifier : extendedModifiers) {
+			if(extendedModifier.isAnnotation()) {
+				Annotation annotation = (Annotation)extendedModifier;
+				this.annotations.add(new UMLAnnotation(cu, filePath, annotation));
+			}
+		}
 		this.locationInfo = new LocationInfo(cu, filePath, fragment, extractVariableDeclarationType(fragment));
 		this.variableName = fragment.getName().getIdentifier();
 		this.initializer = fragment.getInitializer() != null ? new AbstractExpression(cu, filePath, fragment.getInitializer(), CodeElementType.VARIABLE_DECLARATION_INITIALIZER) : null;
 		Type astType = extractType(fragment);
-		this.type = UMLType.extractTypeObject(UMLType.getTypeName(astType, fragment.getExtraDimensions()),
-				new LocationInfo(cu, filePath, astType, CodeElementType.TYPE));
+		this.type = UMLType.extractTypeObject(cu, filePath, astType, fragment.getExtraDimensions());
 		int startOffset = fragment.getStartPosition();
 		ASTNode scopeNode = getScopeNode(fragment);
 		int endOffset = scopeNode.getStartPosition() + scopeNode.getLength();
@@ -98,6 +133,10 @@ public class VariableDeclaration implements LocationInfoProvider, VariableDeclar
 
 	public boolean isVarargsParameter() {
 		return varargsParameter;
+	}
+
+	public List<UMLAnnotation> getAnnotations() {
+		return annotations;
 	}
 
 	@Override

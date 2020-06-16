@@ -162,11 +162,9 @@ public class UMLModelDiff {
       }
       return null;
    }
-   
    public List<UMLClassDiff> getCommonClassDiffList(){
 	  return commonClassDiffList; 
    }
-
    private UMLClassBaseDiff getUMLClassDiffWithAttribute(Replacement pattern) {
       for(UMLClassDiff classDiff : commonClassDiffList) {
          if(classDiff.findAttributeInOriginalClass(pattern.getBefore()) != null &&
@@ -353,7 +351,6 @@ public class UMLModelDiff {
    public List<UMLClass> getAddedClasses(){
 	   return addedClasses;
    }
-
    public UMLClass getRemovedClass(String className) {
       for(UMLClass umlClass : removedClasses) {
          if(umlClass.getName().equals(className))
@@ -619,7 +616,67 @@ public class UMLModelDiff {
 			   processCandidates(candidates, refactorings);
 		   }
 	   }
-      return refactorings;
+	   return filterOutDuplicateRefactorings(refactorings);
+   }
+
+   private List<MoveAttributeRefactoring> filterOutDuplicateRefactorings(List<MoveAttributeRefactoring> refactorings) {
+	   List<MoveAttributeRefactoring> filtered = new ArrayList<MoveAttributeRefactoring>();
+	   Map<String, List<MoveAttributeRefactoring>> map = new LinkedHashMap<String, List<MoveAttributeRefactoring>>();
+	   for(MoveAttributeRefactoring ref : refactorings) {
+		   if(map.containsKey(ref.toString())) {
+			   map.get(ref.toString()).add(ref);
+		   }
+		   else {
+			   List<MoveAttributeRefactoring> refs = new ArrayList<MoveAttributeRefactoring>();
+			   refs.add(ref);
+			   map.put(ref.toString(), refs);
+		   }
+	   }
+	   for(String key : map.keySet()) {
+		   List<MoveAttributeRefactoring> refs = map.get(key);
+		   if(refs.size() == 1) {
+			   filtered.addAll(refs);
+		   }
+		   else {
+			   filtered.addAll(filterOutBasedOnFilePath(refs));
+		   }
+	   }
+	   return filtered;
+   }
+
+   private List<MoveAttributeRefactoring> filterOutBasedOnFilePath(List<MoveAttributeRefactoring> refs) {
+	   List<MoveAttributeRefactoring> filtered = new ArrayList<MoveAttributeRefactoring>();
+	   Map<String, List<MoveAttributeRefactoring>> groupBySourceFilePath = new LinkedHashMap<String, List<MoveAttributeRefactoring>>();
+	   for(MoveAttributeRefactoring ref : refs) {
+		   String sourceFilePath = ref.getOriginalAttribute().getLocationInfo().getFilePath();
+		   if(groupBySourceFilePath.containsKey(sourceFilePath)) {
+			   groupBySourceFilePath.get(sourceFilePath).add(ref);
+		   }
+		   else {
+			   List<MoveAttributeRefactoring> refs2 = new ArrayList<MoveAttributeRefactoring>();
+			   refs2.add(ref);
+			   groupBySourceFilePath.put(sourceFilePath, refs2);
+		   }
+	   }
+	   for(String sourceFilePath : groupBySourceFilePath.keySet()) {
+		   List<MoveAttributeRefactoring> sourceFilePathGroup = groupBySourceFilePath.get(sourceFilePath);
+		   TreeMap<Integer, List<MoveAttributeRefactoring>> groupByLongestCommonSourceFilePath = new TreeMap<Integer, List<MoveAttributeRefactoring>>();
+		   for(MoveAttributeRefactoring ref : sourceFilePathGroup) {
+			   String longestCommonFilePathPrefix = PrefixSuffixUtils.longestCommonPrefix(ref.getOriginalAttribute().getLocationInfo().getFilePath(),
+					   ref.getMovedAttribute().getLocationInfo().getFilePath());
+			   int length = longestCommonFilePathPrefix.length();
+			   if(groupByLongestCommonSourceFilePath.containsKey(length)) {
+				   groupByLongestCommonSourceFilePath.get(length).add(ref);
+			   }
+			   else {
+				   List<MoveAttributeRefactoring> refs2 = new ArrayList<MoveAttributeRefactoring>();
+				   refs2.add(ref);
+				   groupByLongestCommonSourceFilePath.put(length, refs2);
+			   }
+		   }
+		   filtered.addAll(groupByLongestCommonSourceFilePath.lastEntry().getValue());
+	   }
+	   return filtered;
    }
 
    private void processCandidates(List<MoveAttributeRefactoring> candidates, List<MoveAttributeRefactoring> refactorings) {
@@ -826,6 +883,23 @@ public class UMLModelDiff {
       List<UMLOperation> removedOperations = new ArrayList<UMLOperation>();
       for(UMLClassDiff classDiff : commonClassDiffList) {
          removedOperations.addAll(classDiff.getRemovedOperations());
+      }
+      return removedOperations;
+   }
+
+   private List<UMLOperation> getRemovedOperationsInCommonMovedRenamedClasses() {
+      List<UMLOperation> removedOperations = new ArrayList<UMLOperation>();
+      for(UMLClassDiff classDiff : commonClassDiffList) {
+         removedOperations.addAll(classDiff.getRemovedOperations());
+      }
+      for(UMLClassMoveDiff classDiff : classMoveDiffList) {
+    	  removedOperations.addAll(classDiff.getRemovedOperations());
+      }
+      for(UMLClassMoveDiff classDiff : innerClassMoveDiffList) {
+    	  removedOperations.addAll(classDiff.getRemovedOperations());
+      }
+      for(UMLClassRenameDiff classDiff : classRenameDiffList) {
+    	  removedOperations.addAll(classDiff.getRemovedOperations());
       }
       return removedOperations;
    }
@@ -1297,17 +1371,10 @@ public class UMLModelDiff {
 					 if(!diff.getOriginalClass().containsAttributeWithName(pattern.getAfter()) &&
 								!diff.getNextClass().containsAttributeWithName(pattern.getBefore()) &&
 								!attributeMerged(a1, a2, refactorings)) {
-						 RenameAttributeRefactoring ref = new RenameAttributeRefactoring(a1.getVariableDeclaration(), a2.getVariableDeclaration(),
-								 diff.getOriginalClassName(), diff.getNextClassName(), set);
-						 if(!refactorings.contains(ref)) {
-							 refactorings.add(ref);
-							 if(!a1.getVariableDeclaration().getType().equals(a2.getVariableDeclaration().getType()) || !a1.getVariableDeclaration().getType().equalsQualified(a2.getVariableDeclaration().getType())) {
-									ChangeAttributeTypeRefactoring refactoring = new ChangeAttributeTypeRefactoring(a1.getVariableDeclaration(), a2.getVariableDeclaration(),
-											diff.getOriginalClassName(), diff.getNextClassName(),
-											VariableReferenceExtractor.findReferences(a1.getVariableDeclaration(), a2.getVariableDeclaration(), diff.getOperationBodyMapperList()));
-									refactoring.addRelatedRefactoring(ref);
-									refactorings.add(refactoring);
-								}
+						 UMLAttributeDiff attributeDiff = new UMLAttributeDiff(a1, a2, diff.getOperationBodyMapperList());
+						 Set<Refactoring> attributeDiffRefactorings = attributeDiff.getRefactorings(set);
+						 if(!refactorings.containsAll(attributeDiffRefactorings)) {
+							 refactorings.addAll(attributeDiffRefactorings);
 							 break;//it's not necessary to repeat the same process for all candidates in the set
 						 }
 					 }
@@ -1952,7 +2019,7 @@ public class UMLModelDiff {
 
    private void checkForOperationMovesBetweenCommonClasses() throws RefactoringMinerTimedOutException {
       List<UMLOperation> addedOperations = getAddedAndExtractedOperationsInCommonClasses();
-      List<UMLOperation> removedOperations = getRemovedOperationsInCommonClasses();
+      List<UMLOperation> removedOperations = getRemovedOperationsInCommonMovedRenamedClasses();
       if(removedOperations.size() <= MAXIMUM_NUMBER_OF_COMPARED_METHODS || addedOperations.size() <= MAXIMUM_NUMBER_OF_COMPARED_METHODS) {
     	  checkForOperationMoves(addedOperations, removedOperations);
       }
