@@ -321,7 +321,11 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
-	} ]
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
+	}]
 }
 ]},{	"repository": "https://github.com/CyanogenMod/android_frameworks_base.git",
 	"sha1": "4587c32ab8a1c8e2169e4f93491a8c927216a6ab",
@@ -347,7 +351,8 @@
 	"description": "Extract Method public stringToPattern(string String, size byte) : List<LockPatternView.Cell> extracted from public stringToPattern(string String) : List<LockPatternView.Cell> in class com.android.internal.widget.LockPatternUtils",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 },
 {
@@ -355,7 +360,8 @@
 	"description": "Extract Method public of(cells Cell[][], row int, column int, size byte) : Cell extracted from public of(row int, column int, size byte) : Cell in class com.android.internal.widget.LockPatternView.Cell",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/CyanogenMod/android_frameworks_base.git",
@@ -568,6 +574,10 @@
 	"motivations": [ 
 	{ 
                 "label": "EM: Introduce alternative method signature",
+                "status": "match1"
+	},
+	{ 
+                "label": "EM: Improve testability",
                 "status": "match1"
 	} ]
 }
@@ -2236,6 +2246,10 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/phishman3579/java-algorithms-implementation.git",
@@ -2387,6 +2401,10 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 },
 {
@@ -2396,6 +2414,10 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/cwensel/cascading.git",
@@ -2406,8 +2428,9 @@
 	"description": "Extract Method protected logWarn(message String, arguments Object...) : void extracted from protected fireListeners(fromStatus CascadingStats.Status, toStatus CascadingStats.Status) : void in class cascading.stats.CascadingStats",
 	"motivations": [ 
 	{ 
-
-	} ]
+                "label": "EM: Extract reusable method",
+                "status": "match1"
+	}]
 },
 {
 	"type": "Extract Variable",
@@ -2731,6 +2754,10 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match1"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 },
 {
@@ -2770,6 +2797,10 @@
 	"motivations": [ 
 	{ 
                 "label": "EM: Introduce alternative method signature",
+                "status": "match1"
+	},
+	{ 
+                "label": "EM: Improve testability",
                 "status": "match1"
 	} ]
 },
@@ -3472,14 +3503,19 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match2"
+	},
+	{
+		"label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
 	"type": "Extract Method",
 	"description": "Extract Method private mockPropertySource(name String, value String) : MockPropertySource extracted from public differentEventTypes() : void in class org.springframework.boot.actuate.system.ApplicationPidFileWriterTests",
 	"motivations": [ 
-	{ 
-
+	{
+		"label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -3489,6 +3525,10 @@
 	{ 
                 "label": "EM: Decompose method to improve readability",
                 "status": "match2"
+	},
+	{
+		"label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -3498,14 +3538,19 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match2"
+	},
+	{
+		"label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
 	"type": "Extract Method",
 	"description": "Extract Method private mockPropertySource(name String, value String) : MockPropertySource extracted from public overridePidFileWithSpring() : void in class org.springframework.boot.actuate.system.ApplicationPidFileWriterTests",
 	"motivations": [ 
-	{ 
-
+	{
+		"label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -5896,7 +5941,12 @@
 	"description": "Extract Method private propertyConstraint(type Class<Rule>, labelId int, propertyKeyId int) : Rule extracted from public uniquenessConstraint(labelId int, propertyKeyId int) : UniquenessConstraintRule in class org.neo4j.kernel.impl.store.SchemaStorage",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match1"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 },
 {
@@ -6737,6 +6787,10 @@
 	{ 
                 "label": "EM: Remove duplication",
                 "status": "match2"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 },
 {
@@ -6746,6 +6800,10 @@
 	{ 
                 "label": "EM: Remove duplication",
                 "status": "match2"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 },
 {
@@ -6951,6 +7009,10 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match2"
+	},
+	{
+		"label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -8823,6 +8885,10 @@
 	{ 
 		"label": "EM: Introduce alternative method signature",
 		"status": "match2"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/bennidi/mbassador.git",
@@ -9510,7 +9576,8 @@
 	"description": "Extract Method public get(buildTarget BuildTarget, eventBus Optional<BuckEventBus>) : TargetNode<?> extracted from public get(buildTarget BuildTarget) : TargetNode<?> in class com.facebook.buck.parser.Parser.CachedState",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/facebook/buck.git",
@@ -9557,8 +9624,9 @@
 	"description": "Extract Method package getEnumerator(rType RType) : ResourceIdEnumerator extracted from public addIntResourceIfNotPresent(rType RType, name String) : void in class com.facebook.buck.android.aapt.AaptResourceCollector",
 	"motivations": [ 
 	{ 
-
-	} ]
+                "label": "EM: Extract reusable method",
+                "status": "match1"
+	}]
 }
 ]},{	"repository": "https://github.com/facebook/buck.git",
 	"sha1": "6ed4cf9e83fe24fc6ab6fc9ebede016c777c9725",
@@ -10593,7 +10661,8 @@
 	"description": "Extract Method private millis(temporal Temporal) : long extracted from public from(from Object) : U in class org.jooq.tools.Convert.ConvertAll",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Remove duplication",
+                "status": "match2"
 	} ]
 },
 {
@@ -10601,7 +10670,8 @@
 	"description": "Extract Method private millis(temporal Temporal) : long extracted from public from(from Object) : U in class org.jooq.tools.Convert.ConvertAll",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Remove duplication",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/jOOQ/jOOQ.git",
@@ -10614,6 +10684,10 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
+	},
+	{
+		"label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -10632,6 +10706,10 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
+	},
+	{
+		"label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -10641,6 +10719,10 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
+	},
+	{
+		"label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -10668,6 +10750,10 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
+	},
+	{
+		"label": "EM: Introduce factory method",
+                "status": "match1"
 	} ]
 },
 {
@@ -10710,6 +10796,10 @@
 	{ 
                 "label": "EM: Facilitate extension",
                 "status": "match2"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 },
 {
@@ -10728,7 +10818,8 @@
 	"description": "Extract Method public startInsertMode(editorContext EditorContext, anchorCell EditorCell, insertBefore boolean) : void extracted from public insertNewChild(editorContext EditorContext, anchorCell EditorCell, insertBefore boolean) : void in class jetbrains.mps.nodeEditor.cellProviders.AbstractCellListHandler",
 	"motivations": [ 
 	{ 
-
+ 			"label": "EM: Replace method keeping backward compatibility",
+            "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/infinispan/infinispan.git",
@@ -11329,9 +11420,11 @@
 	"type": "Extract Method",
 	"description": "Extract Method protected initPriorityQueue(kBase InternalKnowledgeBase) : BinaryHeapQueue extracted from public AgendaGroupQueueImpl(name String, kBase InternalKnowledgeBase) in class org.drools.core.common.AgendaGroupQueueImpl",
 	"motivations": [ 
-	{ 
-
-	} ]
+	{
+		"label": "EM: Introduce factory method",
+                "status": "match1"
+	}
+	]
 },
 {
 	"type": "Change Attribute Type",
@@ -11494,7 +11587,9 @@
 	"description": "Extract And Move Method public add(handle EventFactHandle) : void extracted from public assertFact(context Object, fact InternalFactHandle, pctx PropagationContext, workingMemory InternalWorkingMemory) : boolean in class org.drools.core.rule.SlidingTimeWindow & moved to class org.drools.core.rule.SlidingTimeWindow.SlidingTimeWindowContext",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match2"
+				
 	} ]
 },
 {
@@ -11502,8 +11597,10 @@
 	"description": "Extract And Move Method public remove(handle EventFactHandle) : void extracted from public retractFact(context Object, fact InternalFactHandle, pctx PropagationContext, workingMemory InternalWorkingMemory) : void in class org.drools.core.rule.SlidingTimeWindow & moved to class org.drools.core.rule.SlidingTimeWindow.SlidingTimeWindowContext",
 	"motivations": [ 
 	{ 
-
-	} ]
+                "label": "EM: Extract reusable method",
+                "status": "match2"
+				
+	}]
 },
 {
 	"type": "Extract And Move Method",
@@ -11565,6 +11662,10 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "add"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/bitcoinj/bitcoinj.git",
@@ -11713,6 +11814,10 @@
 	{ 
                 "label": "EM: Enable overriding",
                 "status": "match1"
+	},
+	{ 
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 },
 {
@@ -12720,6 +12825,10 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match1"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 },
 {
@@ -13233,6 +13342,10 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/apache/cassandra.git",
@@ -15103,6 +15216,10 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/amplab/tachyon.git",
@@ -15269,6 +15386,10 @@
 	{ 
                 "label": "EM: Remove duplication",
                 "status": "match2"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 },
 {
@@ -15278,6 +15399,10 @@
 	{ 
                 "label": "EM: Remove duplication",
                 "status": "match2"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/MovingBlocks/Terasology.git",
@@ -16285,7 +16410,8 @@
 	"description": "Extract Method protected failedSubscribe(s Subscriber<? super T>, t Throwable) : void extracted from public subscribe(s Subscriber<? super T>) : void in class co.paralleluniverse.strands.channels.reactivestreams.ChannelPublisher",
 	"motivations": [ 
 	{ 
-	
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 },
 {
@@ -16784,6 +16910,10 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match1"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 },
 {
@@ -16802,8 +16932,9 @@
 	"description": "Extract Method protected createJobRawOutput(job Job) : String extracted from protected createJob(job Job) : JobId in class com.spotify.helios.system.SystemTestBase",
 	"motivations": [ 
 	{ 
-
-	} ]
+                "label": "EM: Improve testability",
+                "status": "match1"
+	}]
 }
 ]},{	"repository": "https://github.com/SlimeKnights/TinkersConstruct.git",
 	"sha1": "71820e573134be3fad3935035249cd77c4412f4e",
@@ -17144,7 +17275,8 @@
 	"description": "Extract Method private getNormalValue(r Random, magnitude double, min long, max long) : long extracted from private fillTable(client Client, tbl String) : void in class org.voltdb.regressionsuites.TestApproxCountDistinctSuite",
 	"motivations": [ 
 	{ 
-
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/mongodb/morphia.git",
