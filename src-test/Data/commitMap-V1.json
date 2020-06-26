@@ -17219,10 +17219,6 @@
 	"description": "Extract Method public hasSize(size int) : SymbolTableAssert extracted from public isEmpty() : SymbolTableAssert in class org.voltdb.sqlparser.symtab.SymbolTableAssert",
 	"motivations": [ 
             {
-                "label": "EM: Improve testability",
-                "status": "match1"
-            },
-            {
                 "label": "EM: Introduce alternative method signature",
                 "status": "match1"
             } ]

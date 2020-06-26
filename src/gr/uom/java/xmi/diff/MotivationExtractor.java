@@ -40,6 +40,7 @@ import gr.uom.java.xmi.decomposition.StatementObject;
 import gr.uom.java.xmi.decomposition.TernaryOperatorExpression;
 import gr.uom.java.xmi.decomposition.UMLOperationBodyMapper;
 import gr.uom.java.xmi.decomposition.VariableDeclaration;
+import gr.uom.java.xmi.decomposition.replacement.MethodInvocationReplacement;
 
 public class MotivationExtractor {
 	private UMLModelDiff modelDiff;
@@ -657,35 +658,59 @@ public class MotivationExtractor {
 	
 	private boolean isExtractedToImproveTestability(Refactoring ref) {
 		List<UMLOperation> operationsTestingExtractedOperation = new ArrayList<UMLOperation>();
-		if(ref instanceof ExtractOperationRefactoring) {
-			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
+		if (ref instanceof ExtractOperationRefactoring) {
+			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring) ref;
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
-			for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
+			for (UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
 				UMLClass nextClass = classDiff.getNextClass();
-				isOperationTestedInClass(nextClass, extractedOperation, operationsTestingExtractedOperation , extractOpRefactoring);
+				isOperationTestedInClass(nextClass, extractedOperation, operationsTestingExtractedOperation,
+						extractOpRefactoring , classDiff);
 			}
-			for(UMLClass addedClass : modelDiff.getAddedClasses()) {
-				isOperationTestedInClass(addedClass, extractedOperation, operationsTestingExtractedOperation, extractOpRefactoring);
+			for (UMLClass addedClass : modelDiff.getAddedClasses()) {
+				isOperationTestedInClass(addedClass, extractedOperation, operationsTestingExtractedOperation,
+						extractOpRefactoring , null);
 			}
 		}
-		if(operationsTestingExtractedOperation.size() > 0)
+		if (operationsTestingExtractedOperation.size() > 0) {
 			return true;
+		}
 		return false;
 	}
 
 	private void isOperationTestedInClass(UMLClass nextClass, UMLOperation extractedOperation,
-			List<UMLOperation> operationsTestingExtractedOperation , ExtractOperationRefactoring extractOpRefactoring) {
+			List<UMLOperation> operationsTestingExtractedOperation, ExtractOperationRefactoring extractOpRefactoring,
+			UMLClassDiff classDiff) {
 		String extractedOperationClassName = extractOpRefactoring.getExtractedOperation().getClassName();
-		if(!nextClass.getName().equals(extractedOperationClassName)) {
-			for(UMLOperation operation : nextClass.getOperations()) {
-				if(operation.hasTestAnnotation() || operation.getName().startsWith("test") || nextClass.isTestClass()) {
-					for(OperationInvocation invocation : operation.getAllOperationInvocations()) {
-						if(invocation.matchesOperation(extractedOperation, operation.variableTypeMap(), modelDiff)) {
-							operationsTestingExtractedOperation.add(operation);
+		if (!nextClass.getName().equals(extractedOperationClassName)) {
+			for (UMLOperation operation : nextClass.getOperations()) {
+				if (operation.hasTestAnnotation() || operation.getName().startsWith("test")
+						|| nextClass.isTestClass()) {
+					for (OperationInvocation invocation : operation.getAllOperationInvocations()) {
+						if (invocation.matchesOperation(extractedOperation, operation.variableTypeMap(), modelDiff)) {
+							if(classDiff == null) {
+								//classDiff is null when we have an added class and therefore invocation is in added operation.
+								operationsTestingExtractedOperation.add(operation);	
+							}else {
+								//In the case of modified classes
+								//1st: Check added operations in modified class
+								if(classDiff.addedOperations.contains(operation)) {
+									operationsTestingExtractedOperation.add(operation);
+								}
+								//2md:Check edited operations for elements that call extracted operation
+								List<UMLOperationBodyMapper> umlBodyMappers = classDiff.getOperationBodyMapperList();
+								for (UMLOperationBodyMapper bodyMapper : umlBodyMappers) {
+									if (bodyMapper.getOperation2().equalSignature(operation)) {
+										if(bodyMapper.nonMappedElementsT2CallingAddedOperation(Arrays.asList(extractedOperation)) > 0) {
+											//Added Element T2 in Test Operation is calling extracted operation
+											operationsTestingExtractedOperation.add(operation);
+										}
+									}
+								}
+							}
 						}
 					}
 				}
-			}	
+			}
 		}
 	}
 
