@@ -1726,11 +1726,7 @@
             {
                 "label": "EM: Facilitate extension",
                 "status": "match1"
-            },			
-			{
-				"label": "EM: Decompose method to improve readability",
-                "status": "match1"
-			}
+            }
 			]
 },
 {
@@ -7424,10 +7420,6 @@
 	"type": "Extract Method",
 	"description": "Extract Method protected changeSignBasedOnFirstNoneZeroValue() : void extracted from public runIterations(maxNrIterations int) : int in class org.neo4j.graphalgo.impl.centrality.EigenvectorCentralityBase",
 	"motivations": [ 
-	{ 
-			"label": "EM: Remove duplication",
-			"status": "match2"
-	},
 	{
 			"label": "EM: Facilitate extension",
 			"status": "match1"
@@ -13639,11 +13631,7 @@
 	{ 
                 "label": "EM: Facilitate extension",
                 "status": "match1"
-	},
-	{
-	         "label": "EM: Remove duplication",
-                "status": "match2"
-	}	]
+	}]
 },
 {
 	"type": "Extract Method",
@@ -13652,11 +13640,7 @@
 	{ 
                 "label": "EM: Facilitate extension",
                 "status": "match1"
-	},
-	{
-	         "label": "EM: Remove duplication",
-                "status": "match2"
-	} ]
+	}]
 },
 {
 	"type": "Extract And Move Method",
@@ -13665,10 +13649,6 @@
 	{ 
                 "label": "EM: Facilitate extension",
                 "status": "match1"
-	},
-	{
-	         "label": "EM: Remove duplication",
-                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/apache/cassandra.git",
@@ -16708,11 +16688,7 @@
 	{
                 "label": "EM: Facilitate extension",
                 "status": "match1"
-	},
-	{
-	            "label": "EM: Remove duplication",
-                "status": "match2"
-	}	]
+	}]
 },
 {
 	"type": "Extract Method",
@@ -16721,10 +16697,6 @@
 	{
                 "label": "EM: Facilitate extension",
                 "status": "match1"
-	},
-	{
-	            "label": "EM: Remove duplication",
-                "status": "match2"
 	}	]
 }
 ]},{	"repository": "https://github.com/JetBrains/intellij-community.git",

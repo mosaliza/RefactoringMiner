@@ -272,7 +272,7 @@ public class MotivationExtractor {
 		//Motivation Detection algorithms that can detect the motivation independently for each refactoring
 		for(Refactoring ref : listRef) {
 			if(isExtractFacilitateExtension(ref,listRef)){
-					setRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);					
+				setRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
 			}
 			if(isIntroduceAlternativeMethodSignature(ref)) {
 				if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)) {
@@ -340,6 +340,11 @@ public class MotivationExtractor {
 		}
 		
 		postProcessingForIsExtractFacilitateExtension(listRef);
+		for(Refactoring ref : listRef) {
+			if(isMotivationDetected(ref, MotivationType.EM_FACILITATE_EXTENSION)){
+				removeRefactoringMotivation(MotivationType.EM_REMOVE_DUPLICATION, ref);
+			}
+		}
 		//Print All detected refactorings
 		printDetectedRefactoringMotivations();			
 	}
