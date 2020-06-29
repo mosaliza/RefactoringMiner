@@ -318,14 +318,17 @@ public class MotivationExtractor {
 			if(isExtractedtoIntroduceAsyncOperation(ref)) {
 				setRefactoringMotivation(MotivationType.EM_INTRODUCE_ASYNC_OPERATION, ref);
 			}
-			if(isExtractedToIntroduceFactoryMethod(ref)) {
-				setRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
-				removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
-				removeRefactoringMotivation(MotivationType.EM_REMOVE_DUPLICATION, ref);
-				//Removing Reusable method when it is Introduce Factory method and Introduce alternative method signature.
-				if(isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
-					removeRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
-				}
+			if(!isMotivationDetected(ref, MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY) 
+					&& !isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)){
+				if(isExtractedToIntroduceFactoryMethod(ref)) {
+					setRefactoringMotivation(MotivationType.EM_INTRODUCE_FACTORY_METHOD, ref);
+					removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+					removeRefactoringMotivation(MotivationType.EM_REMOVE_DUPLICATION, ref);
+					//Removing Reusable method when it is Introduce Factory method and Introduce alternative method signature.
+					if(isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
+						removeRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
+					}
+				}	
 			}
 			if(isExtractedToEnableOverriding(ref)) {
 				if(!isMotivationDetected(ref, MotivationType.EM_REMOVE_DUPLICATION)
@@ -406,80 +409,92 @@ public class MotivationExtractor {
 		if(ref instanceof ExtractOperationRefactoring) {
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring) ref;
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
-			List<VariableDeclaration> listVariableDeclerations = extractedOperation.getAllVariableDeclarations();
-			List<ObjectCreation> listReturnTypeObjectsCreatedInReturnStatement = new ArrayList<ObjectCreation>();
-			UMLParameter returnParameter =  extractedOperation.getReturnParameter();
-			UMLType returnParameterType = returnParameter.getType();
-			List<String> returnStatementVariables = new ArrayList<String>();
-			Map<String ,List<ObjectCreation>> returnStatementobjectCreationsMap = new HashMap<String,List<ObjectCreation>>();		
-			for(AbstractStatement statement : extractedOperation.getBody().getCompositeStatement().getStatements()) {
-				if (statement.getLocationInfo().getCodeElementType().equals(CodeElementType.RETURN_STATEMENT)) {
-					returnStatementVariables = statement.getVariables();
-					returnStatementobjectCreationsMap = statement.getCreationMap();
-					for(String objectCreationString : returnStatementobjectCreationsMap.keySet()) {
-						//if(!isStatementInMappings(objectCreationString, extractOpRefactoring)) {
-							List<ObjectCreation> listObjectCreation = returnStatementobjectCreationsMap.get(objectCreationString);
-							for(ObjectCreation objectCreation: listObjectCreation) {
-								String statementWithoutObjectCreation = statement.toString().replace(objectCreationString, "").replace(";","");
-								boolean isOnlyObjectCreation = statementWithoutObjectCreation.trim().equals("return")?true:false;
-								if(objectCreation.getType().equalClassType(returnParameterType) ||
-										returnParameterType.equalsWithSubType(objectCreation.getType()) || isOnlyObjectCreation) {
-									listReturnTypeObjectsCreatedInReturnStatement.add(objectCreation);
-								}
-							}	
-						//}
-					}
-					if(listReturnTypeObjectsCreatedInReturnStatement.size() == 1) {
-						return true;							
-					}
-				}
+			UMLOperation sourceOperationBeforeExtraction = extractOpRefactoring.getSourceOperationBeforeExtraction();
+			if(isUMLOperationFactoryMethod(extractedOperation) && !isUMLOperationFactoryMethod(sourceOperationBeforeExtraction) ) {
+				return true;
 			}
-			//Find All the Variable Declerations(that are Object Creation) with same Type as return parameter
-			Map<String ,List<ObjectCreation>> abstractExpressionObjectCreationsMap = new HashMap<String,List<ObjectCreation>>();
-			List<ObjectCreation> abstractExpressionObjectCreations = new ArrayList<ObjectCreation>();
-			List<VariableDeclaration> listObjectCreationVariableDeclerationsWithReturnType = new ArrayList<VariableDeclaration>();
-			Map<UMLType,List<String>> variableTypeNameMap = new HashMap<UMLType, List<String>>();
-			for(VariableDeclaration variableDecleration: listVariableDeclerations){
-				if(variableDecleration.getInitializer() != null) {
-					AbstractExpression abstractExpression = variableDecleration.getInitializer();
-					abstractExpressionObjectCreationsMap = abstractExpression.getCreationMap();
-					for(String objectCreationString : abstractExpressionObjectCreationsMap.keySet()) {
-						//ObjectCreation statement should not be in the mappings 
-						//if(!isStatementInMappings(objectCreationString, extractOpRefactoring)) {
-							abstractExpressionObjectCreations = abstractExpressionObjectCreationsMap.get(objectCreationString);
-							for(ObjectCreation objectCreation: abstractExpressionObjectCreations) {
-								if(objectCreation.getType().equalClassType(returnParameterType) ||
-										returnParameterType.equalsWithSubType(objectCreation.getType())) {
-									listObjectCreationVariableDeclerationsWithReturnType.add(variableDecleration);
-								}
-							}	
-							for(VariableDeclaration objectCreationVariableDecleration :listObjectCreationVariableDeclerationsWithReturnType){
-								if(variableTypeNameMap.containsKey(variableDecleration.getType())) {
-									variableTypeNameMap.get(objectCreationVariableDecleration.getType()).add(objectCreationVariableDecleration.getVariableName());
-								}else {
-									List<String> variableNames  = new ArrayList<String>();
-									variableNames.add(objectCreationVariableDecleration.getVariableName());
-									variableTypeNameMap.put(objectCreationVariableDecleration.getType(), variableNames);						
-								}
+		}
+		return false;
+	}
+	private boolean isUMLOperationFactoryMethod(UMLOperation umlOperation) {
+		
+		List<VariableDeclaration> listVariableDeclerations = umlOperation.getAllVariableDeclarations();
+		List<ObjectCreation> listReturnTypeObjectsCreatedInReturnStatement = new ArrayList<ObjectCreation>();
+		UMLParameter returnParameter =  umlOperation.getReturnParameter();
+		if (returnParameter == null) {
+			return false;
+		}
+		UMLType returnParameterType = returnParameter.getType();
+		List<String> returnStatementVariables = new ArrayList<String>();
+		Map<String ,List<ObjectCreation>> returnStatementobjectCreationsMap = new HashMap<String,List<ObjectCreation>>();		
+		for(AbstractStatement statement : umlOperation.getBody().getCompositeStatement().getStatements()) {
+			if (statement.getLocationInfo().getCodeElementType().equals(CodeElementType.RETURN_STATEMENT)) {
+				returnStatementVariables = statement.getVariables();
+				returnStatementobjectCreationsMap = statement.getCreationMap();
+				for(String objectCreationString : returnStatementobjectCreationsMap.keySet()) {
+					//if(!isStatementInMappings(objectCreationString, extractOpRefactoring)) {
+						List<ObjectCreation> listObjectCreation = returnStatementobjectCreationsMap.get(objectCreationString);
+						for(ObjectCreation objectCreation: listObjectCreation) {
+							String statementWithoutObjectCreation = statement.toString().replace(objectCreationString, "").replace(";","");
+							boolean isOnlyObjectCreation = statementWithoutObjectCreation.trim().equals("return")?true:false;
+							if(objectCreation.getType().equalClassType(returnParameterType) ||
+									returnParameterType.equalsWithSubType(objectCreation.getType()) || isOnlyObjectCreation) {
+								listReturnTypeObjectsCreatedInReturnStatement.add(objectCreation);
 							}
-					//	}
-					}			
+						}	
+					//}
 				}
-			}
-			//Check if return statement returns a Variable Declerations(that are Object Creation) with Return parameter type
-			for(UMLType type : variableTypeNameMap.keySet()) {
-				List<String> variableNames = variableTypeNameMap.get(type);
-				for(String variableName : variableNames) {
-					if( returnStatementVariables.size() == 1 && returnStatementVariables.contains(variableName)){
-						//Check if all statements in the Extracted Operation are object creation related
-						if(isAllStatementsObjectCreationRelated(extractedOperation,listObjectCreationVariableDeclerationsWithReturnType))
-						{
-							return true;							
-						}
-					}	
+				if(listReturnTypeObjectsCreatedInReturnStatement.size() == 1) {
+					return true;							
 				}
 			}
 		}
+		//Find All the Variable Declerations(that are Object Creation) with same Type as return parameter
+		Map<String ,List<ObjectCreation>> abstractExpressionObjectCreationsMap = new HashMap<String,List<ObjectCreation>>();
+		List<ObjectCreation> abstractExpressionObjectCreations = new ArrayList<ObjectCreation>();
+		List<VariableDeclaration> listObjectCreationVariableDeclerationsWithReturnType = new ArrayList<VariableDeclaration>();
+		Map<UMLType,List<String>> variableTypeNameMap = new HashMap<UMLType, List<String>>();
+		for(VariableDeclaration variableDecleration: listVariableDeclerations){
+			if(variableDecleration.getInitializer() != null) {
+				AbstractExpression abstractExpression = variableDecleration.getInitializer();
+				abstractExpressionObjectCreationsMap = abstractExpression.getCreationMap();
+				for(String objectCreationString : abstractExpressionObjectCreationsMap.keySet()) {
+					//ObjectCreation statement should not be in the mappings 
+					//if(!isStatementInMappings(objectCreationString, extractOpRefactoring)) {
+						abstractExpressionObjectCreations = abstractExpressionObjectCreationsMap.get(objectCreationString);
+						for(ObjectCreation objectCreation: abstractExpressionObjectCreations) {
+							if(objectCreation.getType().equalClassType(returnParameterType) ||
+									returnParameterType.equalsWithSubType(objectCreation.getType())) {
+								listObjectCreationVariableDeclerationsWithReturnType.add(variableDecleration);
+							}
+						}	
+						for(VariableDeclaration objectCreationVariableDecleration :listObjectCreationVariableDeclerationsWithReturnType){
+							if(variableTypeNameMap.containsKey(variableDecleration.getType())) {
+								variableTypeNameMap.get(objectCreationVariableDecleration.getType()).add(objectCreationVariableDecleration.getVariableName());
+							}else {
+								List<String> variableNames  = new ArrayList<String>();
+								variableNames.add(objectCreationVariableDecleration.getVariableName());
+								variableTypeNameMap.put(objectCreationVariableDecleration.getType(), variableNames);						
+							}
+						}
+				//	}
+				}			
+			}
+		}
+		//Check if return statement returns a Variable Declerations(that are Object Creation) with Return parameter type
+		for(UMLType type : variableTypeNameMap.keySet()) {
+			List<String> variableNames = variableTypeNameMap.get(type);
+			for(String variableName : variableNames) {
+				if( returnStatementVariables.size() == 1 && returnStatementVariables.contains(variableName)){
+					//Check if all statements in the Extracted Operation are object creation related
+					if(isAllStatementsObjectCreationRelated(umlOperation,listObjectCreationVariableDeclerationsWithReturnType))
+					{
+						return true;							
+					}
+				}	
+			}
+		}
+		
 		return false;
 	}
 	private boolean isStatementInMappings(String statementString , ExtractOperationRefactoring  extractOpRef) {
@@ -495,7 +510,8 @@ public class MotivationExtractor {
 	private boolean isAllStatementsObjectCreationRelated (UMLOperation extractedOperation , List<VariableDeclaration> returnTypeObjectCreationVariableDeclerations ){
 		
 		List<VariableDeclaration> allVariableDeclerations = extractedOperation.getBody().getAllVariableDeclarations();
-		List<String> allObjectCreationRelatedVariables = new ArrayList<String>();
+		//List<String> allObjectCreationRelatedVariables = new ArrayList<String>();
+		Set<String> allObjectCreationRelatedVariables = new HashSet<String>();
 		List<String> allObjectStateSettingVariables = new ArrayList<String>();
 		Set<String> allFactoryMethodRelatedVariables = new HashSet<String>();
 		
@@ -544,24 +560,30 @@ public class MotivationExtractor {
 		}
 		return allObjectStateSettingVariables;
 	}
-	private List<String> getAllObjectCreationRelatedVariables(AbstractExpression returnTypeObjectCreationExpression , List<VariableDeclaration> allVariableDeclerations){	
-		List<String> returnTypeObjectCreationExpressionVariables = returnTypeObjectCreationExpression.getVariables();
-		List<String> otherDependentObjectCreationVariables = getObjectCreationRelatedVariables(returnTypeObjectCreationExpressionVariables, allVariableDeclerations);
+	private Set<String> getAllObjectCreationRelatedVariables(AbstractExpression returnTypeObjectCreationExpression , List<VariableDeclaration> allVariableDeclerations){	
+		Set<String> returnTypeObjectCreationExpressionVariables = new HashSet<String>();
+		Set<String> otherDependentObjectCreationVariables = new HashSet<String>();
+		returnTypeObjectCreationExpressionVariables.addAll(returnTypeObjectCreationExpression.getVariables());
+		otherDependentObjectCreationVariables.addAll(getObjectCreationRelatedVariables(returnTypeObjectCreationExpressionVariables, allVariableDeclerations));
 		returnTypeObjectCreationExpressionVariables.addAll(otherDependentObjectCreationVariables);
-		return  returnTypeObjectCreationExpressionVariables ;
+		return  returnTypeObjectCreationExpressionVariables;
 	}
 	
-	private List<String> getObjectCreationRelatedVariables(List<String> variables , List<VariableDeclaration> allVariableDeclerations){
+	private Set<String> getObjectCreationRelatedVariables(Set<String> variables , List<VariableDeclaration> allVariableDeclerations){
 		int intialVariableSize = variables.size();
 		int newVariableVariableSize = 0;
-		for(VariableDeclaration variableDecleration: allVariableDeclerations) {	
+		for(VariableDeclaration variableDecleration: allVariableDeclerations) {
 			String variableName = variableDecleration.getVariableName();
 			if(variables.contains(variableName)){
-				variables.addAll(variableDecleration.getInitializer().getVariables());
+				AbstractExpression variableInitializer = variableDecleration.getInitializer();
+				if(variableInitializer != null) {
+					variables.addAll(variableInitializer.getVariables());	
+				}
 			}
 		}
 		newVariableVariableSize = variables.size();
-		if(newVariableVariableSize> intialVariableSize) {
+		if(newVariableVariableSize > intialVariableSize) {
+			
 			variables.addAll(getObjectCreationRelatedVariables(variables ,allVariableDeclerations));
 		}
 		return  variables;

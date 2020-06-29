@@ -3521,10 +3521,6 @@
 	{ 
                 "label": "EM: Decompose method to improve readability",
                 "status": "match2"
-	},
-	{
-		"label": "EM: Introduce factory method",
-                "status": "match1"
 	} ]
 },
 {
@@ -9764,11 +9760,7 @@
 	{
 	            "label": "EM: Decompose method to improve readability",
                 "status": "match2"
-	},
-	{
-				"label": "EM: Introduce factory method",
-                "status": "match1"
-	}	]
+	}]
 },
 {
 	"type": "Extract Method",
@@ -10676,10 +10668,6 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
-	},
-	{
-		"label": "EM: Introduce factory method",
-                "status": "match1"
 	} ]
 },
 {
@@ -10698,10 +10686,6 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
-	},
-	{
-		"label": "EM: Introduce factory method",
-                "status": "match1"
 	} ]
 },
 {
@@ -10711,11 +10695,7 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
-	},
-	{
-		"label": "EM: Introduce factory method",
-                "status": "match1"
-	} ]
+	}]
 },
 {
 	"type": "Extract Method",
@@ -10742,11 +10722,7 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
-	},
-	{
-		"label": "EM: Introduce factory method",
-                "status": "match1"
-	} ]
+	}]
 },
 {
 	"type": "Extract Method",
@@ -11227,10 +11203,7 @@
 	"type": "Extract Method",
 	"description": "Extract Method protected createHttpUrlConnector(client Client, connectionFactory ConnectionFactory, chunkSize int, fixLengthStreaming boolean, setMethodWorkaround boolean) : Connector extracted from public getConnector(client Client, config Configuration) : Connector in class org.glassfish.jersey.client.HttpUrlConnectorProvider",
 	"motivations": [ 
-	{
-		"label": "EM: Introduce factory method",
-        "status": "match1"
-	} ]
+	 ]
 },
 {
 	"type": "Parameterize Variable",
@@ -12122,8 +12095,6 @@
 	"description": "Extract And Move Method public makeBlock(payloadBytes byte[]) : Block extracted from private roundtrip(b2 Block) : Block in class org.bitcoinj.core.ChainSplitTest & moved to class org.bitcoinj.core.BitcoinSerializer",
 	"motivations": [ 
 	{ 
-                "label": "EM: Introduce factory method",
-                "status": "match1"
 	} ]
 },
 {
@@ -13694,6 +13665,10 @@
 	{
 			"label": "EM: Improve testability",
 			"status": "match1"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	}
 	]
 },
@@ -14400,6 +14375,10 @@
 	{
 				"label": "EM: Decompose method to improve readability",
                 "status": "match1"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match2"
 	}	]
 },
 {
