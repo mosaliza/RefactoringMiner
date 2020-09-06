@@ -28,7 +28,9 @@ import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.FileASTRequestor;
 import org.eclipse.jdt.core.dom.IExtendedModifier;
@@ -61,7 +63,7 @@ public class UMLModelASTReader {
 
 	public UMLModelASTReader(Map<String, String> javaFileContents, Set<String> repositoryDirectories) {
 		this.umlModel = new UMLModel(repositoryDirectories);
-		this.parser = ASTParser.newParser(AST.JLS11);
+		this.parser = ASTParser.newParser(AST.JLS14);
 		for(String filePath : javaFileContents.keySet()) {
 			Map<String, String> options = JavaCore.getOptions();
 			options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_8);
@@ -75,8 +77,13 @@ public class UMLModelASTReader {
 			if(javaFileContents.get(filePath).contains(FREE_MARKER_GENERATED)) {
 				return;
 			}
-			CompilationUnit compilationUnit = (CompilationUnit)parser.createAST(null);
-			processCompilationUnit(filePath, compilationUnit);
+			try {
+				CompilationUnit compilationUnit = (CompilationUnit)parser.createAST(null);
+				processCompilationUnit(filePath, compilationUnit);
+			}
+			catch(Exception e) {
+				//e.printStackTrace();
+			}
 		}
 	}
 
@@ -132,7 +139,7 @@ public class UMLModelASTReader {
 	}
 
 	private static ASTParser buildAstParser(File srcFolder) {
-		ASTParser parser = ASTParser.newParser(AST.JLS11);
+		ASTParser parser = ASTParser.newParser(AST.JLS14);
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
 		Map<String, String> options = JavaCore.getOptions();
 		JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
@@ -202,6 +209,20 @@ public class UMLModelASTReader {
 		umlClass.setJavadoc(javadoc);
 		
 		umlClass.setEnum(true);
+		
+		List<Type> superInterfaceTypes = enumDeclaration.superInterfaceTypes();
+    	for(Type interfaceType : superInterfaceTypes) {
+    		UMLType umlType = UMLType.extractTypeObject(cu, sourceFile, interfaceType, 0);
+    		UMLRealization umlRealization = new UMLRealization(umlClass, umlType.getClassType());
+    		umlClass.addImplementedInterface(umlType);
+    		getUmlModel().addRealization(umlRealization);
+    	}
+    	
+    	List<EnumConstantDeclaration> enumConstantDeclarations = enumDeclaration.enumConstants();
+    	for(EnumConstantDeclaration enumConstantDeclaration : enumConstantDeclarations) {
+			processEnumConstantDeclaration(cu, enumConstantDeclaration, sourceFile, umlClass);
+		}
+		
 		processModifiers(cu, sourceFile, enumDeclaration, umlClass);
 		
 		processBodyDeclarations(cu, enumDeclaration, packageName, sourceFile, importedTypes, umlClass);
@@ -473,6 +494,23 @@ public class UMLModelASTReader {
 		return umlOperation;
 	}
 
+	private void processEnumConstantDeclaration(CompilationUnit cu, EnumConstantDeclaration enumConstantDeclaration, String sourceFile, UMLClass umlClass) {
+		UMLJavadoc javadoc = generateJavadoc(enumConstantDeclaration);
+		LocationInfo locationInfo = generateLocationInfo(cu, sourceFile, enumConstantDeclaration, CodeElementType.ENUM_CONSTANT_DECLARATION);
+		UMLEnumConstant enumConstant = new UMLEnumConstant(enumConstantDeclaration.getName().getIdentifier(), UMLType.extractTypeObject(umlClass.getName()), locationInfo);
+		VariableDeclaration variableDeclaration = new VariableDeclaration(cu, sourceFile, enumConstantDeclaration);
+		enumConstant.setVariableDeclaration(variableDeclaration);
+		enumConstant.setJavadoc(javadoc);
+		enumConstant.setFinal(true);
+		enumConstant.setStatic(true);
+		enumConstant.setVisibility("public");
+		List<Expression> arguments = enumConstantDeclaration.arguments();
+		for(Expression argument : arguments) {
+			enumConstant.addArgument(argument.toString());
+		}
+		enumConstant.setClassName(umlClass.getName());
+		umlClass.addEnumConstant(enumConstant);
+	}
 
 	private List<UMLAttribute> processFieldDeclaration(CompilationUnit cu, FieldDeclaration fieldDeclaration, boolean isInterfaceField, String sourceFile) {
 		UMLJavadoc javadoc = generateJavadoc(fieldDeclaration);
