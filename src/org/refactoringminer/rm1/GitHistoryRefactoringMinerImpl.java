@@ -198,6 +198,8 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 				
 				UMLModelDiff modelDiff = parentUMLModel.diff(currentUMLModel, renamedFilesHint);
 				refactoringsAtRevision = modelDiff.getRefactorings();
+				refactoringsAtRevision = filter(refactoringsAtRevision);
+
 				MotivationExtractor motivationExtractor = new MotivationExtractor(modelDiff, refactoringsAtRevision);
 				motivationExtractor.detectAllRefactoringMotivations();
 				mapRefactoringMotivations = motivationExtractor.getMapRefactoringMotivations();
@@ -205,10 +207,9 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 				mapDecomposeToImproveRedability = motivationExtractor.getMapDecomposeToImproveRedability();
 				//ProjectMatcher projectMatcher = (ProjectMatcher)handler;
 				//String cloneUrl = projectMatcher.getCloneUrl();
-				stringJSON.append(writeToJSON(/*cloneUrl*/ "https://github.com/github/android.git", commitId, refactoringsAtRevision));	
+//				stringJSON.append(writeToJSON(/*cloneUrl*/ "https://github.com/github/android.git", commitId, refactoringsAtRevision));
 				
-				refactoringsAtRevision = parentUMLModel.diff(currentUMLModel, renamedFilesHint).getRefactorings();
-				refactoringsAtRevision = filter(refactoringsAtRevision);
+//				refactoringsAtRevision = parentUMLModel.diff(currentUMLModel, renamedFilesHint).getRefactorings();
 			} else {
 				//logger.info(String.format("Ignored revision %s with no changes in java files", commitId));
 				refactoringsAtRevision = Collections.emptyList();
@@ -587,9 +588,9 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 			mapFacilitateExtensionT1T2 = motivationExtractor.getMapFacilitateExtensionT1T2();
 			mapDecomposeToImproveRedability = motivationExtractor.getMapDecomposeToImproveRedability();
 			//Never reaches here
-			stringJSON.append(writeToJSON(gitURL ,currentCommitId , refactoringsAtRevision));
-			refactoringsAtRevision = parentUMLModel.diff(currentUMLModel, renamedFilesHint).getRefactorings();
-			refactoringsAtRevision = filter(refactoringsAtRevision);
+//			stringJSON.append(writeToJSON(gitURL ,currentCommitId , refactoringsAtRevision));
+//			refactoringsAtRevision = parentUMLModel.diff(currentUMLModel, renamedFilesHint).getRefactorings();
+//			refactoringsAtRevision = filter(refactoringsAtRevision);
 		}
 		catch(RefactoringMinerTimedOutException e) {
 			logger.warn(String.format("Ignored revision %s due to timeout", currentCommitId), e);
