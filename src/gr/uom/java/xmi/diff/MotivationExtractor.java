@@ -2088,11 +2088,21 @@ public class MotivationExtractor {
 				for(UMLOperation operation : nextClass.getOperations()) {
 					extractedOperationInvokationsInNextClasses.putAll(countOperationAInvokationsInOperationB(extractedOperation , operation));
 				}
+				for(UMLAnonymousClass nextClassAnonymousClass : nextClass.getAnonymousClassList()) {
+					for(UMLOperation nextClassAnonymousClassOperation : nextClassAnonymousClass.getOperations()) {
+						extractedOperationInvokationsInNextClasses.putAll(countOperationAInvokationsInOperationB(extractedOperation , nextClassAnonymousClassOperation));
+					}
+				}
 			}
 		}
 		for(UMLClass addedClass : modelDiff.getAddedClasses()) {
 			for(UMLOperation operation : addedClass.getOperations()) {
 				extractedOperationInvokationsInNextClasses.putAll(countOperationAInvokationsInOperationB(extractedOperation , operation));
+			}
+			for(UMLAnonymousClass addedClassAnonymousClass : addedClass.getAnonymousClassList()) {
+				for(UMLOperation addedClassAnonymousClassOperation : addedClassAnonymousClass.getOperations()) {
+					extractedOperationInvokationsInNextClasses.putAll(countOperationAInvokationsInOperationB(extractedOperation , addedClassAnonymousClassOperation));
+				}
 			}
 		}		
 		return extractedOperationInvokationsInNextClasses;
@@ -2173,13 +2183,17 @@ public class MotivationExtractor {
 	private Map<UMLOperation, List<OperationInvocation>> extractedOperationInvocationsCountInClass(ExtractOperationRefactoring extractOpRefactoring, UMLClass nextClass , List<Refactoring> refList) {
 		Map<UMLOperation, List<OperationInvocation>> mapAllExtraOperationInvokations = new HashMap<UMLOperation, List<OperationInvocation>>();
 		for(UMLOperation operation : nextClass.getOperations()) {
-			mapAllExtraOperationInvokations.putAll(computeAllReusedInvokationsToExtractedMethod(operation,extractOpRefactoring,nextClass,refList));
+			mapAllExtraOperationInvokations.putAll(computeAllReusedInvokationsToExtractedMethod(operation,extractOpRefactoring,refList));
+			for(UMLAnonymousClass anonymousClass : nextClass.getAnonymousClassList()) {
+				for(UMLOperation anonymousClassOperation :anonymousClass.getOperations()) {
+					mapAllExtraOperationInvokations.putAll(computeAllReusedInvokationsToExtractedMethod(anonymousClassOperation,extractOpRefactoring,refList));
+				}
+			}
 		}
 		return mapAllExtraOperationInvokations;	
 	}
 	
-	private Map<UMLOperation, List<OperationInvocation>> computeAllReusedInvokationsToExtractedMethod(UMLOperation operation, ExtractOperationRefactoring extractOpRefactoring, 
-			UMLClass nextClass , List<Refactoring> refList){
+	private Map<UMLOperation, List<OperationInvocation>> computeAllReusedInvokationsToExtractedMethod(UMLOperation operation, ExtractOperationRefactoring extractOpRefactoring, List<Refactoring> refList){
 		Map<UMLOperation, List<OperationInvocation>> mapExtraOperationInvokations = new HashMap<UMLOperation, List<OperationInvocation>>();
 		UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
 		UMLOperation sourceOperationAfterExtration = extractOpRefactoring.getSourceOperationAfterExtraction();
@@ -2187,12 +2201,13 @@ public class MotivationExtractor {
 		/*In the cases when extracted operation is  extracted from a test method (is part of the test code), 
 		extra calls from test methods to extracted operation are considered as reuse. */
 		if(considerCallsFromTestMethodsAsReuse) {
-			if(!operation.equals(sourceOperationAfterExtration) && !operation.equals(extractedOperation)) {
+			if(!operation.equals(sourceOperationAfterExtration) && !operation.equals(extractedOperation) 
+					&& !sourceOperationAfterExtration.getLocationInfo().subsumes(operation.getLocationInfo())) {
 				mapExtraOperationInvokations.putAll(computeReusedInvokationsToExtractedMethod(operation, extractOpRefactoring, refList));
 			}
 		}else {
 			if(!operation.equals(sourceOperationAfterExtration) && !operation.equals(extractedOperation) 
-					&& !operation.hasTestAnnotation() && !operation.getName().startsWith("test")) {
+					&& !sourceOperationAfterExtration.getLocationInfo().subsumes(operation.getLocationInfo()) && !operation.hasTestAnnotation() && !operation.getName().startsWith("test")) {
 				mapExtraOperationInvokations.putAll(computeReusedInvokationsToExtractedMethod(operation, extractOpRefactoring, refList));
 			}
 		}

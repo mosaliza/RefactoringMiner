@@ -353,6 +353,10 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match1"
+	},
+	{ 
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 },
 {
@@ -362,6 +366,10 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match1"
+	},
+	{ 
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/CyanogenMod/android_frameworks_base.git",
@@ -2493,6 +2501,10 @@
 	"motivations": [ 
 	{ 
                 "label": "EM: Decompose method to improve readability",
+                "status": "match1"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
                 "status": "match1"
 	} ]
 },
@@ -5937,8 +5949,8 @@
                 "status": "match1"
 	},
 	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match1"
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 },
 {
@@ -9566,6 +9578,10 @@
 	{ 
                 "label": "EM: Extract reusable method",
                 "status": "match1"
+	},
+	{ 
+                "label": "EM: Introduce alternative method signature",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/facebook/buck.git",
@@ -14487,6 +14503,10 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
+	},
+	{ 
+                "label": "EM: Extract reusable method",
+                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/spring-projects/spring-framework.git",
