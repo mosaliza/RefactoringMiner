@@ -798,7 +798,7 @@ public class MotivationExtractor {
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
 			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
 			List<OperationInvocation> listExtractedOpInvokations = extractOpRefactoring.getExtractedOperationInvocations();
-			boolean isBackwardCompatible = !sourceOpAfterExtraction.equalParameters(extractedOperation) ||
+			boolean isBackwardCompatible = !sourceOpAfterExtraction.equalParameterTypes(extractedOperation) ||
 					!extractedOperation.getName().equals(sourceOpAfterExtraction.getName());
 			String extractedOperationAccessModifier = extractedOperation.getVisibility();
 			String sourceOperationAfterExtractionAccessModifier = sourceOpAfterExtraction.getVisibility();
@@ -918,10 +918,10 @@ public class MotivationExtractor {
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
 			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
 			List<OperationInvocation> listExtractedOpInvokations = extractOpRefactoring.getExtractedOperationInvocations();
-			boolean isEqualParameters = sourceOpAfterExtraction.equalParameters(extractedOperation);
+			boolean isEqualParameterTypes = sourceOpAfterExtraction.equalParameterTypes(extractedOperation);
 			//boolean isEqualNames = extractedOperation.getName().equals(sourceOpAfterExtraction.getName());
 			//boolean isEqualParametersDifferentNames = isEqualParameters && !isEqualNames ;
-			boolean isToIntroduceAlternativeMethod = !isEqualParameters ?true:false;
+			boolean isToIntroduceAlternativeMethod = !isEqualParameterTypes ?true:false;
 			/*DETECTION RULE: Check IF the method parameters has changed AND if source Operation after extraction is a delegate 
 			*/
 			if(isToIntroduceAlternativeMethod && (listExtractedOpInvokations.size() == 1)) {
