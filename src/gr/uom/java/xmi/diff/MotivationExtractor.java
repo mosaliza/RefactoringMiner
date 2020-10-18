@@ -47,6 +47,7 @@ public class MotivationExtractor {
 	private List<Refactoring> refactorings;
 	private Map<RefactoringType, List<Refactoring>> mapClassifiedRefactorings;
 	private Map<Refactoring , List<MotivationType>> mapRefactoringMotivations;
+	private Map<Refactoring , List<MotivationFlag>> mapMotivationFlags;
 	private List<ExtractOperationRefactoring> removeDuplicationFromSingleMethodRefactorings = new ArrayList<ExtractOperationRefactoring>();
 	private List<ExtractOperationRefactoring> decomposeToImproveReadabilityFromSingleMethodRefactorings = new ArrayList<ExtractOperationRefactoring>();
 	private int decomposeToImproveReadabilityFromMultipleMethodRefactorings = 0;
@@ -73,6 +74,7 @@ public class MotivationExtractor {
 		this.refactorings = refactorings;
 		this.mapClassifiedRefactorings = new HashMap<RefactoringType, List<Refactoring>>();
 		this.mapRefactoringMotivations = new HashMap<Refactoring, List<MotivationType>>();
+		this.mapMotivationFlags = new HashMap<Refactoring, List<MotivationFlag>>();
 		classifyRefactoringsByType(refactorings);		
 	}
 	
@@ -84,6 +86,9 @@ public class MotivationExtractor {
 
 	public Map<Refactoring, List<MotivationType>> getMapRefactoringMotivations() {
 		return mapRefactoringMotivations;
+	}
+	public Map<Refactoring, List<MotivationFlag>> getMapMotivationFlags() {
+		return mapMotivationFlags;
 	}
 	private void detectExtractMethodWithLoggingSatement(List<Refactoring> listRef) {
 		for(Refactoring ref : listRef){
@@ -107,6 +112,7 @@ public class MotivationExtractor {
 		switch (type) {
 		case EXTRACT_OPERATION :
 			detectExtractOperationMotivation(listRef);
+			setExtractMethodInitialMotivationFlags(listRef);
 			detectExtractMethodWithLoggingSatement(listRef);
 			break;
 		case MOVE_CLASS:
@@ -146,6 +152,19 @@ public class MotivationExtractor {
 		}	
 	}
 	
+	private void setExtractMethodInitialMotivationFlags(List<Refactoring> listRef) {
+		for(Refactoring ref : listRef) {
+			if(ref.getRefactoringType().equals(RefactoringType.EXTRACT_OPERATION) ||
+					ref.getRefactoringType().equals(RefactoringType.EXTRACT_AND_MOVE_OPERATION)) {
+				ExtractOperationRefactoring extractOpRef = (ExtractOperationRefactoring)ref;
+				if(isExtractedOperationWithAddedParameters(extractOpRef.getExtractedOperation(),
+						extractOpRef.getSourceOperationAfterExtraction())) {
+					setMotivationFlag(MotivationFlag.EM_HAS_ADDED_PARAMETERS, ref);	
+				}
+			}
+		}
+	}
+
 	private void detectInlineOperationMotivation(List<Refactoring> listRef){
 		for(Refactoring ref : listRef){
 			if(isInlineMethodToEliminateUnncessaryMethod(ref)) {
@@ -303,9 +322,10 @@ public class MotivationExtractor {
 				}
 			}
 			if(isExtractReusableMethod(ref , listRef)) {
-				if (!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {
+				if (!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY) &&
+						!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
 					setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
-					//removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref);
+					//removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref); 
 					if(decomposeToImproveReadabilityFromMultipleMethodRefactorings == 0 && decomposeToImproveReadabilityFromSingleMethodRefactorings.size() > 0) {
 						removeRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY, ref);
 					}
@@ -886,7 +906,9 @@ public class MotivationExtractor {
 
 		if( ref instanceof ExtractOperationRefactoring){
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring)ref;
-			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();;	
+			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
+			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
+			isExtractedOperationWithAddedParameters(extractedOperation, sourceOpAfterExtraction);
 			OperationBody sourceOpBodyAfterExtraction = sourceOpAfterExtraction.getBody();
 			int countStatements = sourceOpBodyAfterExtraction.statementCount();
 			if(countStatements == 1){
@@ -911,6 +933,14 @@ public class MotivationExtractor {
 		return false;
 	}
 	
+	private boolean isExtractedOperationWithAddedParameters(UMLOperation extractedOperation,
+			UMLOperation sourceOpAfterExtraction) {
+		if(extractedOperation.getParametersWithoutReturnType().size() > sourceOpAfterExtraction.getParametersWithoutReturnType().size()) {
+			return true;
+		}
+		return false;
+	}
+
 	private boolean isExtractOperationToIntroduceAlternativeMethod(Refactoring ref){
 		
 		if(ref instanceof ExtractOperationRefactoring) {
@@ -918,10 +948,10 @@ public class MotivationExtractor {
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
 			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
 			List<OperationInvocation> listExtractedOpInvokations = extractOpRefactoring.getExtractedOperationInvocations();
-			boolean isEqualParameterTypes = sourceOpAfterExtraction.equalParameterTypes(extractedOperation);
+			boolean isEqualParameters = sourceOpAfterExtraction.equalParameterTypes(extractedOperation);
 			//boolean isEqualNames = extractedOperation.getName().equals(sourceOpAfterExtraction.getName());
 			//boolean isEqualParametersDifferentNames = isEqualParameters && !isEqualNames ;
-			boolean isToIntroduceAlternativeMethod = !isEqualParameterTypes ?true:false;
+			boolean isToIntroduceAlternativeMethod = !isEqualParameters ?true:false;
 			/*DETECTION RULE: Check IF the method parameters has changed AND if source Operation after extraction is a delegate 
 			*/
 			if(isToIntroduceAlternativeMethod && (listExtractedOpInvokations.size() == 1)) {
@@ -2833,10 +2863,31 @@ public class MotivationExtractor {
 			mapRefactoringMotivations.put(ref, listMotivations);
 		}
 	}
+	private void setMotivationFlag(MotivationFlag motivationFlag, Refactoring ref) {
+		if (mapMotivationFlags.containsKey(ref)){
+			mapMotivationFlags.get(ref).add(motivationFlag);
+		}
+		else {
+			List<MotivationFlag> listMotivationFlags = new ArrayList<MotivationFlag>();
+			listMotivationFlags.add(motivationFlag);
+			mapMotivationFlags.put(ref, listMotivationFlags);
+		}
+	}
 	private boolean removeRefactoringMotivation(MotivationType motivationType, Refactoring ref) {
 		if (mapRefactoringMotivations.containsKey(ref)){
 			if(!mapRefactoringMotivations.get(ref).isEmpty() && mapRefactoringMotivations.get(ref).contains(motivationType)){
 				if(mapRefactoringMotivations.get(ref).remove(motivationType)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	private boolean removeMotivationFlag(MotivationFlag motivationFlag, Refactoring ref) {
+		if (mapMotivationFlags.containsKey(ref)){
+			if(!mapMotivationFlags.get(ref).isEmpty() && mapMotivationFlags.get(ref).contains(motivationFlag)){
+				if(mapMotivationFlags.get(ref).remove(motivationFlag)) {
 					return true;
 				}
 			}

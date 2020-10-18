@@ -1,9 +1,13 @@
 import com.vladmihalcea.hibernate.type.json.JsonStringType;
+
+import gr.uom.java.xmi.diff.MotivationFlag;
 import gr.uom.java.xmi.diff.MotivationType;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
 import javax.persistence.*;
+
+import java.util.Date;
 import java.util.Set;
 
 @Entity
@@ -36,8 +40,30 @@ public class ExtractMethodMotivation {
 
     @Column(name = "commit_id")
     private String commitId;
+    
+	@Column(name = "commit_message")
+    private String commitMessage;
+    
+    @Column(name = "committer_name")
+    private String commiterName;
+    
+    @Column(name = "commit_time")
+    private int commitTime;
+    
+    @Column(name = "committer_date")
+    private Date commiterDate;
+    
+	@Column(name = "commit_author")
+    private String commitAuthor;
+    
+    @Column(name = "author_date")
+    private Date commitAuthorDate;
+    
+	@Column(name = "refactoring_type")
+    private String refactoringType;
 
-    @Column(name = "refactoring_desc", columnDefinition = "LONGTEXT")
+
+	@Column(name = "refactoring_desc", columnDefinition = "LONGTEXT")
     private String refactoringDesc;
 
     @Type(type = "json")
@@ -76,17 +102,31 @@ public class ExtractMethodMotivation {
 
     @Column(name = "introduce_async_method")
     private boolean introduceAsyncMethod;
+    
+    @Column(name = "em_has_added_parameter")
+    private boolean emHasAddedParameter = false;
 
     public ExtractMethodMotivation() {
     }
 
-    public ExtractMethodMotivation(Set<MotivationType> motivations) {
+    public ExtractMethodMotivation(Set<MotivationType> motivations , Set<MotivationFlag> motivationFlags) {
         for (MotivationType motivation : motivations) {
             this.addMotivation(motivation);
         }
+        for(MotivationFlag motivationFlag : motivationFlags) {
+        	this.addMotivationFlag(motivationFlag);
+        }
     }
 
-    public long getId() {
+    public boolean isEmHasAddedParameter() {
+		return emHasAddedParameter;
+	}
+
+	public void setEmHasAddedParameter(boolean emHasAddedParameter) {
+		this.emHasAddedParameter = emHasAddedParameter;
+	}
+
+	public long getId() {
         return id;
     }
 
@@ -109,11 +149,66 @@ public class ExtractMethodMotivation {
     public void setCommitId(String commitId) {
         this.commitId = commitId;
     }
+    
+    public String getCommitMessage() {
+		return commitMessage;
+	}
+
+	public void setCommitMessage(String commitMessage) {
+		this.commitMessage = commitMessage;
+	}
+    public String getCommiterName() {
+		return commiterName;
+	}
+
+	public void setCommiterName(String commiterName) {
+		this.commiterName = commiterName;
+	}
+
+	public Date getCommiterDate() {
+		return commiterDate;
+	}
+
+	public void setCommiterDate(Date commiterDate) {
+		this.commiterDate = commiterDate;
+	}
+
+	public Date getCommitAuthorDate() {
+		return commitAuthorDate;
+	}
+
+	public void setCommitAuthorDate(Date commitAuthorDate) {
+		this.commitAuthorDate = commitAuthorDate;
+	}
+	
+	public int getCommitTime() {
+		return commitTime;
+	}
+
+	public void setCommitTime(int commitTime) {
+		this.commitTime = commitTime;
+	}
+
+	public String getCommitAuthor() {
+		return commitAuthor;
+	}
+
+	public void setCommitAuthor(String commitAuthor) {
+		this.commitAuthor = commitAuthor;
+	}
 
     public String getRefactoringDesc() {
         return refactoringDesc;
     }
+    	
+    public String getRefactoringType() {
+		return refactoringType;
+	}
 
+	public void setRefactoringType(String refactoringType) {
+		this.refactoringType = refactoringType;
+	}
+	
     public void setRefactoringDesc(String refactoringDesc) {
         this.refactoringDesc = refactoringDesc;
     }
@@ -213,7 +308,14 @@ public class ExtractMethodMotivation {
     public void setIntroduceAsyncMethod(boolean introduceAsyncMethod) {
         this.introduceAsyncMethod = introduceAsyncMethod;
     }
-
+    private void addMotivationFlag(MotivationFlag motivationFlag) {
+        switch (motivationFlag) {
+            case EM_HAS_ADDED_PARAMETERS:
+                emHasAddedParameter = true;
+                break;
+        }
+    }
+    
     private void addMotivation(MotivationType motivation) {
         switch (motivation) {
             case EM_REUSABLE_METHOD:
@@ -251,4 +353,5 @@ public class ExtractMethodMotivation {
                 break;
         }
     }
+
 }

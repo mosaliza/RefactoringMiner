@@ -3,6 +3,7 @@ package org.refactoringminer.api;
 import java.util.List;
 import java.util.Map;
 
+import gr.uom.java.xmi.diff.MotivationFlag;
 import gr.uom.java.xmi.diff.MotivationType;
 
 /**
@@ -54,6 +55,7 @@ public abstract class RefactoringHandler {
 
 	public void handle(String commitId, List<Refactoring> refactorings,
 			Map<Refactoring, List<MotivationType>> mapRefactoringMotivations,
+			Map<Refactoring, List<MotivationFlag>> mapMotivationFlags,
 			Map<Refactoring, int[]> mapFacilitateExtensionT1T2,
 			Map<Refactoring, String> mapDecomposeToImproveRedability) {
 		// TODO Auto-generated method stub

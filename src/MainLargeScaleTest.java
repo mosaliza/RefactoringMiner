@@ -1,3 +1,4 @@
+import gr.uom.java.xmi.diff.MotivationFlag;
 import gr.uom.java.xmi.diff.MotivationType;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PullCommand;
@@ -23,7 +24,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class MainLargeScaleTest {
-    private static String FOLDER_TO_CLONE = "H:\\Projects\\";
+    private static String FOLDER_TO_CLONE = "tmp1\\";
     private SessionFactory sessionFactoryObj;
 
     public static void main(String[] args) throws Exception {
@@ -118,14 +119,21 @@ public class MainLargeScaleTest {
                         }
 
                         @Override
-                        public void handle(String commitId, List<Refactoring> refactorings, Map<Refactoring, List<MotivationType>> mapRefactoringMotivations, Map<Refactoring, int[]> mapFacilitateExtensionT1T2, Map<Refactoring, String> mapDecomposeToImproveRedability) {
+                        public void handle(String commitId, List<Refactoring> refactorings, Map<Refactoring, List<MotivationType>> mapRefactoringMotivations,Map<Refactoring, List<MotivationFlag>> mapMotivationFlags, Map<Refactoring, int[]> mapFacilitateExtensionT1T2, Map<Refactoring, String> mapDecomposeToImproveRedability) {
                             List<ExtractMethodMotivation> results = mapRefactoringMotivations.entrySet().stream()
                                     .filter(entry -> isExtractOperationRefactoring(entry.getKey().getRefactoringType()))
                                     .map(entry -> {
-                                        ExtractMethodMotivation extractMethodMotivation = new ExtractMethodMotivation(new HashSet<>(entry.getValue()));
+                                        ExtractMethodMotivation extractMethodMotivation = new ExtractMethodMotivation(new HashSet<>(entry.getValue()),new HashSet<>(mapMotivationFlags.get(entry.getKey())));
                                         extractMethodMotivation.setRepository(repositoryWebURL);
                                         extractMethodMotivation.setCommitId(commitId);
+                                        extractMethodMotivation.setCommitTime(commit.getCommitTime());
+                                        extractMethodMotivation.setCommitMessage(commit.getShortMessage());
+                                        extractMethodMotivation.setCommitAuthor(commit.getAuthorIdent().getName());
+                                        extractMethodMotivation.setCommitAuthorDate(commit.getAuthorIdent().getWhen());
+                                        extractMethodMotivation.setCommiterName(commit.getCommitterIdent().getName());
+                                        extractMethodMotivation.setCommiterDate(commit.getCommitterIdent().getWhen());
                                         extractMethodMotivation.setRefactoringDesc(entry.getKey().toString());
+                                        extractMethodMotivation.setRefactoringType(entry.getKey().getRefactoringType().toString());
                                         extractMethodMotivation.setRefactoringJSON(entry.getKey().toJSON());
                                         return extractMethodMotivation;
                                     })
@@ -170,7 +178,7 @@ public class MainLargeScaleTest {
                             }
                         }
 
-                    }, 10000);
+                    }, 60);
                 }
             }
         }

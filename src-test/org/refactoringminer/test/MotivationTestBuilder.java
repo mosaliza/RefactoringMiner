@@ -29,6 +29,7 @@ import org.refactoringminer.util.GitServiceImpl;
 import com.sun.javafx.applet.ExperimentalExtensions;
 
 import gr.uom.java.xmi.diff.MotivationType;
+import gr.uom.java.xmi.diff.MotivationFlag;
 import org.refactoringminer.test.MotivationPopulator.Refactorings;
 import org.refactoringminer.test.MotivationTestBuilder.ProjectMatcher.CommitMatcher.RefactoringMatcher;
 
@@ -348,6 +349,7 @@ public class MotivationTestBuilder {
 		@Override
 		public void handle(String commitId, List<Refactoring> refactorings,
 				Map<Refactoring, List<MotivationType>> mapRefactoringMotivations,
+				Map<Refactoring, List<MotivationFlag>> mapMotivationFlag,
 				Map<Refactoring, int[]> mapFacilitateExtensionT1T2,
 				Map<Refactoring, String> mapDecomposeToImproveRedability) {
 			refactorings= filterRefactoring(refactorings);
