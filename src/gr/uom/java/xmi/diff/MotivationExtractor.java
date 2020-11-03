@@ -382,6 +382,8 @@ public class MotivationExtractor {
 					codeAnalysisDecomposeToImproveRedability(Arrays.asList((ExtractOperationRefactoring)ref));
 					decomposeToImproveReadabilityFromSingleMethodRefactorings.add((ExtractOperationRefactoring)ref);
 					setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
+					setMotivationFlag(MotivationFlag.EM_INVOCATION_EDIT_DISTANCE_THRESHOLD_SM, ref);
+					setMotivationFlag(MotivationFlag.EM_DECOMPOS_SINGLE_METHOD, ref);
 				}
 			}
 		}
@@ -393,7 +395,9 @@ public class MotivationExtractor {
 			ExtractOperationRefactoring extractOpRef = (ExtractOperationRefactoring)ref;
 			UMLOperation extractedOperation = extractOpRef.getExtractedOperation();
 			if((extractedOperation.isGetter() ||extractedOperation.isSetter())) {
+				setMotivationFlag(MotivationFlag.EM_GETTER_SETTER, extractOpRef);
 				removeRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY, ref);
+				removeMotivationFlag(MotivationFlag.EM_DECOMPOS_SINGLE_METHOD, extractOpRef);
 			}
 		}
 	}
@@ -430,13 +434,15 @@ public class MotivationExtractor {
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring) ref;
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
 			UMLOperation sourceOperationBeforeExtraction = extractOpRefactoring.getSourceOperationBeforeExtraction();
-			if(isUMLOperationFactoryMethod(extractedOperation) && !isUMLOperationFactoryMethod(sourceOperationBeforeExtraction) ) {
+			boolean sobe_factory_method = isUMLOperationFactoryMethod(sourceOperationBeforeExtraction , extractOpRefactoring);
+			setMotivationFlag(MotivationFlag.SOBE_FACTORY_METHOD, extractOpRefactoring);
+			if(isUMLOperationFactoryMethod(extractedOperation, extractOpRefactoring) && !sobe_factory_method) {
 				return true;
 			}
 		}
 		return false;
 	}
-	private boolean isUMLOperationFactoryMethod(UMLOperation umlOperation) {
+	private boolean isUMLOperationFactoryMethod(UMLOperation umlOperation , ExtractOperationRefactoring extractOp) {
 		
 		List<VariableDeclaration> listVariableDeclerations = umlOperation.getAllVariableDeclarations();
 		List<ObjectCreation> listReturnTypeObjectsCreatedInReturnStatement = new ArrayList<ObjectCreation>();
@@ -449,16 +455,27 @@ public class MotivationExtractor {
 		Map<String ,List<ObjectCreation>> returnStatementobjectCreationsMap = new HashMap<String,List<ObjectCreation>>();		
 		for(AbstractStatement statement : umlOperation.getBody().getCompositeStatement().getStatements()) {
 			if (statement.getLocationInfo().getCodeElementType().equals(CodeElementType.RETURN_STATEMENT)) {
+				if(umlOperation.equalSignature(extractOp.getExtractedOperation())) {
+					setMotivationFlag(MotivationFlag.EM_HAS_RETURN_STATEMENTS, extractOp);
+				}
 				returnStatementVariables = statement.getVariables();
 				returnStatementobjectCreationsMap = statement.getCreationMap();
+				int em_return_statement_new_keywords = returnStatementobjectCreationsMap.size();
+				if(umlOperation.equalSignature(extractOp.getExtractedOperation())) {
+					setMotivationFlag(MotivationFlag.EM_RETURN_STATEMENT_NEW_KEYWORDS.setMotivationValue(em_return_statement_new_keywords), extractOp);
+				}
 				for(String objectCreationString : returnStatementobjectCreationsMap.keySet()) {
 					//if(!isStatementInMappings(objectCreationString, extractOpRefactoring)) {
 						List<ObjectCreation> listObjectCreation = returnStatementobjectCreationsMap.get(objectCreationString);
 						for(ObjectCreation objectCreation: listObjectCreation) {
 							String statementWithoutObjectCreation = statement.toString().replace(objectCreationString, "").replace(";","");
 							boolean isOnlyObjectCreation = statementWithoutObjectCreation.trim().equals("return")?true:false;
-							if(objectCreation.getType().equalClassType(returnParameterType) ||
-									returnParameterType.equalsWithSubType(objectCreation.getType()) || isOnlyObjectCreation) {
+							boolean em_return_equal_new_return = objectCreation.getType().equalClassType(returnParameterType) ||
+									returnParameterType.equalsWithSubType(objectCreation.getType()) ;
+							if(umlOperation.equalSignature(extractOp.getExtractedOperation())) {
+								setMotivationFlag(MotivationFlag.EM_RETURN_EQUAL_NEW_RETURN, extractOp);
+							}
+							if(em_return_equal_new_return || isOnlyObjectCreation) {
 								listReturnTypeObjectsCreatedInReturnStatement.add(objectCreation);
 							}
 						}	
@@ -509,6 +526,9 @@ public class MotivationExtractor {
 					//Check if all statements in the Extracted Operation are object creation related
 					if(isAllStatementsObjectCreationRelated(umlOperation,listObjectCreationVariableDeclerationsWithReturnType))
 					{
+						if(umlOperation.equalSignature(extractOp.getExtractedOperation())) {
+							setMotivationFlag(MotivationFlag.EM_VARS_FACTORY_METHOD_RELATED, extractOp);
+						}
 						return true;							
 					}
 				}	
@@ -627,6 +647,7 @@ public class MotivationExtractor {
 							List<OperationInvocation> invocations = declerationMethodInvocationMap.get(methodInvocation);
 							for(OperationInvocation invocation : invocations) {
 								if(invocation.matchesOperation(extractedOperation, sourceOperationAfterExtraction.variableTypeMap(), modelDiff)){
+									setMotivationFlag(MotivationFlag.SOAE_ANONYMOUS_CLASS_RUNNABLE_EM_INVOCATION, extractOpRefactoring);
 									return true;
 								}
 							}	
@@ -650,17 +671,20 @@ public class MotivationExtractor {
 				for(UMLClassDiff classDiff : modelDiff.getCommonClassDiffList()) {
 					UMLClass nextClass = classDiff.getNextClass();
 					isOperationOverridenInClass(extractedOperation, extractedOperationNextClass, nextClass,
-							operationsOverridingeExtractedOperations);
+							operationsOverridingeExtractedOperations , extractOpRefactoring);
 				}
 				for(UMLClass addedClass : modelDiff.getAddedClasses()) {
 					isOperationOverridenInClass(extractedOperation, extractedOperationNextClass, addedClass,
-							operationsOverridingeExtractedOperations);	
+							operationsOverridingeExtractedOperations , extractOpRefactoring);	
 				}
 			}
 			/* DETECTION RULE:
 			 * 1-Check if any subclasses is overriding the extracted operation OR
 			 * 2-Check the UML operation comments to see if it contains any keywords about overriding.
 			 */
+			if(isUmlOperationCommentUsingOverridingKeywords(extractedOperation)) {
+				setMotivationFlag(MotivationFlag.EM_OVERRIDING_KEYWORD_IN_COMMENT, extractOpRefactoring);
+			}
 			if((operationsOverridingeExtractedOperations.size()>0) || isUmlOperationCommentUsingOverridingKeywords(extractedOperation)) {
 				return true;
 			}
@@ -669,12 +693,14 @@ public class MotivationExtractor {
 	}
 	
 	private void isOperationOverridenInClass(UMLOperation extractedOperation, UMLClass extractedOperationNextClass,
-			UMLClass nextClass, List<UMLOperation> operationsOverridingeExtractedOperations) {
+			UMLClass nextClass, List<UMLOperation> operationsOverridingeExtractedOperations , Refactoring extractOp) {
 		List<UMLAnonymousClass> listAnonymousUmlClasses = nextClass.getAnonymousClassList();
 		if(nextClass.isSubTypeOf(extractedOperationNextClass)){
 			for(UMLOperation operation : nextClass.getOperations()) {
-				if(operation.equalSignature(extractedOperation))
+				if(operation.equalSignature(extractedOperation)) {
 					operationsOverridingeExtractedOperations.add(operation);
+					setMotivationFlag(MotivationFlag.EM_EQUAL_OPERATION_SIGNATURE_IN_SUBTYPE, extractOp);
+				}
 			}
 		}
 		for(UMLAnonymousClass anonymousClass : listAnonymousUmlClasses) {
@@ -732,9 +758,12 @@ public class MotivationExtractor {
 			for (UMLOperation operation : nextClass.getOperations()) {
 				if (operation.hasTestAnnotation() || operation.getName().startsWith("test")
 						|| nextClass.isTestClass()) {
+					setMotivationFlag(MotivationFlag.EM_TEST_INVOCATION_CLASS_EQUAL_TO_EM_CLASS, extractOpRefactoring);
+					setMotivationFlag(MotivationFlag.EM_INVOCATION_IN_TEST_OPERATION, extractOpRefactoring);
 					for (OperationInvocation invocation : operation.getAllOperationInvocations()) {
 						if (invocation.matchesOperation(extractedOperation, operation.variableTypeMap(), modelDiff)) {
 							if(classDiff == null) {
+								setMotivationFlag(MotivationFlag.EM_TEST_INVOCATION_IN_ADDED_NODE, extractOpRefactoring);
 								//classDiff is null when we have an added class and therefore invocation is in added operation.
 								operationsTestingExtractedOperation.add(operation);	
 							}else {
@@ -742,6 +771,8 @@ public class MotivationExtractor {
 								//1st: Check added operations in modified class
 								if(classDiff.addedOperations.contains(operation)) {
 									operationsTestingExtractedOperation.add(operation);
+									setMotivationFlag(MotivationFlag.EM_TEST_INVOCATION_IN_ADDED_NODE, extractOpRefactoring);
+
 								}
 								//2md:Check edited operations for elements that call extracted operation
 								List<UMLOperationBodyMapper> umlBodyMappers = classDiff.getOperationBodyMapperList();
@@ -750,6 +781,7 @@ public class MotivationExtractor {
 										if(bodyMapper.nonMappedElementsT2CallingAddedOperation(Arrays.asList(extractedOperation)) > 0) {
 											//Added Element T2 in Test Operation is calling extracted operation
 											operationsTestingExtractedOperation.add(operation);
+											setMotivationFlag(MotivationFlag.EM_TEST_INVOCATION_IN_ADDED_NODE, extractOpRefactoring);
 										}
 									}
 								}
@@ -766,10 +798,16 @@ public class MotivationExtractor {
 			ExtractOperationRefactoring extractOpRefactoring = (ExtractOperationRefactoring) ref;
 			UMLOperation sourceOperationBeforeExtraction = extractOpRefactoring.getSourceOperationBeforeExtraction();
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
-			if(!isUmlOperationRecursive(sourceOperationBeforeExtraction)) {
-				if(isUmlOperationRecursive(extractedOperation)) {
-					return true;
-				}
+			boolean sobe_recursive = isUmlOperationRecursive(sourceOperationBeforeExtraction);
+			boolean em_recursive = isUmlOperationRecursive(extractedOperation);
+			if(sobe_recursive) {
+				setMotivationFlag(MotivationFlag.SOBE_RECURSIVE, extractOpRefactoring);
+			}
+			if(em_recursive) {
+				setMotivationFlag(MotivationFlag.EM_RECURSIVE, extractOpRefactoring);
+			}
+			if(!sobe_recursive && em_recursive) {
+				return true;
 			}
 		}
 		return false;
@@ -797,6 +835,10 @@ public class MotivationExtractor {
 			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();;	
 			OperationBody sourceOpBodyAfterExtraction = sourceOpAfterExtraction.getBody();
 			int countStatements = sourceOpBodyAfterExtraction.statementCount();
+			
+			if((countStatements == 1) && getAllOperationInvocationToExtractedMethod(sourceOpAfterExtraction, extractOpRefactoring.getExtractedOperation()).size() == 1) {
+				setMotivationFlag(MotivationFlag.SOAE_IS_DELEGATE_TO_EM, extractOpRefactoring);
+			}
 			if(countStatements == 1){
 				if(isExtractOperationForBackwardCompatibility(ref)) {
 					return true;
@@ -818,17 +860,26 @@ public class MotivationExtractor {
 			UMLOperation extractedOperation = extractOpRefactoring.getExtractedOperation();
 			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
 			List<OperationInvocation> listExtractedOpInvokations = extractOpRefactoring.getExtractedOperationInvocations();
-			boolean isBackwardCompatible = !sourceOpAfterExtraction.equalParameterTypes(extractedOperation) ||
-					!extractedOperation.getName().equals(sourceOpAfterExtraction.getName());
+			
+			boolean em_soae_equal_parameter_types = sourceOpAfterExtraction.equalParameterTypes(extractedOperation);
+			setMotivationFlag(MotivationFlag.EM_SOAE_EQUAL_PARAMETER_TYPES, extractOpRefactoring);
+			boolean em_soae_equal_names = extractedOperation.getName().equals(sourceOpAfterExtraction.getName());
+			setMotivationFlag(MotivationFlag.EM_SOAE_EQUAL_NAMES, extractOpRefactoring);
+			boolean isBackwardCompatible = (!em_soae_equal_parameter_types ||!em_soae_equal_names);
 			String extractedOperationAccessModifier = extractedOperation.getVisibility();
 			String sourceOperationAfterExtractionAccessModifier = sourceOpAfterExtraction.getVisibility();
-			boolean isSourceOperationAfterExtractionAndExtractedOperationModifiersProtectedOrPrivate = 
-					sourceOperationAfterExtractionAccessModifier.equals("protected") || sourceOperationAfterExtractionAccessModifier.equals("private") ? true: false;
+			
+			boolean soae_protected = sourceOperationAfterExtractionAccessModifier.equals("protected");
+			boolean soae_private = sourceOperationAfterExtractionAccessModifier.equals("private");
+			setMotivationFlag(MotivationFlag.SOAE_PROTECTED, extractOpRefactoring);
+			setMotivationFlag(MotivationFlag.SOAE_PRIVATE, extractOpRefactoring);
+			boolean isSourceOperationAfterExtractionAndExtractedOperationModifiersProtectedOrPrivate = soae_protected || soae_private  ? true: false;
 			/*DETECTION RULE: Check IF the method parameters OR name has changed AND if source Operation after extraction is a delegate
 			 * AND also check if it contains @deprecated in annotations or JavaDoc 
 			 */
 			if(isBackwardCompatible && (listExtractedOpInvokations.size() == 1) && !isSourceOperationAfterExtractionAndExtractedOperationModifiersProtectedOrPrivate) {
 				if(isUmlOperationWithDeprecatedAnnotation(sourceOpAfterExtraction) || isUmlOperationJavaDocContainsTagName(sourceOpAfterExtraction, "@deprecated")) {
+					setMotivationFlag(MotivationFlag.SOAE_DEPRECATED, extractOpRefactoring);
 					if(isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
 						removeRefactoringMotivation(MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE, ref);
 					}
@@ -911,6 +962,9 @@ public class MotivationExtractor {
 			isExtractedOperationWithAddedParameters(extractedOperation, sourceOpAfterExtraction);
 			OperationBody sourceOpBodyAfterExtraction = sourceOpAfterExtraction.getBody();
 			int countStatements = sourceOpBodyAfterExtraction.statementCount();
+			if((countStatements == 1) && getAllOperationInvocationToExtractedMethod(sourceOpAfterExtraction, extractOpRefactoring.getExtractedOperation()).size() == 1) {
+				setMotivationFlag(MotivationFlag.SOAE_IS_DELEGATE_TO_EM, extractOpRefactoring);
+			}
 			if(countStatements == 1){
 				if(isExtractOperationToIntroduceAlternativeMethod(ref)) {
 					return true;
@@ -949,6 +1003,7 @@ public class MotivationExtractor {
 			UMLOperation sourceOpAfterExtraction = extractOpRefactoring.getSourceOperationAfterExtraction();
 			List<OperationInvocation> listExtractedOpInvokations = extractOpRefactoring.getExtractedOperationInvocations();
 			boolean isEqualParameters = sourceOpAfterExtraction.equalParameterTypes(extractedOperation);
+			setMotivationFlag(MotivationFlag.EM_SOAE_EQUAL_PARAMETER_TYPES, extractOpRefactoring);
 			//boolean isEqualNames = extractedOperation.getName().equals(sourceOpAfterExtraction.getName());
 			//boolean isEqualParametersDifferentNames = isEqualParameters && !isEqualNames ;
 			boolean isToIntroduceAlternativeMethod = !isEqualParameters ?true:false;
@@ -1037,6 +1092,7 @@ public class MotivationExtractor {
 			int countChildNonMappedLeavesAndInnerNodesT2 = 0;
 			int countParentNonMappedLeavesAndInnerNodesT2 = 0;
 			if(isExtractedMethodMappingAddedTernaryOperator(extractOperationRefactoring)) {
+				setMotivationFlag(MotivationFlag.EM_MAPPING_FRAGMENT2_TERNARY, extractOperationRefactoring);
 				return true;
 			}
 			List<CompositeStatementObject> listParentT2CompositesWithInvokationsToExtractedMethodInExpression = new ArrayList<CompositeStatementObject>();
@@ -1057,6 +1113,11 @@ public class MotivationExtractor {
 			List<StatementObject> parentListNotMappedLeavesT2 = umlBodyMapper.getParentMapper().getNonMappedLeavesT2();
 			List<CompositeStatementObject> parentListNotMappedInnerNodesT2 = umlBodyMapper.getParentMapper().getNonMappedInnerNodesT2();
 			
+			int em_NotMapped_T2_unfiltered = listNotMappedLeavesT2.size() + listNotMappedInnerNodesT2.size();
+			int soae_NotMapped_T2_unfiltered = parentListNotMappedLeavesT2.size()+parentListNotMappedInnerNodesT2.size();
+			setMotivationFlag(MotivationFlag.EM_NOTMAPPED_T2_UNFILTERED.setMotivationValue(em_NotMapped_T2_unfiltered), extractOperationRefactoring);
+			setMotivationFlag(MotivationFlag.SOAE_NOT_MAPPED_T2_UNFILTERED.setMotivationValue(soae_NotMapped_T2_unfiltered), extractOperationRefactoring);
+						
 			Set<StatementObject> setParentMarkedT2Leaves = new HashSet<StatementObject>();
 			Set<CompositeStatementObject> setParentMarkedT2InnerNodes = new HashSet<CompositeStatementObject>();
 			Set<StatementObject> setChildMarkedT2Leaves = new HashSet<StatementObject>();
@@ -1113,19 +1174,23 @@ public class MotivationExtractor {
 				}
 				if(isNeutralNodeForFacilitateExtension(notMappedNode , refList , sourceOperationAfterExtrction, addedOperationNames, allOperationNames )) {
 					listParentNeutralLeaves.add(notMappedNode);
+					setMotivationFlag(MotivationFlag.SOAE_T2_NEUTRAL, extractOperationRefactoring);
 				}
 				if(isParentT2LeafNodeinT1leafNodes(notMappedNode, parentListNotMappedleafNodesT1, allT1Nodes)) {
 					listParentT2LeafNodeInT1LeafNodes.add(notMappedNode);
 				}
 				if(isParentLeafNodeExtraInvocationsExpressionsInExtractedMethodParameters(notMappedNode ,extractedOperation, sourceOperationAfterExtrction , refList)) {
 					listParentLeafWithInvocationsExpressionsInExtractOperationInvocationParameters.add(notMappedNode);
+					setMotivationFlag(MotivationFlag.SOAE_T2_IE_IN_EM_PARAMETERS, extractOperationRefactoring);
 					
 				}
 				if(isParentLeafNodeDeclaredVariableInExtractedMethodParameters(notMappedNode ,extractedOperation, sourceOperationAfterExtrction , refList)) {
 					listParentLeafWithDeclaredVariableInExtractOperationInvocationParameters.add(notMappedNode);
+					setMotivationFlag(MotivationFlag.SOAE_T2_DV_IN_EM_PARAMETERS, extractOperationRefactoring);
 				}
 				if(isParentT2LeafNodeInParentMappings(notMappedNode, parentMappings)) {
 					listParentT2LeafNodesInMappings.add(notMappedNode);
+					setMotivationFlag(MotivationFlag.SOAE_T2_IN_MAPPING, extractOperationRefactoring);
 				}
 			}
 			setParentMarkedT2Leaves.addAll(listParentNotMappedLeavesWithInvokationsToExtractedMethod);
@@ -1135,6 +1200,11 @@ public class MotivationExtractor {
 			setParentMarkedT2Leaves.addAll(listParentT2LeafNodesInMappings);
 			setParentMarkedT2Leaves.addAll(listParentLeafWithDeclaredVariableInExtractOperationInvocationParameters);
 			
+			int soae_T2_in_T1 = listParentT2LeafNodeInT1LeafNodes.size() + listParentT2InnerNodeInT1InnerNodes.size();
+			if(soae_T2_in_T1 > 0) {
+				setMotivationFlag(MotivationFlag.SOAE_T2_IN_T1, extractOperationRefactoring);
+			}
+
 			//Processing Child (Extracted Operation) T2 Inner(Composite)/Leaf Nodes to filter out  marked nodes
 			for(CompositeStatementObject  notMappedCompositeNode : listNotMappedInnerNodesT2) {
 				
@@ -1164,20 +1234,32 @@ public class MotivationExtractor {
 				}
 				if(isLeafNodeExtraInvocationsExpressionsInOperationParameters(notMappedNode, extractedOperation)) {
 					listChildNotMappedLeavesWithInvocationsExpressionsInOperationParameters.add(notMappedNode);
+					setMotivationFlag(MotivationFlag.EM_T2_IE_IN_EM_PARAMETERS, extractOperationRefactoring);
+
 				}
 				if(isNeutralNodeForFacilitateExtension(notMappedNode, refList, extractedOperation,  addedOperationNames, allOperationNames)){
 					listChildNeutralLeaves.add(notMappedNode);
+					setMotivationFlag(MotivationFlag.EM_T2_NEUTRAL, extractOperationRefactoring);
+
 				}
 				if(isChildT2LeafNodeinT1leafNodes(notMappedNode, listNotMappedleafNodesT1 , allT1Nodes)) {
 					listChildT2LeafNodeInT1LeafNodes.add(notMappedNode);
 				}
 				if(isChildT2LeafNodeInChildMappings(notMappedNode, childMappings)) {
 					listChildT2LeafNodesInChildMappings.add(notMappedNode);
+					setMotivationFlag(MotivationFlag.EM_T2_IN_MAPPING, extractOperationRefactoring);
 				}
 				if(isChildT2LeafNodeInParentMappings(notMappedNode, parentMappings)) {
 					listChildT2LeafNodesInParentMappings.add(notMappedNode);
+					setMotivationFlag(MotivationFlag.EM_T2_IN_MAPPING, extractOperationRefactoring);
 				}
 			}
+			int em_T2_in_T1 = listChildT2LeafNodeInT1LeafNodes.size() + listChildT2InnerNodeInT1InnerNodes.size();
+			if(em_T2_in_T1 > 0) {
+				setMotivationFlag(MotivationFlag.EM_T2_IN_T1, extractOperationRefactoring);
+			}
+	
+			
 			setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithInvokationsToExtractedMethod);
 			setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithRecursive);
 			//setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithInvocationsExpressionsInOperationParameters);
@@ -1267,6 +1349,10 @@ public class MotivationExtractor {
 				 //Exclude all composite leaves in child(extracted operation) when there is a recursive leave
 				 countChildNonMappedLeavesAndInnerNodesT2 -= countFilteredComposites;
 			 }
+			 int soae_NotMapped_T2_filtered = countParentNonMappedLeavesAndInnerNodesT2;
+			 int em_NotMapped_T2_filtered = countChildNonMappedLeavesAndInnerNodesT2;
+			 setMotivationFlag(MotivationFlag.EM_NOTMAPPED_T2_FILTERED.setMotivationValue(em_NotMapped_T2_filtered), extractOperationRefactoring);
+			 setMotivationFlag(MotivationFlag.SOAE_NOTMAPPED_T2_FILTERED.setMotivationValue(soae_NotMapped_T2_filtered), extractOperationRefactoring);
 			 if( countChildNonMappedLeavesAndInnerNodesT2 > 0 || countParentNonMappedLeavesAndInnerNodesT2 > 0) {
 				// if(!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE) && !isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)) {	
 					 return true;
@@ -2040,6 +2126,7 @@ public class MotivationExtractor {
 			}
 			//Check the mappings of invocations to Extracted method in Original and next class
 			if(isExtractedMethodInvocationsEqualInOriginalAndNextClass(ref)) {
+				setMotivationFlag(MotivationFlag.EM_INVOCATION_EQUAL_MAPPING, extractOpRefactoring);
 				return false;
 			}
 			
@@ -2050,7 +2137,7 @@ public class MotivationExtractor {
 					return true;
 				}
 			}else {
-			
+				setMotivationFlag(MotivationFlag.EM_EQUAL_SINATURE_INVOCATIONS, extractOpRefactoring);
 				Map<String, List<ExtractOperationRefactoring>> groupedByToString =
 						refList.stream() // For each refactoring
 						// Cast to ExtractOperationRefactoring
@@ -2195,6 +2282,7 @@ public class MotivationExtractor {
 		if(((extractOpRefactoring.getExtractedOperationInvocations().size() == 1) || (extractOpRefactoring.getExtractedOperationInvocations().size() == 0)) 
 				&& (extractedOperationCallsInsideSourceOperationAfterExtraction == 0 )) {
 			if(mapExtraExtractedOperationInvokationsInClasses.size() == 1) {
+				setMotivationFlag(MotivationFlag.EM_NESTED_INVOCATIONS, extractOpRefactoring);
 				return false;
 			}
 		}
@@ -2202,8 +2290,14 @@ public class MotivationExtractor {
 		 * IF Invocations to Extracted method from source method after Extraction is more than one OR 
 		 *  there are other Invocations from other methods to extracted operation.
 		 *  Invocations inside test methods will not be considered as reusable calls. */
-
 		int extarctOpRefactoringCallstoExtractedOperation = extractOpRefactoring.getExtractedOperationInvocations().size();
+	
+		int em_soae_invocations = extarctOpRefactoringCallstoExtractedOperation - countSingleMethodRemoveDuplications;
+		setMotivationFlag(MotivationFlag.EM_SOAE_INVOCATIONS.setMotivationValue(em_soae_invocations), extractOpRefactoring);
+	
+		int em_not_soae_invocations = mapExtraExtractedOperationInvokationsInClasses.size();
+		setMotivationFlag(MotivationFlag.EM_NONE_SOAE_INVOCATIONS.setMotivationValue(em_not_soae_invocations), extractOpRefactoring);
+		
 		if((extarctOpRefactoringCallstoExtractedOperation - countSingleMethodRemoveDuplications) > 1 || mapExtraExtractedOperationInvokationsInClasses.size() > 0 ) {
 			return true;
 		}
@@ -2231,11 +2325,15 @@ public class MotivationExtractor {
 		/*In the cases when extracted operation is  extracted from a test method (is part of the test code), 
 		extra calls from test methods to extracted operation are considered as reuse. */
 		if(considerCallsFromTestMethodsAsReuse) {
+			setMotivationFlag(MotivationFlag.SOAE_IS_TEST_OPERATION, extractOpRefactoring);
 			if(!operation.equals(sourceOperationAfterExtration) && !operation.equals(extractedOperation) 
 					&& !sourceOperationAfterExtration.getLocationInfo().subsumes(operation.getLocationInfo())) {
 				mapExtraOperationInvokations.putAll(computeReusedInvokationsToExtractedMethod(operation, extractOpRefactoring, refList));
 			}
 		}else {
+			if( operation.hasTestAnnotation() || operation.getName().startsWith("test")) {
+				setMotivationFlag(MotivationFlag.EM_INVOCATION_IN_TEST_OPERATION, extractOpRefactoring);
+			}		 
 			if(!operation.equals(sourceOperationAfterExtration) && !operation.equals(extractedOperation) 
 					&& !sourceOperationAfterExtration.getLocationInfo().subsumes(operation.getLocationInfo()) && !operation.hasTestAnnotation() && !operation.getName().startsWith("test")) {
 				mapExtraOperationInvokations.putAll(computeReusedInvokationsToExtractedMethod(operation, extractOpRefactoring, refList));
@@ -2254,6 +2352,8 @@ public class MotivationExtractor {
 			 *  source methods we ignore extra invokations from "same remove duplication" "source operations after extraction"  Extract method's. */
 			if(!isOperationEqualToSourceOperationAfterExtractionOfSameRemoveDuplicationGroupExtractRefactorings(operation, refList , extractOpRefactoring)) {
 				mapExtraInvokations.putAll(countOperationAInvokationsInOperationB(extractedOperation,operation));
+			}else {
+				setMotivationFlag(MotivationFlag.EM_INVOCATION_IN_REMOVE_DUPLICATION, extractOpRefactoring);
 			}
 		}else {
 			mapExtraInvokations.putAll(countOperationAInvokationsInOperationB(extractedOperation,operation));		 
@@ -2344,12 +2444,17 @@ public class MotivationExtractor {
 		
 			
 			if(list.size() > 1) {
-			 	if(!isExtractMethodRefactoringsEqual(list)) { 		
+			 	if(!isExtractMethodRefactoringsEqual(list)) {
+			 		for(ExtractOperationRefactoring ref : list) {
+			 			setMotivationFlag(MotivationFlag.EM_DISTINCT, ref);
+			 			setMotivationFlag(MotivationFlag.EM_WITH_SAME_SOURCE_OPERATION, ref);
+			 		}
 					//Compute the Decompose Extract methods that with with Edit distance more than 15%
 					int countDecompose = 0 ;
 					for(ExtractOperationRefactoring ref : list) {
 						double editDistance = getDecomposeNormalizedEditDistance(ref);
 						if(editDistance > 0.55) {
+							setMotivationFlag(MotivationFlag.EM_INVOCATION_EDIT_DISTANCE_THRESHOLD_MM, ref);
 							countDecompose ++;
 						}
 					}
@@ -2359,8 +2464,13 @@ public class MotivationExtractor {
 						for(ExtractOperationRefactoring ref : list) {
 							//Set Motivation for each refactoring with the same source 
 							setRefactoringMotivation(MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY,  ref);
+							setMotivationFlag(MotivationFlag.EM_DECOMPOSE_MULTIPLE_METHODS, ref);
 							countDecomposeMethodToImproveReadability++;	
 						}				 			
+			 		}
+			 	}else {
+			 		for(ExtractOperationRefactoring ref : list) {
+			 			setMotivationFlag(MotivationFlag.EM_WITH_SAME_SOURCE_OPERATION, ref);
 			 		}
 			 	}
 			}
@@ -2480,6 +2590,7 @@ public class MotivationExtractor {
 			}
 			//if notMapped T1 statements are 0 and everything is mapped there is no decomposition
 			if(isEverySourceOperationNodeMapped(extractOperationRef)) {
+				setMotivationFlag(MotivationFlag.EM_ALL_SOURCE_OPERATION_NODES_MAPPED, extractOperationRef);
 				return false;
 			}
 			//Checking the structure of the mappings for nested composite statements
@@ -2496,6 +2607,21 @@ public class MotivationExtractor {
 				decomposeToImproveReadabilityFromSingleMethodByHavingCallToExtractedMethodInReturn.add((ExtractOperationRefactoring)ref);
 			}
 			List<AbstractExpression> expressionsInCompositesWithCallsToExtractedMethod = getAllCompositeStatementObjectExpressionsWithInvokationsToExtractedOperation(sourceOperationAfterExtractionBody, extratedOperation, sourceOperationAfterExtraction);
+			
+			if(expressionsInCompositesWithCallsToExtractedMethod.size()>0) {
+				int em_composite_expression_invocations =  expressionsInCompositesWithCallsToExtractedMethod.size();
+				setMotivationFlag(MotivationFlag.EM_COMPOSITE_EXPRESSION_INVOCATIONS.setMotivationValue(em_composite_expression_invocations), extractOperationRef);
+				
+			}
+			if(expressionsUsingVariableInitializedWithExtracedOperationInvocation.size()>0) {
+				setMotivationFlag(MotivationFlag.EM_COMPOSITE_EXPRESSION_CALLVAR, extractOperationRef);
+
+			}
+			if((listReturnStatementswithCallsToExtractedOperation.size() > 0) && (sourceOperationAfterExtraction.getBody().statementCount() > 1)) {
+				int em_return_statement_invocations = listReturnStatementswithCallsToExtractedOperation.size();
+				setMotivationFlag(MotivationFlag.EM_RETURN_STATEMENT_INVOCATIONS.setMotivationValue(em_return_statement_invocations), extractOperationRef);
+			}
+			
 			if(expressionsInCompositesWithCallsToExtractedMethod.size() > 0 || /*listExpressioNStatementsWithCallsToExtractedOperation.size() > 0 || */
 					expressionsUsingVariableInitializedWithExtracedOperationInvocation.size() > 0 || 
 					((listReturnStatementswithCallsToExtractedOperation.size() > 0) && (sourceOperationAfterExtraction.getBody().statementCount() > 1))) {
@@ -2578,6 +2704,7 @@ public class MotivationExtractor {
 				}			
 				if(fragment1CompositeParents != null && compositeStatementsInMappings != null ) {
 					if(compositeStatementsInMappings.size() > 0 ) {
+						setMotivationFlag(MotivationFlag.EM_MAPPING_COMPOSITE_NODES.setMotivationValue(compositeStatementsInMappings.size()), extractOperationRef);
 						return true;
 					}
 				}
@@ -2800,6 +2927,7 @@ public class MotivationExtractor {
 					removeDuplicationFromSingleMethodRefactorings.addAll(listSourceOperations);
 				}
 				for(ExtractOperationRefactoring extractOp : listSourceOperations){
+					setMotivationFlag(MotivationFlag.EM_SAME_EXTRACTED_OPERATIONS, extractOp);
 					setRefactoringMotivation(MotivationType.EM_REMOVE_DUPLICATION, extractOp);
 					if(isMotivationDetected(extractOp , MotivationType.EM_DECOMPOSE_TO_IMPROVE_READABILITY) 
 							&& (!decomposeToImproveReadabilityFromSingleMethodRefactorings.contains(extractOp)||
