@@ -138,7 +138,10 @@ public class ExtractMethodMotivation {
     @Column(name = "soae_is_delegate_to_em")
     private boolean soae_is_delegate_to_em = false;
     
-   //Decompose Method to Improve Readability
+    @Column(name = "soae_is_all_temp_variables")
+    private boolean soae_is_all_temp_variables = false;
+    
+	//Decompose Method to Improve Readability
     @Column(name = "em_decompose_single_method")
     private boolean em_decompose_single_method = false;
     
@@ -218,11 +221,25 @@ public class ExtractMethodMotivation {
     @Column(name = "soae_T2_DV_in_em_parameters")
     private boolean soae_T2_DV_in_em_parameters;
     
+    @Column(name = "em_T2_em_invocations")
+    private boolean em_T2_em_invocations;
+    
+    @Column(name = "soae_T2_em_invocations")
+    private boolean soae_T2_em_invocations;
+
+    
     //Remove Duplication
     @Column(name = "em_same_extracted_operations")
     private boolean em_same_extracted_operations;
     
-    //Replace Method Preserving Backwards compatibility
+    @Column(name = "em_mapping_size")
+    private int em_mapping_size;
+    
+    @Column(name = "em_num_methods_used_in_duplication_removal")
+    private int em_num_methods_used_in_duplication_removal;
+    
+    
+	//Replace Method Preserving Backwards compatibility
     @Column(name = "em_soae_equal_names")
     private boolean em_soae_equal_names;
     
@@ -249,6 +266,7 @@ public class ExtractMethodMotivation {
     @Column(name = "em_overriding_keyword_in_comment")
     private boolean em_overriding_keyword_in_comment;
     
+    
     //Enable Recursion
     
     @Column(name = "sobe_recursive")
@@ -267,6 +285,9 @@ public class ExtractMethodMotivation {
     @Column(name = "em_return_equal_new_return")
     private boolean em_return_equal_new_return;
     
+    @Column(name = "em_object_creation_variable_returned")
+    private boolean em_object_creation_variable_returned;
+    
     @Column(name = "em_vars_factory_method_related")
     private boolean em_vars_factory_method_related;
     
@@ -275,7 +296,10 @@ public class ExtractMethodMotivation {
     
     @Column(name = "soae_anonymous_class_runnable_em_invocation")
     private boolean soae_anonymous_class_runnable_em_invocation;
-
+    
+    @Column(name = "soae_statements_contain_runnable_type")
+    private boolean soae_statements_contain_runnable_type;
+                 
 	public ExtractMethodMotivation() {
     }
 
@@ -288,6 +312,65 @@ public class ExtractMethodMotivation {
         }
     }
     
+	public int getEm_num_methods_used_in_duplication_removal() {
+		return em_num_methods_used_in_duplication_removal;
+	}
+
+	public void setEm_num_methods_used_in_duplication_removal(int em_num_methods_used_in_duplication_removal) {
+		this.em_num_methods_used_in_duplication_removal = em_num_methods_used_in_duplication_removal;
+	}
+
+	public boolean isSoae_statements_contain_runnable_type() {
+		return soae_statements_contain_runnable_type;
+	}
+
+	public void setSoae_statements_contain_runnable_type(boolean soae_statements_contain_runnable_type) {
+		this.soae_statements_contain_runnable_type = soae_statements_contain_runnable_type;
+	}
+	
+    public boolean isEm_T2_em_invocations() {
+		return em_T2_em_invocations;
+	}
+
+	public void setEm_T2_em_invocations(boolean em_T2_em_invocations) {
+		this.em_T2_em_invocations = em_T2_em_invocations;
+	}
+
+	public boolean isSoae_T2_em_invocations() {
+		return soae_T2_em_invocations;
+	}
+
+	public void setSoae_T2_em_invocations(boolean soae_T2_em_invocations) {
+		this.soae_T2_em_invocations = soae_T2_em_invocations;
+	}
+
+	public int getEm_mapping_size() {
+		return em_mapping_size;
+	}
+
+	public void setEm_mapping_size(int em_mapping_size) {
+		this.em_mapping_size = em_mapping_size;
+	}
+	public boolean isEm_object_creation_variable_returned() {
+		return em_object_creation_variable_returned;
+	}
+
+	public void setEm_object_creation_variable_returned(boolean em_object_creation_variable_returned) {
+		this.em_object_creation_variable_returned = em_object_creation_variable_returned;
+	}
+    
+   public boolean isSoae_is_all_temp_variables() {
+		return soae_is_all_temp_variables;
+	}
+
+	public void setSoae_is_all_temp_variables(boolean soae_is_all_temp_variables) {
+		this.soae_is_all_temp_variables = soae_is_all_temp_variables;
+	}
+
+	public int getEm_return_statement_new_keywords() {
+		return em_return_statement_new_keywords;
+	}
+	
 	public boolean isEm_has_return_statement() {
 		return em_has_return_statement;
 	}
@@ -1066,7 +1149,30 @@ public class ExtractMethodMotivation {
             	break;
             case SOAE_ANONYMOUS_CLASS_RUNNABLE_EM_INVOCATION:
             	soae_anonymous_class_runnable_em_invocation = true;
-            	break;        	
+            	break;
+            case SOAE_IS_ALL_TEMP_VARIABLES:
+            	soae_is_all_temp_variables = true;
+            	break;
+            case EM_OBJECT_CREATION_VARIABLE_RETURNED:
+            	em_object_creation_variable_returned = true;
+            	break;
+            case EM_T2_EM_INVOCATIONS:
+            	em_T2_em_invocations = true;
+            	break;
+            case SOAE_T2_EM_INVOCATIONS:
+            	soae_T2_em_invocations = true;
+            	break;
+            case EM_MAPPING_SIZE: 
+            	em_mapping_size = motivationFlag.getMotivationValue();
+            	break;
+            case EM_NUM_METHODS_USED_IN_DUPLICATION_REMOVAL: 
+            	em_num_methods_used_in_duplication_removal = motivationFlag.getMotivationValue();
+            	break;
+            case SOAE_STATEMENTS_CONTAIN_RUNNABLE_TYPE: 
+            	soae_statements_contain_runnable_type = true;
+            	break;
+            	
+            	           	
         }
     }
     

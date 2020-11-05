@@ -523,6 +523,7 @@ public class MotivationExtractor {
 			List<String> variableNames = variableTypeNameMap.get(type);
 			for(String variableName : variableNames) {
 				if( returnStatementVariables.size() == 1 && returnStatementVariables.contains(variableName)){
+					setMotivationFlag(MotivationFlag.EM_OBJECT_CREATION_VARIABLE_RETURNED, extractOp);
 					//Check if all statements in the Extracted Operation are object creation related
 					if(isAllStatementsObjectCreationRelated(umlOperation,listObjectCreationVariableDeclerationsWithReturnType))
 					{
@@ -639,7 +640,8 @@ public class MotivationExtractor {
 			OperationBody sourceBody = sourceOperationAfterExtraction.getBody();
 			CompositeStatementObject sourceCompositeStatement = sourceBody.getCompositeStatement();
 			for(AbstractStatement statement : sourceCompositeStatement.getStatements()) {
-				if(statement.getTypes().contains("Runnable")){								
+				if(statement.getTypes().contains("Runnable")){
+					setMotivationFlag(MotivationFlag.SOAE_STATEMENTS_CONTAIN_RUNNABLE_TYPE, extractOpRefactoring);
 					List<AnonymousClassDeclarationObject> anonymousClassDeclerations = statement.getAnonymousClassDeclarations();
 					for(AnonymousClassDeclarationObject decleration: anonymousClassDeclerations) {
 						Map<String,List<OperationInvocation>> declerationMethodInvocationMap = decleration.getMethodInvocationMap();
@@ -1019,14 +1021,14 @@ public class MotivationExtractor {
 		return false;
 	}
 	
-	private boolean isUmlOperationStatementsAllTempVariables(UMLOperation sourceOperationAfterExtraction , ExtractOperationRefactoring extracteOpRefactoring) {
+	private boolean isUmlOperationStatementsAllTempVariables(UMLOperation sourceOperationAfterExtraction , ExtractOperationRefactoring extractOpRefactoring) {
 		CompositeStatementObject compositeStatement = sourceOperationAfterExtraction.getBody().getCompositeStatement();
 		List<AbstractStatement> abstractStatements = compositeStatement.getStatements();
 		Set<CodeElementType> codeElementTypeSet = new HashSet<CodeElementType>();
 		List<AbstractStatement> nonTempAbstractStatements = new ArrayList<AbstractStatement>();
 		List<StatementObject> statementsCallingExtractedOperation = new ArrayList<StatementObject>();
-		statementsCallingExtractedOperation.addAll(getStatementsCallingExtractedOperation(extracteOpRefactoring, CodeElementType.VARIABLE_DECLARATION_STATEMENT));	
-		statementsCallingExtractedOperation.addAll(getStatementsCallingExtractedOperation(extracteOpRefactoring, CodeElementType.EXPRESSION_STATEMENT));
+		statementsCallingExtractedOperation.addAll(getStatementsCallingExtractedOperation(extractOpRefactoring, CodeElementType.VARIABLE_DECLARATION_STATEMENT));	
+		statementsCallingExtractedOperation.addAll(getStatementsCallingExtractedOperation(extractOpRefactoring, CodeElementType.EXPRESSION_STATEMENT));
 		codeElementTypeSet.add(CodeElementType.VARIABLE_DECLARATION_STATEMENT);
 		//codeElementTypeSet.add(CodeElementType.RETURN_STATEMENT);//Considering return statements as Temp
 		for(AbstractStatement statement : abstractStatements) {
@@ -1041,6 +1043,8 @@ public class MotivationExtractor {
 		    }			
 			if(!codeElementTypeSet.contains(statementType) && !statementContainsInvocationToExtractedMethod /*&& !statementVariableIncludesParameterNames*/ ){
 					nonTempAbstractStatements.add(statement);																			
+				}else {
+					setMotivationFlag(MotivationFlag.EM_SOAE_EQUAL_PARAMETER_TYPES, extractOpRefactoring);
 				}
 			}			
 		if(nonTempAbstractStatements.size() == 0 ) {
@@ -1174,7 +1178,6 @@ public class MotivationExtractor {
 				}
 				if(isNeutralNodeForFacilitateExtension(notMappedNode , refList , sourceOperationAfterExtrction, addedOperationNames, allOperationNames )) {
 					listParentNeutralLeaves.add(notMappedNode);
-					setMotivationFlag(MotivationFlag.SOAE_T2_NEUTRAL, extractOperationRefactoring);
 				}
 				if(isParentT2LeafNodeinT1leafNodes(notMappedNode, parentListNotMappedleafNodesT1, allT1Nodes)) {
 					listParentT2LeafNodeInT1LeafNodes.add(notMappedNode);
@@ -1203,6 +1206,14 @@ public class MotivationExtractor {
 			int soae_T2_in_T1 = listParentT2LeafNodeInT1LeafNodes.size() + listParentT2InnerNodeInT1InnerNodes.size();
 			if(soae_T2_in_T1 > 0) {
 				setMotivationFlag(MotivationFlag.SOAE_T2_IN_T1, extractOperationRefactoring);
+			}
+			int soae_T2_neutral = listParentNeutralLeaves.size() + listParentNeutralInnerNodes.size();
+			if(soae_T2_neutral > 0) {
+				setMotivationFlag(MotivationFlag.SOAE_T2_NEUTRAL, extractOperationRefactoring);
+			}
+			int soae_T2_em_invocations = listParentNotMappedLeavesWithInvokationsToExtractedMethod.size() + listParentT2CompositesWithInvokationsToExtractedMethodInExpression.size();
+			if(soae_T2_em_invocations > 0) {
+				setMotivationFlag(MotivationFlag.SOAE_T2_EM_INVOCATIONS, extractOperationRefactoring);
 			}
 
 			//Processing Child (Extracted Operation) T2 Inner(Composite)/Leaf Nodes to filter out  marked nodes
@@ -1239,8 +1250,6 @@ public class MotivationExtractor {
 				}
 				if(isNeutralNodeForFacilitateExtension(notMappedNode, refList, extractedOperation,  addedOperationNames, allOperationNames)){
 					listChildNeutralLeaves.add(notMappedNode);
-					setMotivationFlag(MotivationFlag.EM_T2_NEUTRAL, extractOperationRefactoring);
-
 				}
 				if(isChildT2LeafNodeinT1leafNodes(notMappedNode, listNotMappedleafNodesT1 , allT1Nodes)) {
 					listChildT2LeafNodeInT1LeafNodes.add(notMappedNode);
@@ -1258,7 +1267,15 @@ public class MotivationExtractor {
 			if(em_T2_in_T1 > 0) {
 				setMotivationFlag(MotivationFlag.EM_T2_IN_T1, extractOperationRefactoring);
 			}
-	
+			int em_T2_neutral = listChildNeutralLeaves.size() + listChildNeutralInnerNodes.size();
+			if(em_T2_neutral > 0) {
+				setMotivationFlag(MotivationFlag.EM_T2_NEUTRAL, extractOperationRefactoring);
+			}
+			int em_T2_em_invocations = listChildNotMappedLeavesWithInvokationsToExtractedMethod.size() + listChildT2CompositesWithInvokationsToExtractedMethodInExpression.size();
+			if(em_T2_em_invocations > 0) {
+				setMotivationFlag(MotivationFlag.EM_T2_EM_INVOCATIONS, extractOperationRefactoring);
+			}
+			
 			
 			setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithInvokationsToExtractedMethod);
 			setChildMarkedT2Leaves.addAll(listChildNotMappedLeavesWithRecursive);
@@ -2925,6 +2942,10 @@ public class MotivationExtractor {
 				}
 				if(isExtractMethodRefactoringsEqual(listSourceOperations)) {
 					removeDuplicationFromSingleMethodRefactorings.addAll(listSourceOperations);
+				}else {
+					for(ExtractOperationRefactoring ref : listSourceOperations) {
+			 			setMotivationFlag(MotivationFlag.EM_DISTINCT, ref);
+			 		}
 				}
 				for(ExtractOperationRefactoring extractOp : listSourceOperations){
 					setMotivationFlag(MotivationFlag.EM_SAME_EXTRACTED_OPERATIONS, extractOp);
@@ -2944,6 +2965,14 @@ public class MotivationExtractor {
 		return false;
 	}
 	private boolean isRemoveDuplicationOneLine(List<ExtractOperationRefactoring> extractOperations) {
+		for(ExtractOperationRefactoring extractOperation : extractOperations) {
+			int em_mapping_size = extractOperation.getBodyMapper().getMappings().size();
+			setMotivationFlag(MotivationFlag.EM_MAPPING_SIZE.setMotivationValue(em_mapping_size), extractOperation);
+		}
+		int em_num_methods_used_in_duplication_removal = extractOperations.size();
+		for(ExtractOperationRefactoring extractOperation : extractOperations) {
+			setMotivationFlag(MotivationFlag.EM_NUM_METHODS_USED_IN_DUPLICATION_REMOVAL.setMotivationValue(em_num_methods_used_in_duplication_removal), extractOperation);
+		}
 		if(extractOperations.size() < 3) {
 			for(ExtractOperationRefactoring extractOperation : extractOperations) {
 				Set<AbstractCodeMapping> abstractCodeMappings = extractOperation.getBodyMapper().getMappings();

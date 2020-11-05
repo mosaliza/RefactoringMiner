@@ -12,6 +12,7 @@ public enum MotivationFlag {
 	
 	EM_SOAE_EQUAL_PARAMETER_TYPES("Extracted Method has Euqal Paramater Types with Source Operation After Extraction"),
 	SOAE_IS_DELEGATE_TO_EM("Extracted Method is a delegate to the Source Operation After Extraction"),
+	SOAE_IS_ALL_TEMP_VARIABLES("All Source Operation After Extraction statements h temporary variables"),
 	EM_HAS_ADDED_PARAMETERS("Extracted Operation has more parameters than the Source Operation"),
 	
 	EM_DECOMPOS_SINGLE_METHOD("Single Method Decomposition to Improve Readability"),
@@ -41,8 +42,12 @@ public enum MotivationFlag {
 	EM_T2_NEUTRAL("Extracted Method T2 NotMapped Nodes are Neutral"),
 	SOAE_T2_NEUTRAL("Source Operation After Extraction T2 NotMapped Nodes are Neutral"),
 	SOAE_T2_DV_IN_EM_PARAMETERS("Source Operation After Extraction Declared Variable are in the Extracted Method Parameters"),
-	
+	EM_T2_EM_INVOCATIONS("Extracted Operation T2 has invocation to the Extracted Method"),
+	SOAE_T2_EM_INVOCATIONS("Source Operation after Extraction T2 has invocation to the Extracted Method"),
+		
 	EM_SAME_EXTRACTED_OPERATIONS("Extract Method operations with the same extracted operations"),
+	EM_MAPPING_SIZE("Extract Method Mapping Size"),
+	EM_NUM_METHODS_USED_IN_DUPLICATION_REMOVAL("Number of Extract Methods used in Duplication Removal"),
 	
 	//EM_SOAE_EQUAL_PARAMETER_TYPES, SOAE_IS_DELEGATE_TO_EM are extracted for Backward compatibility as well.
 	EM_SOAE_EQUAL_NAMES("Extracted Method has equal names with the Source Operation After Extraction"),
@@ -63,9 +68,11 @@ public enum MotivationFlag {
 	EM_HAS_RETURN_STATEMENTS("Extract Method has return statements"),
 	EM_RETURN_STATEMENT_NEW_KEYWORDS("New keywords in the return statement"),
 	EM_RETURN_EQUAL_NEW_RETURN("Extract Method return type equals the object creation type in the return statement"),
+	EM_OBJECT_CREATION_VARIABLE_RETURNED("Variabale initialized with Object Creation is returned in the Extracted Method"),
 	EM_VARS_FACTORY_METHOD_RELATED("Extract Method Variables are related to object creation for factory method"),
 	SOBE_FACTORY_METHOD("Source Operation Before Extraction is Factory Method"),
-
+	
+	SOAE_STATEMENTS_CONTAIN_RUNNABLE_TYPE("Source Operation After Extraction statements have Runnable Type"),
 	SOAE_ANONYMOUS_CLASS_RUNNABLE_EM_INVOCATION("Source Operation After Extraction has an anonymous class and runnable type that has invocation to Extracted Method");
 	
 	private String description;
