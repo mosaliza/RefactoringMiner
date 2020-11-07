@@ -4,6 +4,7 @@ import org.refactoringminer.api.RefactoringType;
 
 public enum MotivationType {
 	
+	NONE("No Motivation"),
 	
 	EM_REUSABLE_METHOD("EM: Extract reusable method"),
 	EM_INTRODUCE_ALTERNATIVE_SIGNATURE("EM: Introduce alternative method signature"),

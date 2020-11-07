@@ -112,6 +112,10 @@ public class MotivationExtractor {
 		switch (type) {
 		case EXTRACT_OPERATION :
 			detectExtractOperationMotivation(listRef);
+			//Add Refactorings without motivation
+			for(Refactoring ref : listRef) {
+				setRefactoringMotivation(MotivationType.NONE, ref);
+			}
 			setExtractMethodInitialMotivationFlags(listRef);
 			detectExtractMethodWithLoggingSatement(listRef);
 			break;
@@ -368,6 +372,7 @@ public class MotivationExtractor {
 				removeRefactoringMotivation(MotivationType.EM_REMOVE_DUPLICATION, ref);
 			}
 		}
+
 		//Print All detected refactorings
 		printDetectedRefactoringMotivations();			
 	}
@@ -3011,7 +3016,7 @@ public class MotivationExtractor {
 		return false;
 	}
 	private void setRefactoringMotivation(MotivationType motivationType, Refactoring ref) {
-		if (mapRefactoringMotivations.containsKey(ref)){
+		if (mapRefactoringMotivations.containsKey(ref) && motivationType != MotivationType.NONE){
 			mapRefactoringMotivations.get(ref).add(motivationType);
 		}
 		else {

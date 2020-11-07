@@ -94,7 +94,7 @@ public class MainLargeScaleTest {
                 PullCommand pull = git.pull();
                 String treeName = "refs/heads/master"; // tag or branch
                 for (RevCommit commit : git.log().add(repository.resolve(treeName)).call()) {
-                    System.out.println(commit.getName());
+                    System.out.println(commit.getName());                   
                     writeToFile(projectDirectory + "/analysis/processed.csv", String.format("%s,%d", commit.getName(), System.currentTimeMillis()) + System.lineSeparator(), StandardOpenOption.APPEND);
                     miner.detectAtCommit(repository, commit.getName(), new RefactoringHandler() {
                         @Override
@@ -120,7 +120,12 @@ public class MainLargeScaleTest {
 
                         @Override
                         public void handle(String commitId, List<Refactoring> refactorings, Map<Refactoring, List<MotivationType>> mapRefactoringMotivations,Map<Refactoring, List<MotivationFlag>> mapMotivationFlags, Map<Refactoring, int[]> mapFacilitateExtensionT1T2, Map<Refactoring, String> mapDecomposeToImproveRedability) {
-                            List<ExtractMethodMotivation> results = mapRefactoringMotivations.entrySet().stream()
+
+                        	RefactoringHistory refactoringHistory = new RefactoringHistory(commitId , repositoryWebURL);
+                        	for(Refactoring ref : refactorings) {
+                        		refactoringHistory.addRefactoringType(ref);
+                        	}
+                        	List<ExtractMethodMotivation> results = mapRefactoringMotivations.entrySet().stream()
                                     .filter(entry -> isExtractOperationRefactoring(entry.getKey().getRefactoringType()))
                                     .map(entry -> {
                                         ExtractMethodMotivation extractMethodMotivation = new ExtractMethodMotivation(new HashSet<>(entry.getValue()),new HashSet<>(mapMotivationFlags.get(entry.getKey())));
@@ -147,6 +152,7 @@ public class MainLargeScaleTest {
                                     for (ExtractMethodMotivation result : results) {
                                         sessionObj.save(result);
                                     }
+                                    sessionObj.save(refactoringHistory);
 
                                     // Committing The Transactions To The Database
                                     sessionObj.getTransaction().commit();
@@ -189,6 +195,7 @@ public class MainLargeScaleTest {
         Configuration configObj = new Configuration();
         configObj.configure("hibernate.cfg.xml");
         configObj.addAnnotatedClass(ExtractMethodMotivation.class);
+        configObj.addAnnotatedClass(RefactoringHistory.class);
 
         // Since Hibernate Version 4.x, ServiceRegistry Is Being Used
         ServiceRegistry serviceRegistryObj = new StandardServiceRegistryBuilder().applySettings(configObj.getProperties()).build();
