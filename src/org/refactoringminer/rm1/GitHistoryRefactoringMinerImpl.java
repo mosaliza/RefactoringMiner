@@ -3,6 +3,7 @@ package org.refactoringminer.rm1;
 import gr.uom.java.xmi.UMLModel;
 import gr.uom.java.xmi.UMLModelASTReader;
 import gr.uom.java.xmi.diff.MotivationExtractor;
+import gr.uom.java.xmi.diff.MotivationFlag;
 import gr.uom.java.xmi.diff.MotivationType;
 import gr.uom.java.xmi.diff.UMLModelDiff;
 
@@ -148,12 +149,13 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 		while (i.hasNext()) {
 			RevCommit currentCommit = i.next();
 			try {
-				List<Refactoring> refactoringsAtRevision = detectRefactorings(gitService, repository, handler, projectFolder, currentCommit);
+				List<Refactoring> refactoringsAtRevision = detectRefactorings(gitService, repository, handler,
+						projectFolder, currentCommit);
 				refactoringsCount += refactoringsAtRevision.size();
-				
+
 			} catch (Exception e) {
 				logger.warn(String.format("Ignored revision %s due to error", currentCommit.getId().getName()), e);
-				handler.handleException(currentCommit.getId().getName(),e);
+				handler.handleException(currentCommit.getId().getName(), e);
 				errorCommitsCount++;
 			}
 
@@ -161,7 +163,8 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 			long time2 = System.currentTimeMillis();
 			if ((time2 - time) > 20000) {
 				time = time2;
-				logger.info(String.format("Processing %s [Commits: %d, Errors: %d, Refactorings: %d]", projectName, commitsCount, errorCommitsCount, refactoringsCount));
+				logger.info(String.format("Processing %s [Commits: %d, Errors: %d, Refactorings: %d]", projectName,
+						commitsCount, errorCommitsCount, refactoringsCount));
 			}
 		}
 
@@ -172,6 +175,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 	protected List<Refactoring> detectRefactorings(GitService gitService, Repository repository, final RefactoringHandler handler, File projectFolder, RevCommit currentCommit) throws Exception {
 		List<Refactoring> refactoringsAtRevision;
 		Map<Refactoring, List<MotivationType>> mapRefactoringMotivations = Collections.emptyMap();
+		Map<Refactoring, List<MotivationFlag>> mapMotivationFlags = Collections.emptyMap();
 		Map<Refactoring, int[]> mapFacilitateExtensionT1T2 = Collections.emptyMap();
 		Map<Refactoring, String> mapDecomposeToImproveRedability = Collections.emptyMap();
 		
@@ -203,6 +207,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 				MotivationExtractor motivationExtractor = new MotivationExtractor(modelDiff, refactoringsAtRevision);
 				motivationExtractor.detectAllRefactoringMotivations();
 				mapRefactoringMotivations = motivationExtractor.getMapRefactoringMotivations();
+				mapMotivationFlags = motivationExtractor.getMapMotivationFlags();
 				mapFacilitateExtensionT1T2 = motivationExtractor.getMapFacilitateExtensionT1T2();
 				mapDecomposeToImproveRedability = motivationExtractor.getMapDecomposeToImproveRedability();
 				//ProjectMatcher projectMatcher = (ProjectMatcher)handler;
@@ -214,11 +219,12 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 				//logger.info(String.format("Ignored revision %s with no changes in java files", commitId));
 				refactoringsAtRevision = Collections.emptyList();
 				mapRefactoringMotivations = Collections.emptyMap();
+				mapMotivationFlags = Collections.emptyMap();
 				mapFacilitateExtensionT1T2 = Collections.emptyMap();
 				mapDecomposeToImproveRedability = Collections.emptyMap();
 			}
 			handler.handle(commitId, refactoringsAtRevision);
-			handler.handle(commitId, refactoringsAtRevision, mapRefactoringMotivations , 
+			handler.handle(commitId, refactoringsAtRevision, mapRefactoringMotivations , mapMotivationFlags,
 					mapFacilitateExtensionT1T2 , mapDecomposeToImproveRedability);
 			walk.dispose();
 		}
@@ -258,6 +264,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 	protected List<Refactoring> detectRefactorings(final RefactoringHandler handler, File projectFolder, String cloneURL, String currentCommitId) {
 		List<Refactoring> refactoringsAtRevision = Collections.emptyList();
 		Map<Refactoring, List<MotivationType>> mapRefactoringMotivations = Collections.emptyMap();
+		Map<Refactoring, List<MotivationFlag>> mapMotivationFlags = Collections.emptyMap();
 		Map<Refactoring, int[]> mapFacilitateExtensionT1T2 = Collections.emptyMap();
 		Map<Refactoring, String> mapDecomposeToImproveRedability = Collections.emptyMap();
 		try {
@@ -282,6 +289,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 				MotivationExtractor motivationExtractor = new MotivationExtractor(modelDiff, refactoringsAtRevision);
 				motivationExtractor.detectAllRefactoringMotivations();
 				mapRefactoringMotivations = motivationExtractor.getMapRefactoringMotivations();
+				mapMotivationFlags = motivationExtractor.getMapMotivationFlags();
 				mapFacilitateExtensionT1T2 = motivationExtractor.getMapFacilitateExtensionT1T2();
 				mapDecomposeToImproveRedability = motivationExtractor.getMapDecomposeToImproveRedability();
 				stringJSON.append(writeToJSON(cloneURL ,currentCommitId , refactoringsAtRevision));
@@ -297,7 +305,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 			handler.handleException(currentCommitId, e);
 		}
 		handler.handle(currentCommitId, refactoringsAtRevision);
-		handler.handle(currentCommitId, refactoringsAtRevision, mapRefactoringMotivations,
+		handler.handle(currentCommitId, refactoringsAtRevision, mapRefactoringMotivations,mapMotivationFlags, 
 				mapFacilitateExtensionT1T2 , mapDecomposeToImproveRedability);
 		return refactoringsAtRevision;
 	}
@@ -567,6 +575,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 	protected List<Refactoring> detectRefactorings(final RefactoringHandler handler, String gitURL, String currentCommitId) {
 		List<Refactoring> refactoringsAtRevision = Collections.emptyList();
 		Map<Refactoring, List<MotivationType>> mapRefactoringMotivations = Collections.emptyMap();
+		Map<Refactoring, List<MotivationFlag>> mapMotivationFlags = Collections.emptyMap();
 		Map<Refactoring, int[]> mapFacilitateExtensionT1T2 = Collections.emptyMap();
 		Map<Refactoring, String> mapDecomposeToImproveRedability = Collections.emptyMap();
 		Collections.emptyMap();
@@ -585,6 +594,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 			MotivationExtractor motivationExtractor = new MotivationExtractor(modelDiff, refactoringsAtRevision);
 			motivationExtractor.detectAllRefactoringMotivations();
 			mapRefactoringMotivations = motivationExtractor.getMapRefactoringMotivations();
+			mapMotivationFlags = motivationExtractor.getMapMotivationFlags();
 			mapFacilitateExtensionT1T2 = motivationExtractor.getMapFacilitateExtensionT1T2();
 			mapDecomposeToImproveRedability = motivationExtractor.getMapDecomposeToImproveRedability();
 			//Never reaches here
@@ -601,7 +611,7 @@ public class GitHistoryRefactoringMinerImpl implements GitHistoryRefactoringMine
 			handler.handleException(currentCommitId, e);
 		}
 		handler.handle(currentCommitId, refactoringsAtRevision);
-		handler.handle(currentCommitId, refactoringsAtRevision, mapRefactoringMotivations,
+		handler.handle(currentCommitId, refactoringsAtRevision, mapRefactoringMotivations, mapMotivationFlags, 
 				mapFacilitateExtensionT1T2,mapDecomposeToImproveRedability);
 
 		return refactoringsAtRevision;
