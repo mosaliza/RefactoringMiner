@@ -114,7 +114,14 @@ public class MotivationExtractor {
 			detectExtractOperationMotivation(listRef);
 			//Add Refactorings without motivation
 			for(Refactoring ref : listRef) {
-				setRefactoringMotivation(MotivationType.NONE, ref);
+				if(mapRefactoringMotivations.isEmpty()) {
+					setRefactoringMotivation(MotivationType.NONE, ref);
+				}else {
+					List<MotivationType> motivationTypes = mapRefactoringMotivations.get(ref);
+					if(motivationTypes == null || motivationTypes.size() == 0) {
+						setRefactoringMotivation(MotivationType.NONE, ref);
+					}
+				}
 			}
 			setExtractMethodInitialMotivationFlags(listRef);
 			detectExtractMethodWithLoggingSatement(listRef);
