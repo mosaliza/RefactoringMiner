@@ -38,6 +38,7 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 	private List<UMLTypeParameter> typeParameters;
 	private UMLJavadoc javadoc;
 	private List<UMLAnnotation> annotations;
+	private List<UMLComment> comments;
 	
 	public UMLOperation(String name, LocationInfo locationInfo) {
 		this.locationInfo = locationInfo;
@@ -46,6 +47,7 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
         this.anonymousClassList = new ArrayList<UMLAnonymousClass>();
         this.typeParameters = new ArrayList<UMLTypeParameter>();
         this.annotations = new ArrayList<UMLAnnotation>();
+        this.comments = new ArrayList<UMLComment>();
     }
 
 	public List<UMLTypeParameter> getTypeParameters() {
@@ -139,6 +141,10 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 
 	public void setJavadoc(UMLJavadoc javadoc) {
 		this.javadoc = javadoc;
+	}
+
+	public List<UMLComment> getComments() {
+		return comments;
 	}
 
 	public List<OperationInvocation> getAllOperationInvocations() {

@@ -908,7 +908,9 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 				if(replacement instanceof MethodInvocationReplacement ||
 						replacement instanceof VariableReplacementWithMethodInvocation ||
 						replacement instanceof ClassInstanceCreationWithMethodInvocationReplacement ||
-						replacement.getType().equals(ReplacementType.ARGUMENT_REPLACED_WITH_RIGHT_HAND_SIDE_OF_ASSIGNMENT_EXPRESSION)) {
+						replacement.getType().equals(ReplacementType.ARGUMENT_REPLACED_WITH_RIGHT_HAND_SIDE_OF_ASSIGNMENT_EXPRESSION) ||
+						replacement instanceof IntersectionReplacement ||
+						replacement.getType().equals(ReplacementType.ANONYMOUS_CLASS_DECLARATION)) {
 					replacements.add(replacement);
 				}
 			}
@@ -1961,7 +1963,7 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 		replacementInfo.addReplacements(replacementsToBeAdded);
 		boolean isEqualWithReplacement = s1.equals(s2) || replacementInfo.argumentizedString1.equals(replacementInfo.argumentizedString2) || differOnlyInCastExpressionOrPrefixOperator(s1, s2, replacementInfo) || oneIsVariableDeclarationTheOtherIsVariableAssignment(s1, s2, replacementInfo) ||
 				oneIsVariableDeclarationTheOtherIsReturnStatement(s1, s2) || oneIsVariableDeclarationTheOtherIsReturnStatement(statement1.getString(), statement2.getString()) ||
-				(commonConditional(s1, s2, replacementInfo) && containsValidOperatorReplacements(replacementInfo)) ||
+				(containsValidOperatorReplacements(replacementInfo) && (equalAfterInfixExpressionExpansion(s1, s2, replacementInfo, statement1.getInfixExpressions()) || commonConditional(s1, s2, replacementInfo))) ||
 				equalAfterArgumentMerge(s1, s2, replacementInfo) ||
 				equalAfterNewArgumentAdditions(s1, s2, replacementInfo) ||
 				(validStatementForConcatComparison(statement1, statement2) && commonConcat(s1, s2, replacementInfo));
@@ -2312,30 +2314,66 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 			replacementInfo.addReplacement(r);
 			return replacementInfo.getReplacements();
 		}
-		//check if the method call in the second statement is the expression of the method invocation in the first statement
+		//check if the method call in the second statement is the expression (or sub-expression) of the method invocation in the first statement
 		if(invocationCoveringTheEntireStatement2 != null) {
 			for(String key1 : methodInvocationMap1.keySet()) {
 				for(AbstractCall invocation1 : methodInvocationMap1.get(key1)) {
-					if(statement1.getString().endsWith(key1 + ";\n") &&
-							methodInvocationMap2.keySet().contains(invocation1.getExpression())) {
-						Replacement replacement = new MethodInvocationReplacement(invocation1.actualString(),
-								invocationCoveringTheEntireStatement2.actualString(), (OperationInvocation)invocation1, invocationCoveringTheEntireStatement2, ReplacementType.METHOD_INVOCATION);
-						replacementInfo.addReplacement(replacement);
-						return replacementInfo.getReplacements();
+					if(statement1.getString().endsWith(key1 + ";\n")) {
+						if(methodInvocationMap2.keySet().contains(invocation1.getExpression())) {
+							Replacement replacement = new MethodInvocationReplacement(invocation1.actualString(),
+									invocationCoveringTheEntireStatement2.actualString(), (OperationInvocation)invocation1, invocationCoveringTheEntireStatement2, ReplacementType.METHOD_INVOCATION);
+							replacementInfo.addReplacement(replacement);
+							return replacementInfo.getReplacements();
+						}
+						if(invocation1 instanceof OperationInvocation) {
+							for(String subExpression1 : ((OperationInvocation)invocation1).getSubExpressions()) {
+								if(methodInvocationMap2.keySet().contains(subExpression1)) {
+									AbstractCall subOperationInvocation1 = null;
+									for(String key : methodInvocationMap1.keySet()) {
+										if(key.endsWith(subExpression1)) {
+											subOperationInvocation1 = methodInvocationMap1.get(key).get(0);
+											break;
+										}
+									}
+									Replacement replacement = new MethodInvocationReplacement(subExpression1,
+											invocationCoveringTheEntireStatement2.actualString(), (OperationInvocation)subOperationInvocation1, invocationCoveringTheEntireStatement2, ReplacementType.METHOD_INVOCATION);
+									replacementInfo.addReplacement(replacement);
+									return replacementInfo.getReplacements();
+								}
+							}
+						}
 					}
 				}
 			}
 		}
-		//check if the method call in the first statement is the expression of the method invocation in the second statement
+		//check if the method call in the first statement is the expression (or sub-expression) of the method invocation in the second statement
 		if(invocationCoveringTheEntireStatement1 != null) {
 			for(String key2 : methodInvocationMap2.keySet()) {
 				for(AbstractCall invocation2 : methodInvocationMap2.get(key2)) {
-					if(statement2.getString().endsWith(key2 + ";\n") &&
-							methodInvocationMap1.keySet().contains(invocation2.getExpression())) {
-						Replacement replacement = new MethodInvocationReplacement(invocationCoveringTheEntireStatement1.actualString(),
-								invocation2.actualString(), invocationCoveringTheEntireStatement1, (OperationInvocation)invocation2, ReplacementType.METHOD_INVOCATION);
-						replacementInfo.addReplacement(replacement);
-						return replacementInfo.getReplacements();
+					if(statement2.getString().endsWith(key2 + ";\n")) {
+						if(methodInvocationMap1.keySet().contains(invocation2.getExpression())) {
+							Replacement replacement = new MethodInvocationReplacement(invocationCoveringTheEntireStatement1.actualString(),
+									invocation2.actualString(), invocationCoveringTheEntireStatement1, (OperationInvocation)invocation2, ReplacementType.METHOD_INVOCATION);
+							replacementInfo.addReplacement(replacement);
+							return replacementInfo.getReplacements();
+						}
+						if(invocation2 instanceof OperationInvocation) {
+							for(String subExpression2 : ((OperationInvocation)invocation2).getSubExpressions()) {
+								if(methodInvocationMap1.keySet().contains(subExpression2)) {
+									AbstractCall subOperationInvocation2 = null;
+									for(String key : methodInvocationMap2.keySet()) {
+										if(key.endsWith(subExpression2)) {
+											subOperationInvocation2 = methodInvocationMap2.get(key).get(0);
+											break;
+										}
+									}
+									Replacement replacement = new MethodInvocationReplacement(invocationCoveringTheEntireStatement1.actualString(),
+											subExpression2, invocationCoveringTheEntireStatement1, (OperationInvocation)subOperationInvocation2, ReplacementType.METHOD_INVOCATION);
+									replacementInfo.addReplacement(replacement);
+									return replacementInfo.getReplacements();
+								}
+							}
+						}
 					}
 				}
 			}
@@ -2382,8 +2420,22 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 				identicalArrayInitializer = creationCoveringTheEntireStatement1.identicalArrayInitializer(creationCoveringTheEntireStatement2);
 			}
 			if(identicalArrayInitializer) {
+				String anonymousClassDeclaration1 = creationCoveringTheEntireStatement1.getAnonymousClassDeclaration();
+				String anonymousClassDeclaration2 = creationCoveringTheEntireStatement2.getAnonymousClassDeclaration();
+				if(anonymousClassDeclaration1 != null && anonymousClassDeclaration2 != null && !anonymousClassDeclaration1.equals(anonymousClassDeclaration2)) {
+					Replacement replacement = new Replacement(anonymousClassDeclaration1, anonymousClassDeclaration2, ReplacementType.ANONYMOUS_CLASS_DECLARATION);
+					replacementInfo.addReplacement(replacement);
+				}
 				return replacementInfo.getReplacements();
 			}
+		}
+		//object creation has identical arguments, but different type
+		if(creationCoveringTheEntireStatement1 != null && creationCoveringTheEntireStatement2 != null &&
+				creationCoveringTheEntireStatement1.getArguments().size() > 0 && creationCoveringTheEntireStatement1.equalArguments(creationCoveringTheEntireStatement2)) {
+			Replacement replacement = new ObjectCreationReplacement(creationCoveringTheEntireStatement1.getName(),
+					creationCoveringTheEntireStatement2.getName(), creationCoveringTheEntireStatement1, creationCoveringTheEntireStatement2, ReplacementType.CLASS_INSTANCE_CREATION);
+			replacementInfo.addReplacement(replacement);
+			return replacementInfo.getReplacements();
 		}
 		//object creation has only changes in the arguments
 		if(creationCoveringTheEntireStatement1 != null && creationCoveringTheEntireStatement2 != null) {
@@ -2588,6 +2640,40 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 			}
 		}
 		return null;
+	}
+
+	private boolean equalAfterInfixExpressionExpansion(String s1, String s2, ReplacementInfo replacementInfo, List<String> infixExpressions1) {
+		Set<Replacement> replacementsToBeRemoved = new LinkedHashSet<Replacement>();
+		Set<Replacement> replacementsToBeAdded = new LinkedHashSet<Replacement>();
+		String originalArgumentizedString1 = replacementInfo.getArgumentizedString1();
+		for(Replacement replacement : replacementInfo.getReplacements()) {
+			String before = replacement.getBefore();
+			for(String infixExpression1 : infixExpressions1) {
+				if(infixExpression1.startsWith(before)) {
+					String suffix = infixExpression1.substring(before.length(), infixExpression1.length());
+					String after = replacement.getAfter();
+					if(s1.contains(after + suffix)) {
+						String temp = ReplacementUtil.performReplacement(replacementInfo.getArgumentizedString1(), after + suffix, after);
+						int distanceRaw = StringDistance.editDistance(temp, replacementInfo.getArgumentizedString2());
+						if(distanceRaw >= 0 && distanceRaw < replacementInfo.getRawDistance()) {
+							replacementsToBeRemoved.add(replacement);
+							Replacement newReplacement = new Replacement(infixExpression1, after, ReplacementType.INFIX_EXPRESSION);
+							replacementsToBeAdded.add(newReplacement);
+							replacementInfo.setArgumentizedString1(temp);
+						}
+					}
+				}
+			}
+		}
+		if(replacementInfo.getRawDistance() == 0) {
+			replacementInfo.removeReplacements(replacementsToBeRemoved);
+			replacementInfo.addReplacements(replacementsToBeAdded);
+			return true;
+		}
+		else {
+			replacementInfo.setArgumentizedString1(originalArgumentizedString1);
+			return false;
+		}
 	}
 
 	private boolean isExpressionOfAnotherMethodInvocation(AbstractCall invocation, Map<String, List<? extends AbstractCall>> invocationMap) {

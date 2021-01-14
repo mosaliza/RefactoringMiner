@@ -87,6 +87,17 @@ public class LocationInfo {
 				this.endOffset >= other.endOffset;
 	}
 
+	public boolean sameLine(LocationInfo other) {
+		return this.filePath.equals(other.filePath) &&
+				this.startLine == other.startLine &&
+				this.endLine == other.endLine;
+	}
+
+	public boolean nextLine(LocationInfo other) {
+		return this.filePath.equals(other.filePath) &&
+				this.startLine == other.endLine + 1;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -190,7 +201,10 @@ public class LocationInfo {
 		ANNOTATION,
 		SINGLE_MEMBER_ANNOTATION_VALUE,
 		NORMAL_ANNOTATION_MEMBER_VALUE_PAIR,
-		ENUM_CONSTANT_DECLARATION;
+		ENUM_CONSTANT_DECLARATION,
+		JAVADOC,
+		LINE_COMMENT,
+		BLOCK_COMMENT;
 		
 		private String name;
 		
