@@ -126,8 +126,12 @@ public class UMLAnnotation implements Serializable, LocationInfoProvider {
 		if (value == null) {
 			if (other.value != null)
 				return false;
-		} else if (!value.getExpression().equals(other.value.getExpression()))
-			return false;
+		} else {
+			if (other.value == null)
+				return false;
+			if (!value.getExpression().equals(other.value.getExpression()))
+				return false;
+		}
 		return true;
 	}
 
@@ -145,6 +149,8 @@ public class UMLAnnotation implements Serializable, LocationInfoProvider {
 				if (!(m.get(thisKey) == null && m.containsKey(thisKey)))
 					return false;
 			} else {
+				if (m.get(thisKey) == null)
+					return false;
 				if (!thisValue.getExpression().equals(m.get(thisKey).getExpression()))
 					return false;
 			}

@@ -92,7 +92,7 @@ public class SplitVariableRefactoring implements Refactoring {
 		sb.append(splitVariables);
 		sb.append(" in method ");
 		sb.append(operationAfter);
-		sb.append(" in class ").append(operationAfter.getClassName());
+		sb.append(" from class ").append(operationAfter.getClassName());
 		return sb.toString();
 	}
 
@@ -145,6 +145,9 @@ public class SplitVariableRefactoring implements Refactoring {
 		ranges.add(oldVariable.codeRange()
 				.setDescription("original variable declaration")
 				.setCodeElement(oldVariable.toString()));
+		ranges.add(operationBefore.codeRange()
+				.setDescription("original method declaration")
+				.setCodeElement(operationBefore.toString()));
 		return ranges;
 	}
 
@@ -156,6 +159,9 @@ public class SplitVariableRefactoring implements Refactoring {
 					.setDescription("split variable declaration")
 					.setCodeElement(splitVariable.toString()));
 		}
+		ranges.add(operationAfter.codeRange()
+				.setDescription("method declaration with split variable")
+				.setCodeElement(operationAfter.toString()));
 		return ranges;
 	}
 }

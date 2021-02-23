@@ -75,7 +75,7 @@ public class RenameVariableRefactoring implements Refactoring {
 		sb.append(renamedVariable);
 		sb.append(" in method ");
 		sb.append(operationAfter);
-		sb.append(" in class ").append(operationAfter.getClassName());
+		sb.append(" from class ").append(operationAfter.getClassName());
 		return sb.toString();
 	}
 
@@ -140,6 +140,9 @@ public class RenameVariableRefactoring implements Refactoring {
 		ranges.add(originalVariable.codeRange()
 				.setDescription("original variable declaration")
 				.setCodeElement(originalVariable.toString()));
+		ranges.add(operationBefore.codeRange()
+				.setDescription("original method declaration")
+				.setCodeElement(operationBefore.toString()));
 		return ranges;
 	}
 
@@ -149,6 +152,9 @@ public class RenameVariableRefactoring implements Refactoring {
 		ranges.add(renamedVariable.codeRange()
 				.setDescription("renamed variable declaration")
 				.setCodeElement(renamedVariable.toString()));
+		ranges.add(operationAfter.codeRange()
+				.setDescription("method declaration with renamed variable")
+				.setCodeElement(operationAfter.toString()));
 		return ranges;
 	}
 }

@@ -37,14 +37,14 @@ public class UMLClassDiff extends UMLClassBaseDiff {
 		this.removedAttributes.add(umlAttribute);
 	}
 
-	protected void processAttributes() {
+	protected void processAttributes() throws RefactoringMinerTimedOutException {
 		for(UMLAttribute attribute : originalClass.getAttributes()) {
 			UMLAttribute matchingAttribute = nextClass.containsAttribute(attribute);
     		if(matchingAttribute == null) {
     			this.reportRemovedAttribute(attribute);
     		}
     		else {
-    			UMLAttributeDiff attributeDiff = new UMLAttributeDiff(attribute, matchingAttribute, getOperationBodyMapperList());
+    			UMLAttributeDiff attributeDiff = new UMLAttributeDiff(attribute, matchingAttribute, this);
     			if(!attributeDiff.isEmpty()) {
 	    			refactorings.addAll(attributeDiff.getRefactorings());
 	    			this.attributeDiffList.add(attributeDiff);
@@ -57,7 +57,7 @@ public class UMLClassDiff extends UMLClassBaseDiff {
     			this.reportAddedAttribute(attribute);
     		}
     		else {
-    			UMLAttributeDiff attributeDiff = new UMLAttributeDiff(matchingAttribute, attribute, getOperationBodyMapperList());
+    			UMLAttributeDiff attributeDiff = new UMLAttributeDiff(matchingAttribute, attribute, this);
     			if(!attributeDiff.isEmpty()) {
 	    			refactorings.addAll(attributeDiff.getRefactorings());
 					this.attributeDiffList.add(attributeDiff);
@@ -113,15 +113,20 @@ public class UMLClassDiff extends UMLClassBaseDiff {
 			}
 		}
 		for(UMLOperation operation : originalClass.getOperations()) {
-			if(!containsMapperForOperation(operation) && nextClass.getOperations().contains(operation) && !removedOperations.contains(operation)) {
+			if(!containsMapperForOperation1(operation) && nextClass.getOperations().contains(operation) && !removedOperations.contains(operation)) {
     			int index = nextClass.getOperations().indexOf(operation);
     			int lastIndex = nextClass.getOperations().lastIndexOf(operation);
     			int finalIndex = index;
     			if(index != lastIndex) {
-    				double d1 = operation.getReturnParameter().getType().normalizedNameDistance(nextClass.getOperations().get(index).getReturnParameter().getType());
-    				double d2 = operation.getReturnParameter().getType().normalizedNameDistance(nextClass.getOperations().get(lastIndex).getReturnParameter().getType());
-    				if(d2 < d1) {
+    				if(containsMapperForOperation2(nextClass.getOperations().get(index))) {
     					finalIndex = lastIndex;
+    				}
+    				else if(!operation.isConstructor()) {
+	    				double d1 = operation.getReturnParameter().getType().normalizedNameDistance(nextClass.getOperations().get(index).getReturnParameter().getType());
+	    				double d2 = operation.getReturnParameter().getType().normalizedNameDistance(nextClass.getOperations().get(lastIndex).getReturnParameter().getType());
+	    				if(d2 < d1) {
+	    					finalIndex = lastIndex;
+	    				}
     				}
     			}
     			UMLOperationBodyMapper operationBodyMapper = new UMLOperationBodyMapper(operation, nextClass.getOperations().get(finalIndex), this);
@@ -161,13 +166,13 @@ public class UMLClassDiff extends UMLClassBaseDiff {
 		addedOperations.removeAll(addedOperationsToBeRemoved);
 	}
 
-	protected void checkForAttributeChanges() {
+	protected void checkForAttributeChanges() throws RefactoringMinerTimedOutException {
 		for(Iterator<UMLAttribute> removedAttributeIterator = removedAttributes.iterator(); removedAttributeIterator.hasNext();) {
 			UMLAttribute removedAttribute = removedAttributeIterator.next();
 			for(Iterator<UMLAttribute> addedAttributeIterator = addedAttributes.iterator(); addedAttributeIterator.hasNext();) {
 				UMLAttribute addedAttribute = addedAttributeIterator.next();
 				if(removedAttribute.getName().equals(addedAttribute.getName())) {
-					UMLAttributeDiff attributeDiff = new UMLAttributeDiff(removedAttribute, addedAttribute, getOperationBodyMapperList());
+					UMLAttributeDiff attributeDiff = new UMLAttributeDiff(removedAttribute, addedAttribute, this);
 					refactorings.addAll(attributeDiff.getRefactorings());
 					addedAttributeIterator.remove();
 					removedAttributeIterator.remove();
@@ -178,9 +183,18 @@ public class UMLClassDiff extends UMLClassBaseDiff {
 		}
 	}
 
-	private boolean containsMapperForOperation(UMLOperation operation) {
+	private boolean containsMapperForOperation1(UMLOperation operation) {
 		for(UMLOperationBodyMapper mapper : getOperationBodyMapperList()) {
 			if(mapper.getOperation1().equalsQualified(operation)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean containsMapperForOperation2(UMLOperation operation) {
+		for(UMLOperationBodyMapper mapper : getOperationBodyMapperList()) {
+			if(mapper.getOperation2().equalsQualified(operation)) {
 				return true;
 			}
 		}

@@ -67,6 +67,9 @@ Currently, it supports the detection of the following refactorings:
 38. Extract Attribute
 39. Move and Rename Method
 40. Move and Inline Method
+
+**<ins>supported by RefactoringMiner 2.1</ins>**
+
 41. Add Method Annotation
 42. Remove Method Annotation
 43. Modify Method Annotation
@@ -79,9 +82,16 @@ Currently, it supports the detection of the following refactorings:
 50. Add Parameter Annotation
 51. Remove Parameter Annotation
 52. Modify Parameter Annotation
-53. Add Parameter
-54. Remove Parameter
-55. Reorder Parameter
+53. Add Variable Annotation
+54. Remove Variable Annotation
+55. Modify Variable Annotation
+56. Add Parameter
+57. Remove Parameter
+58. Reorder Parameter
+59. Add Thrown Exception Type
+60. Remove Thrown Exception Type
+61. Change Thrown Exception Type
+62. Change Method Access Modifier
 
 # How to build RefactoringMiner
 
@@ -305,7 +315,8 @@ List<Refactoring> refactorings = modelDiff.getRefactorings();
 ```
 ## With all information fetched directly from GitHub
 
-**To use this API, please provide a valid OAuth token in the `github-oauth.properties` file.**
+To use this API, please provide a valid OAuth token in the `github-oauth.properties` file.
+You can generate an OAuth token in GitHub `Settings` -> `Developer settings` -> `Personal access tokens`.
 
 If you don't want to clone locally the repository, you can use the following code snippet:
 
@@ -443,6 +454,9 @@ With a locally cloned repository, run:
 If you don't want to clone locally the repository, run:
 
     > ./RefactoringMiner -gc https://github.com/danilofes/refactoring-toy-example.git 36287f7c3b09eff78395267a3ac0d7da067863fd 10
+
+For the `-gc` and `-gp` options you must provide a valid OAuth token in the `github-oauth.properties` file stored in the `bin` folder.
+You can generate an OAuth token in GitHub `Settings` -> `Developer settings` -> `Personal access tokens`.
 
 In both cases, you will get the output in JSON format:
 

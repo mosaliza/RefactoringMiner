@@ -3,6 +3,7 @@ package gr.uom.java.xmi.diff;
 import gr.uom.java.xmi.UMLAnnotation;
 import gr.uom.java.xmi.UMLOperation;
 import gr.uom.java.xmi.UMLParameter;
+import gr.uom.java.xmi.UMLType;
 import gr.uom.java.xmi.decomposition.AbstractCodeMapping;
 import gr.uom.java.xmi.decomposition.VariableReferenceExtractor;
 
@@ -29,13 +30,22 @@ public class UMLOperationDiff {
 	private boolean parametersReordered;
 	private Set<AbstractCodeMapping> mappings = new LinkedHashSet<AbstractCodeMapping>();
 	private UMLAnnotationListDiff annotationListDiff;
+	private List<UMLType> addedExceptionTypes;
+	private List<UMLType> removedExceptionTypes;
+	private SimpleEntry<Set<UMLType>, Set<UMLType>> changedExceptionTypes;
 	
 	public UMLOperationDiff(UMLOperation removedOperation, UMLOperation addedOperation) {
+		process(removedOperation, addedOperation);
+	}
+
+	private void process(UMLOperation removedOperation, UMLOperation addedOperation) {
 		this.removedOperation = removedOperation;
 		this.addedOperation = addedOperation;
 		this.addedParameters = new ArrayList<UMLParameter>();
 		this.removedParameters = new ArrayList<UMLParameter>();
 		this.parameterDiffList = new ArrayList<UMLParameterDiff>();
+		this.addedExceptionTypes = new ArrayList<UMLType>();
+		this.removedExceptionTypes = new ArrayList<UMLType>();
 		this.visibilityChanged = false;
 		this.abstractionChanged = false;
 		this.returnTypeChanged = false;
@@ -50,6 +60,7 @@ public class UMLOperationDiff {
 			returnTypeChanged = true;
 		else if(!removedOperation.equalQualifiedReturnParameter(addedOperation))
 			qualifiedReturnTypeChanged = true;
+		processThrownExceptionTypes(removedOperation.getThrownExceptionTypes(), addedOperation.getThrownExceptionTypes());
 		this.annotationListDiff = new UMLAnnotationListDiff(removedOperation.getAnnotations(), addedOperation.getAnnotations());
 		List<SimpleEntry<UMLParameter, UMLParameter>> matchedParameters = updateAddedRemovedParameters(removedOperation, addedOperation);
 		for(SimpleEntry<UMLParameter, UMLParameter> matchedParameter : matchedParameters) {
@@ -101,10 +112,10 @@ public class UMLOperationDiff {
 		if(matchedParameterCount == removedParametersWithoutReturnType.size()-1 && matchedParameterCount == addedParametersWithoutReturnType.size()-1) {
 			for(Iterator<UMLParameter> removedParameterIterator = removedParameters.iterator(); removedParameterIterator.hasNext();) {
 				UMLParameter removedParameter = removedParameterIterator.next();
-				int indexOfRemovedParameter = removedParametersWithoutReturnType.indexOf(removedParameter);
+				int indexOfRemovedParameter = indexOfParameter(removedParametersWithoutReturnType, removedParameter);
 				for(Iterator<UMLParameter> addedParameterIterator = addedParameters.iterator(); addedParameterIterator.hasNext();) {
 					UMLParameter addedParameter = addedParameterIterator.next();
-					int indexOfAddedParameter = addedParametersWithoutReturnType.indexOf(addedParameter);
+					int indexOfAddedParameter = indexOfParameter(addedParametersWithoutReturnType, addedParameter);
 					if(indexOfRemovedParameter == indexOfAddedParameter) {
 						UMLParameterDiff parameterDiff = new UMLParameterDiff(removedParameter, addedParameter, removedOperation, addedOperation, mappings);
 						parameterDiffList.add(parameterDiff);
@@ -117,9 +128,58 @@ public class UMLOperationDiff {
 		}
 	}
 
+	private int indexOfParameter(List<UMLParameter> parameters, UMLParameter parameter) {
+		int index = 0;
+		for(UMLParameter p : parameters) {
+			if(p.equalsIncludingName(parameter)) {
+				return index;
+			}
+			index++;
+		}
+		return -1;
+	}
+
 	public UMLOperationDiff(UMLOperation removedOperation, UMLOperation addedOperation, Set<AbstractCodeMapping> mappings) {
-		this(removedOperation, addedOperation);
 		this.mappings = mappings;
+		process(removedOperation, addedOperation);
+	}
+
+	private void processThrownExceptionTypes(List<UMLType> exceptionTypes1, List<UMLType> exceptionTypes2) {
+		Set<UMLType> addedExceptionTypes = new LinkedHashSet<UMLType>();
+		Set<UMLType> removedExceptionTypes = new LinkedHashSet<UMLType>();
+		for(UMLType exceptionType1 : exceptionTypes1) {
+			boolean found = false;
+			for(UMLType exceptionType2 : exceptionTypes2) {
+				if(exceptionType1.equals(exceptionType2)) {
+					found = true;
+					break;
+				}
+			}
+			if(!found) {
+				removedExceptionTypes.add(exceptionType1);
+			}
+		}
+		for(UMLType exceptionType2 : exceptionTypes2) {
+			boolean found = false;
+			for(UMLType exceptionType1 : exceptionTypes1) {
+				if(exceptionType1.equals(exceptionType2)) {
+					found = true;
+					break;
+				}
+			}
+			if(!found) {
+				addedExceptionTypes.add(exceptionType2);
+			}
+		}
+		if(removedExceptionTypes.size() > 0 && addedExceptionTypes.size() == 0) {
+			this.removedExceptionTypes.addAll(removedExceptionTypes);
+		}
+		else if(addedExceptionTypes.size() > 0 && removedExceptionTypes.size() == 0) {
+			this.addedExceptionTypes.addAll(addedExceptionTypes);
+		}
+		else if(removedExceptionTypes.size() > 0 && addedExceptionTypes.size() > 0) {
+			this.changedExceptionTypes = new SimpleEntry<Set<UMLType>, Set<UMLType>>(removedExceptionTypes, addedExceptionTypes);
+		}
 	}
 
 	private boolean existsAnotherAddedParameterWithTheSameType(UMLParameter parameter) {
@@ -274,6 +334,22 @@ public class UMLOperationDiff {
 		}
 		for(UMLAnnotationDiff annotationDiff : annotationListDiff.getAnnotationDiffList()) {
 			ModifyMethodAnnotationRefactoring refactoring = new ModifyMethodAnnotationRefactoring(annotationDiff.getRemovedAnnotation(), annotationDiff.getAddedAnnotation(), removedOperation, addedOperation);
+			refactorings.add(refactoring);
+		}
+		for(UMLType exceptionType : addedExceptionTypes) {
+			AddThrownExceptionTypeRefactoring refactoring = new AddThrownExceptionTypeRefactoring(exceptionType, removedOperation, addedOperation);
+			refactorings.add(refactoring);
+		}
+		for(UMLType exceptionType : removedExceptionTypes) {
+			RemoveThrownExceptionTypeRefactoring refactoring = new RemoveThrownExceptionTypeRefactoring(exceptionType, removedOperation, addedOperation);
+			refactorings.add(refactoring);
+		}
+		if(changedExceptionTypes != null) {
+			ChangeThrownExceptionTypeRefactoring refactoring = new ChangeThrownExceptionTypeRefactoring(changedExceptionTypes.getKey(), changedExceptionTypes.getValue(), removedOperation, addedOperation);
+			refactorings.add(refactoring);
+		}
+		if(visibilityChanged) {
+			ChangeOperationAccessModifierRefactoring refactoring = new ChangeOperationAccessModifierRefactoring(removedOperation.getVisibility(), addedOperation.getVisibility(), removedOperation, addedOperation);
 			refactorings.add(refactoring);
 		}
 		return refactorings;

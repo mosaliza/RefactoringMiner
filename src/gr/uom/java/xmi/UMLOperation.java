@@ -36,9 +36,11 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 	private OperationBody operationBody;
 	private List<UMLAnonymousClass> anonymousClassList;
 	private List<UMLTypeParameter> typeParameters;
+	private List<UMLType> thrownExceptionTypes;
 	private UMLJavadoc javadoc;
 	private List<UMLAnnotation> annotations;
 	private List<UMLComment> comments;
+	private Map<String, Set<VariableDeclaration>> variableDeclarationMap;
 	
 	public UMLOperation(String name, LocationInfo locationInfo) {
 		this.locationInfo = locationInfo;
@@ -46,6 +48,7 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
         this.parameters = new ArrayList<UMLParameter>();
         this.anonymousClassList = new ArrayList<UMLAnonymousClass>();
         this.typeParameters = new ArrayList<UMLTypeParameter>();
+        this.thrownExceptionTypes = new ArrayList<UMLType>();
         this.annotations = new ArrayList<UMLAnnotation>();
         this.comments = new ArrayList<UMLComment>();
     }
@@ -64,6 +67,14 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 
 	public void addAnnotation(UMLAnnotation annotation) {
 		annotations.add(annotation);
+	}
+
+	public List<UMLType> getThrownExceptionTypes() {
+		return thrownExceptionTypes;
+	}
+
+	public void addThrownExceptionType(UMLType exceptionType) {
+		thrownExceptionTypes.add(exceptionType);
 	}
 
 	public LocationInfo getLocationInfo() {
@@ -166,33 +177,58 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 	}
 
 	public List<VariableDeclaration> getAllVariableDeclarations() {
-		if(operationBody != null)
-			return operationBody.getAllVariableDeclarations();
-		return new ArrayList<VariableDeclaration>();
+		if(operationBody != null) {
+			List<VariableDeclaration> allVariableDeclarations = new ArrayList<VariableDeclaration>();
+			allVariableDeclarations.addAll(this.getParameterDeclarationList());
+			allVariableDeclarations.addAll(operationBody.getAllVariableDeclarations());
+			return allVariableDeclarations;
+		}
+		return getParameterDeclarationList();
 	}
 
 	public List<VariableDeclaration> getVariableDeclarationsInScope(LocationInfo location) {
-		if(operationBody != null)
-			return operationBody.getVariableDeclarationsInScope(location);
-		return new ArrayList<VariableDeclaration>();
+		List<VariableDeclaration> variableDeclarations = new ArrayList<VariableDeclaration>();
+		for(VariableDeclaration parameterDeclaration : getParameterDeclarationList()) {
+			if(parameterDeclaration.getScope().subsumes(location)) {
+				variableDeclarations.add(parameterDeclaration);
+			}
+		}
+		if(operationBody != null) {
+			variableDeclarations.addAll(operationBody.getVariableDeclarationsInScope(location));
+		}
+		return variableDeclarations;
 	}
 
 	public VariableDeclaration getVariableDeclaration(String variableName) {
-		if(operationBody != null)
-			return operationBody.getVariableDeclaration(variableName);
+		if(operationBody != null) {
+			VariableDeclaration variableDeclatation = operationBody.getVariableDeclaration(variableName);
+			if(variableDeclatation != null) {
+				return variableDeclatation;
+			}
+		}
+		for(VariableDeclaration parameterDeclaration : getParameterDeclarationList()) {
+			if(parameterDeclaration.getVariableName().equals(variableName)) {
+				return parameterDeclaration;
+			}
+		}
 		return null;
 	}
 
-	public Map<String, UMLType> variableTypeMap() {
-		Map<String, UMLType> variableTypeMap = new LinkedHashMap<String, UMLType>();
-		for(UMLParameter parameter : parameters) {
-			if(!parameter.getKind().equals("return"))
-				variableTypeMap.put(parameter.getName(), parameter.getType());
+	public Map<String, Set<VariableDeclaration>> variableDeclarationMap() {
+		if(this.variableDeclarationMap == null) {
+			this.variableDeclarationMap = new LinkedHashMap<String, Set<VariableDeclaration>>();
+			for(VariableDeclaration declaration : getAllVariableDeclarations()) {
+				if(variableDeclarationMap.containsKey(declaration.getVariableName())) {
+					variableDeclarationMap.get(declaration.getVariableName()).add(declaration);
+				}
+				else {
+					Set<VariableDeclaration> variableDeclarations = new LinkedHashSet<VariableDeclaration>();
+					variableDeclarations.add(declaration);
+					variableDeclarationMap.put(declaration.getVariableName(), variableDeclarations);
+				}
+			}
 		}
-		for(VariableDeclaration declaration : getAllVariableDeclarations()) {
-			variableTypeMap.put(declaration.getVariableName(), declaration.getType());
-		}
-		return variableTypeMap;
+		return variableDeclarationMap;
 	}
 
 	public int statementCount() {
@@ -239,6 +275,15 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 		return anonymousClassList;
 	}
 
+	public UMLAnonymousClass findAnonymousClass(AnonymousClassDeclarationObject anonymousClassDeclaration) {
+		for(UMLAnonymousClass anonymousClass : this.getAnonymousClassList()) {
+			if(anonymousClass.getLocationInfo().equals(anonymousClassDeclaration.getLocationInfo())) {
+				return anonymousClass;
+			}
+		}
+		return null;
+	}
+
 	public UMLParameter getReturnParameter() {
 		for(UMLParameter parameter : parameters) {
 			if(parameter.getKind().equals("return"))
@@ -267,6 +312,11 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 			return true;
 		else
 			return false;
+	}
+
+	public boolean equalSignatureForAbstractMethods(UMLOperation operation) {
+		return this.getBody() == null && operation.getBody() == null && this.name.equals(operation.name) &&
+				equalTypeParameters(operation) && equalReturnParameter(operation) && this.getParameterTypeList().equals(operation.getParameterTypeList());
 	}
 
 	public boolean equalSignature(UMLOperation operation) {
@@ -391,6 +441,16 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 		return commonParameterTypes;
 	}
 
+	public List<UMLParameter> getParameterizedTypesInSignature() {
+		List<UMLParameter> params = new ArrayList<UMLParameter>();
+		for(UMLParameter parameter : parameters) {
+			if(parameter.getType().isParameterized()) {
+				params.add(parameter);
+			}
+		}
+		return params;
+	}
+
 	public List<UMLType> getParameterTypeList() {
 		List<UMLType> parameterTypeList = new ArrayList<UMLType>();
 		for(UMLParameter parameter : parameters) {
@@ -407,6 +467,15 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 				parameterNameList.add(parameter.getName());
 		}
 		return parameterNameList;
+	}
+
+	public List<VariableDeclaration> getParameterDeclarationList() {
+		List<VariableDeclaration> parameterDeclarationList = new ArrayList<VariableDeclaration>();
+		for(UMLParameter parameter : parameters) {
+			if(!parameter.getKind().equals("return"))
+				parameterDeclarationList.add(parameter.getVariableDeclaration());
+		}
+		return parameterDeclarationList;
 	}
 
 	public int getNumberOfNonVarargsParameters() {
@@ -437,7 +506,7 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 				for(String key : operationInvocationMap.keySet()) {
 					List<OperationInvocation> operationInvocations = operationInvocationMap.get(key);
 					for(OperationInvocation operationInvocation : operationInvocations) {
-						if(operationInvocation.matchesOperation(this, this.variableTypeMap(), null) || operationInvocation.getMethodName().equals(this.getName())) {
+						if(operationInvocation.matchesOperation(this, this.variableDeclarationMap(), null) || operationInvocation.getMethodName().equals(this.getName())) {
 							return operationInvocation;
 						}
 					}
@@ -690,25 +759,40 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 	}
 
 	public boolean equalParameterTypes(UMLOperation operation) {
-		return this.equalReturnParameter(operation) && this.getParameterTypeList().equals(operation.getParameterTypeList()) && equalTypeParameters(operation);
+		return this.getParameterTypeList().equals(operation.getParameterTypeList()) && equalTypeParameters(operation);
+	}
+
+	private boolean typeParameterToTypeArgumentMatch(UMLOperation operation, Map<UMLTypeParameter, UMLType> typeParameterToTypeArgumentMap) {
+		for(UMLTypeParameter key : typeParameterToTypeArgumentMap.keySet()) {
+			UMLType value = typeParameterToTypeArgumentMap.get(key);
+			UMLParameter thisReturnParameter = this.getReturnParameter();
+			UMLParameter otherReturnParameter = operation.getReturnParameter();
+			if(thisReturnParameter != null && otherReturnParameter != null) {
+				UMLType thisReturnType = thisReturnParameter.getType();
+				UMLType otherReturnType = otherReturnParameter.getType();
+				if(thisReturnType.toString().equals(value.toString()) &&
+						(otherReturnType.toString().equals(key.toString()) || otherReturnType.toString().equals(key.getName()))) {
+					return true;
+				}
+				if(otherReturnType.toString().equals(value.toString()) &&
+						(thisReturnType.toString().equals(key.toString()) || thisReturnType.toString().equals(key.getName()))) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private boolean equalTypeParameters(UMLOperation operation) {
 		return this.typeParameters.equals(operation.typeParameters);
 	}
 
-	public boolean equalParameterNames(UMLOperation operation) {
-		return this.equalReturnParameter(operation) && this.getParameterNameList().equals(operation.getParameterNameList());
+	private boolean equalParameterNames(UMLOperation operation) {
+		return this.getParameterNameList().equals(operation.getParameterNameList());
 	}
 
-	public boolean overloadedParameters(UMLOperation operation) {
-		return this.equalReturnParameter(operation) &&
-				(this.getParameters().containsAll(operation.getParameters()) || operation.getParameters().containsAll(this.getParameters()));
-	}
-
-	public boolean overloadedParameterTypes(UMLOperation operation) {
-		return this.equalReturnParameter(operation) &&
-				(this.getParameterTypeList().containsAll(operation.getParameterTypeList()) || operation.getParameterTypeList().containsAll(this.getParameterTypeList()));
+	private boolean overloadedParameterTypes(UMLOperation operation) {
+		return this.getParameterTypeList().containsAll(operation.getParameterTypeList()) || operation.getParameterTypeList().containsAll(this.getParameterTypeList());
 	}
 	
 	public boolean replacedParameterTypes(UMLOperation operation) {
@@ -819,7 +903,11 @@ public class UMLOperation implements Comparable<UMLOperation>, Serializable, Loc
 	}
 
 	public boolean compatibleSignature(UMLOperation removedOperation) {
-		return equalParameterTypes(removedOperation) || overloadedParameterTypes(removedOperation) || replacedParameterTypes(removedOperation) || equalParameterNames(removedOperation);
+		return (this.equalReturnParameter(removedOperation) && (equalParameterTypes(removedOperation) || overloadedParameterTypes(removedOperation) || equalParameterNames(removedOperation))) || replacedParameterTypes(removedOperation);
+	}
+
+	public boolean compatibleSignature(UMLOperation removedOperation, Map<UMLTypeParameter, UMLType> typeParameterToTypeArgumentMap) {
+		return ((this.equalReturnParameter(removedOperation) || typeParameterToTypeArgumentMatch(removedOperation, typeParameterToTypeArgumentMap)) && (equalParameterTypes(removedOperation) || overloadedParameterTypes(removedOperation) || equalParameterNames(removedOperation))) || replacedParameterTypes(removedOperation);
 	}
 
 	public boolean hasTwoParametersWithTheSameType() {

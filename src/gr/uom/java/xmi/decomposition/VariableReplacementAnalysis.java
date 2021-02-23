@@ -663,17 +663,19 @@ public class VariableReplacementAnalysis {
 							if(argument1.contains("[") || argument2.contains("[")) {
 								String before = argument1.contains("[") ? argument1.substring(0, argument1.indexOf("[")) : argument1;
 								String after = argument2.contains("[") ? argument2.substring(0, argument2.indexOf("[")) : argument2;
-								Replacement variableReplacement = new Replacement(before, after, ReplacementType.VARIABLE_NAME);
-								if(!returnVariableMapping(mapping, replacement) &&
-										!containsMethodInvocationReplacementWithDifferentExpressionNameAndArguments(mapping.getReplacements()) &&
-										replacementNotInsideMethodSignatureOfAnonymousClass(mapping, replacement)) {
-									if(map.containsKey(variableReplacement)) {
-										map.get(variableReplacement).add(mapping);
-									}
-									else {
-										Set<AbstractCodeMapping> list = new LinkedHashSet<AbstractCodeMapping>();
-										list.add(mapping);
-										map.put(variableReplacement, list);
+								if(!before.equals(after)) {
+									Replacement variableReplacement = new Replacement(before, after, ReplacementType.VARIABLE_NAME);
+									if(!returnVariableMapping(mapping, replacement) &&
+											!containsMethodInvocationReplacementWithDifferentExpressionNameAndArguments(mapping.getReplacements()) &&
+											replacementNotInsideMethodSignatureOfAnonymousClass(mapping, replacement)) {
+										if(map.containsKey(variableReplacement)) {
+											map.get(variableReplacement).add(mapping);
+										}
+										else {
+											Set<AbstractCodeMapping> list = new LinkedHashSet<AbstractCodeMapping>();
+											list.add(mapping);
+											map.put(variableReplacement, list);
+										}
 									}
 								}
 							}
@@ -1132,7 +1134,7 @@ public class VariableReplacementAnalysis {
 							Map<String, List<OperationInvocation>> methodInvocationMap = v2.getInitializer().getMethodInvocationMap();
 							for(String key : methodInvocationMap.keySet()) {
 								for(OperationInvocation invocation : methodInvocationMap.get(key)) {
-									if(invocation.matchesOperation(extractedMethod, operation2.variableTypeMap(), null)) {
+									if(invocation.matchesOperation(extractedMethod, operation2.variableDeclarationMap(), null)) {
 										return false;
 									}
 									else {
@@ -1144,7 +1146,7 @@ public class VariableReplacementAnalysis {
 													Map<String, List<OperationInvocation>> methodInvocationMap2 = declaration.getInitializer().getMethodInvocationMap();
 													for(String key2 : methodInvocationMap2.keySet()) {
 														for(OperationInvocation invocation2 : methodInvocationMap2.get(key2)) {
-															if(invocation2.matchesOperation(extractedMethod, operation2.variableTypeMap(), null)) {
+															if(invocation2.matchesOperation(extractedMethod, operation2.variableDeclarationMap(), null)) {
 																return false;
 															}
 														}

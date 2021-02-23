@@ -14,7 +14,6 @@ import gr.uom.java.xmi.decomposition.replacement.MergeVariableReplacement;
 import gr.uom.java.xmi.decomposition.replacement.Replacement;
 import gr.uom.java.xmi.decomposition.replacement.Replacement.ReplacementType;
 import gr.uom.java.xmi.diff.CodeRange;
-import static gr.uom.java.xmi.diff.UMLClassBaseDiff.allMappingsAreExactMatches;
 
 public abstract class AbstractCall implements LocationInfoProvider {
 	protected int typeArguments;
@@ -103,7 +102,7 @@ public abstract class AbstractCall implements LocationInfoProvider {
 		return getArguments().equals(call.getArguments());
 	}
 
-	public boolean identicalOrReplacedArguments(AbstractCall call, Set<Replacement> replacements) {
+	public boolean identicalOrReplacedArguments(AbstractCall call, Set<Replacement> replacements, List<UMLOperationBodyMapper> lambdaMappers) {
 		List<String> arguments1 = getArguments();
 		List<String> arguments2 = call.getArguments();
 		if(arguments1.size() != arguments2.size())
@@ -118,7 +117,16 @@ public abstract class AbstractCall implements LocationInfoProvider {
 					break;
 				}
 			}
-			if(!argument1.equals(argument2) && !argumentReplacement)
+			boolean lambdaReplacement = false;
+			if(argument1.contains("->") && argument2.contains("->")) {
+				for(UMLOperationBodyMapper lambdaMapper : lambdaMappers) {
+					if(lambdaMapper.nonMappedElementsT1() == 0 && lambdaMapper.nonMappedElementsT2() == 0) {
+						lambdaReplacement = true;
+						break;
+					}
+				}
+			}
+			if(!argument1.equals(argument2) && !argumentReplacement && !lambdaReplacement)
 				return false;
 		}
 		return true;
@@ -208,8 +216,8 @@ public abstract class AbstractCall implements LocationInfoProvider {
 		return replacedArguments > 0 && replacedArguments == arguments1.size();
 	}
 
-	public boolean renamedWithIdenticalExpressionAndArguments(AbstractCall call, Set<Replacement> replacements, double distance) {
-		boolean identicalOrReplacedArguments = identicalOrReplacedArguments(call, replacements);
+	public boolean renamedWithIdenticalExpressionAndArguments(AbstractCall call, Set<Replacement> replacements, double distance, List<UMLOperationBodyMapper> lambdaMappers) {
+		boolean identicalOrReplacedArguments = identicalOrReplacedArguments(call, replacements, lambdaMappers);
 		boolean allArgumentsReplaced = allArgumentsReplaced(call, replacements);
 		return getExpression() != null && call.getExpression() != null &&
 				identicalExpression(call, replacements) &&
@@ -226,7 +234,7 @@ public abstract class AbstractCall implements LocationInfoProvider {
 	public boolean renamedWithIdenticalArgumentsAndNoExpression(AbstractCall call, double distance, List<UMLOperationBodyMapper> lambdaMappers) {
 		boolean allExactLambdaMappers = lambdaMappers.size() > 0;
 		for(UMLOperationBodyMapper lambdaMapper : lambdaMappers) {
-			if(!allMappingsAreExactMatches(lambdaMapper)) {
+			if(!lambdaMapper.allMappingsAreExactMatches()) {
 				allExactLambdaMappers = false;
 				break;
 			}
@@ -240,7 +248,7 @@ public abstract class AbstractCall implements LocationInfoProvider {
 	public boolean renamedWithIdenticalExpressionAndDifferentNumberOfArguments(AbstractCall call, Set<Replacement> replacements, double distance, List<UMLOperationBodyMapper> lambdaMappers) {
 		boolean allExactLambdaMappers = lambdaMappers.size() > 0;
 		for(UMLOperationBodyMapper lambdaMapper : lambdaMappers) {
-			if(!allMappingsAreExactMatches(lambdaMapper)) {
+			if(!lambdaMapper.allMappingsAreExactMatches()) {
 				allExactLambdaMappers = false;
 				break;
 			}
@@ -314,10 +322,35 @@ public abstract class AbstractCall implements LocationInfoProvider {
 		return false;
 	}
 
-	public boolean identical(AbstractCall call, Set<Replacement> replacements) {
+	public boolean identical(AbstractCall call, Set<Replacement> replacements, List<UMLOperationBodyMapper> lambdaMappers) {
 		return identicalExpression(call, replacements) &&
 				identicalName(call) &&
-				equalArguments(call);
+				(equalArguments(call) || onlyLambdaArgumentsDiffer(call, lambdaMappers));
+	}
+
+	private boolean onlyLambdaArgumentsDiffer(AbstractCall call, List<UMLOperationBodyMapper> lambdaMappers) {
+		if(lambdaMappers.size() > 0) {
+			List<String> arguments1 = getArguments();
+			List<String> arguments2 = call.getArguments();
+			if(arguments1.size() == arguments2.size()) {
+				for(int i=0; i<arguments1.size(); i++) {
+					String argument1 = arguments1.get(i);
+					String argument2 = arguments2.get(i);
+					if(argument1.contains("->") && argument2.contains("->")) {
+						for(UMLOperationBodyMapper lambdaMapper : lambdaMappers) {
+							if(!(lambdaMapper.nonMappedElementsT1() == 0 && lambdaMapper.nonMappedElementsT2() == 0)) {
+								return false;
+							}
+						}
+					}
+					else if(!argument1.equals(argument2)) {
+						return false;
+					}
+				}
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public Set<String> argumentIntersection(AbstractCall call) {
@@ -355,15 +388,27 @@ public abstract class AbstractCall implements LocationInfoProvider {
 	}
 
 	private boolean argumentIsEqual(String statement) {
-		return statement.endsWith(";\n") && getArguments().size() == 1 &&
+		if(statement.endsWith(";\n")) {
+			for(String argument : getArguments()) {
 				//length()-2 to remove ";\n" from the end of the statement
-				equalsIgnoringExtraParenthesis(getArguments().get(0), statement.substring(0, statement.length()-2));
+				if(equalsIgnoringExtraParenthesis(argument, statement.substring(0, statement.length()-2))) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private boolean argumentIsReturned(String statement) {
-		return statement.startsWith("return ") && getArguments().size() == 1 &&
+		if(statement.startsWith("return ")) {
+			for(String argument : getArguments()) {
 				//length()-2 to remove ";\n" from the end of the return statement, 7 to remove the prefix "return "
-				equalsIgnoringExtraParenthesis(getArguments().get(0), statement.substring(7, statement.length()-2));
+				if(equalsIgnoringExtraParenthesis(argument, statement.substring(7, statement.length()-2))) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public Replacement makeReplacementForReturnedArgument(String statement) {

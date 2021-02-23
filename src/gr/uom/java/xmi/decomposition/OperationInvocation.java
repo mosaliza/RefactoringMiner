@@ -6,6 +6,7 @@ import gr.uom.java.xmi.UMLOperation;
 import gr.uom.java.xmi.UMLParameter;
 import gr.uom.java.xmi.UMLType;
 import gr.uom.java.xmi.diff.StringDistance;
+import gr.uom.java.xmi.diff.UMLClassBaseDiff;
 import gr.uom.java.xmi.diff.UMLModelDiff;
 
 import java.util.ArrayList;
@@ -147,10 +148,10 @@ public class OperationInvocation extends AbstractCall {
     }
 
     public boolean matchesOperation(UMLOperation operation) {
-    	return matchesOperation(operation, new HashMap<String, UMLType>(), null);
+    	return matchesOperation(operation, new HashMap<String, Set<VariableDeclaration>>(), null);
     }
 
-    public boolean matchesOperation(UMLOperation operation, Map<String, UMLType> variableTypeMap, UMLModelDiff modelDiff) {
+    public boolean matchesOperation(UMLOperation operation, Map<String, Set<VariableDeclaration>> variableDeclarationMap, UMLModelDiff modelDiff) {
     	List<UMLType> inferredArgumentTypes = new ArrayList<UMLType>();
     	for(String arg : arguments) {
     		int indexOfOpeningParenthesis = arg.indexOf("(");
@@ -171,8 +172,14 @@ public class OperationInvocation extends AbstractCall {
     		else if(indexOfOpeningParenthesis == -1 && indexOfOpeningSquareBracket != -1) {
     			openingSquareBracketBeforeParenthesis = true;
     		}
-    		if(variableTypeMap.containsKey(arg)) {
-    			inferredArgumentTypes.add(variableTypeMap.get(arg));
+    		if(variableDeclarationMap.containsKey(arg)) {
+    			Set<VariableDeclaration> variableDeclarations = variableDeclarationMap.get(arg);
+    			for(VariableDeclaration variableDeclaration : variableDeclarations) {
+    				if(variableDeclaration.getScope().subsumes(this.getLocationInfo())) {
+    					inferredArgumentTypes.add(variableDeclaration.getType());
+    					break;
+    				}
+    			}
     		}
     		else if(arg.startsWith("\"") && arg.endsWith("\"")) {
     			inferredArgumentTypes.add(UMLType.extractTypeObject("String"));
@@ -261,7 +268,24 @@ public class OperationInvocation extends AbstractCall {
     	if(modelDiff != null && modelDiff.isSubclassOf(type.getClassType(), parameter.getType().getClassType())) {
     		return true;
     	}
+    	// the super type is available in the modelDiff, but not the subclass type
+    	UMLClassBaseDiff subclassDiff = getUMLClassDiff(modelDiff, type);
+    	UMLClassBaseDiff superclassDiff = getUMLClassDiff(modelDiff, parameter.getType());
+    	if(superclassDiff != null && subclassDiff == null) {
+    		return true;
+    	}
     	return false;
+    }
+
+    private UMLClassBaseDiff getUMLClassDiff(UMLModelDiff modelDiff, UMLType type) {
+    	UMLClassBaseDiff classDiff = null;
+    	if(modelDiff != null) {
+    		classDiff = modelDiff.getUMLClassDiff(type.getClassType());
+    		if(classDiff == null) {
+    			classDiff = modelDiff.getUMLClassDiff(type);
+    		}
+    	}
+		return classDiff;
     }
 
     private boolean varArgsMatch(UMLOperation operation) {

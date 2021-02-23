@@ -79,8 +79,9 @@ public class UMLModelASTReader {
 			parser.setStatementsRecovery(true);
 			String javaFileContent = javaFileContents.get(filePath);
 			parser.setSource(javaFileContent.toCharArray());
-			if(javaFileContent.contains(FREE_MARKER_GENERATED)) {
-				return;
+			if(javaFileContent.contains(FREE_MARKER_GENERATED) &&
+					!javaFileContent.contains("private static final String FREE_MARKER_GENERATED = \"generated using freemarker\";")) {
+				continue;
 			}
 			try {
 				CompilationUnit compilationUnit = (CompilationUnit)parser.createAST(null);
@@ -376,6 +377,7 @@ public class UMLModelASTReader {
     			AnonymousClassDeclaration anonymous = (AnonymousClassDeclaration)node.getUserObject();
     			boolean operationFound = false;
     			UMLOperation matchingOperation = null;
+    			UMLAttribute matchingAttribute = null;
     			List<UMLComment> comments = null;
 				for(UMLOperation operation : umlClass.getOperations()) {
     				if(operation.getLocationInfo().getStartOffset() <= anonymous.getStartPosition() &&
@@ -391,18 +393,21 @@ public class UMLModelASTReader {
 	    				if(attribute.getLocationInfo().getStartOffset() <= anonymous.getStartPosition() &&
 	    						attribute.getLocationInfo().getEndOffset() >= anonymous.getStartPosition()+anonymous.getLength()) {
 	    					comments = attribute.getComments();
-	    					operationFound = true;
+	    					matchingAttribute = attribute;
 	    					break;
 	    				}
 	    			}
     			}
-    			if(operationFound) {
+    			if(matchingOperation != null || matchingAttribute != null) {
 	    			String anonymousBinaryName = getAnonymousBinaryName(node);
 	    			String anonymousCodePath = getAnonymousCodePath(node);
 	    			UMLAnonymousClass anonymousClass = processAnonymousClassDeclaration(cu, anonymous, packageName + "." + className, anonymousBinaryName, anonymousCodePath, sourceFile, comments);
 	    			umlClass.addAnonymousClass(anonymousClass);
 	    			if(matchingOperation != null) {
 	    				matchingOperation.addAnonymousClass(anonymousClass);
+	    			}
+	    			if(matchingAttribute != null) {
+	    				matchingAttribute.addAnonymousClass(anonymousClass);
 	    			}
 	    			for(UMLOperation operation : anonymousClass.getOperations()) {
 	    				for(UMLAnonymousClass createdAnonymousClass : createdAnonymousClasses) {
@@ -525,6 +530,11 @@ public class UMLModelASTReader {
 			variableDeclaration.setParameter(true);
 			umlParameter.setVariableDeclaration(variableDeclaration);
 			umlOperation.addParameter(umlParameter);
+		}
+		List<Type> thrownExceptionTypes = methodDeclaration.thrownExceptionTypes();
+		for(Type thrownExceptionType : thrownExceptionTypes) {
+			UMLType type = UMLType.extractTypeObject(cu, sourceFile, thrownExceptionType, 0);
+			umlOperation.addThrownExceptionType(type);
 		}
 		return umlOperation;
 	}

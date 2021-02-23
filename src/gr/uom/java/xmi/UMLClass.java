@@ -213,43 +213,6 @@ public class UMLClass extends UMLAbstractClass implements Comparable<UMLClass>, 
     	return null;
     }
 
-    public UMLAttribute containsAttribute(UMLAttribute otherAttribute) {
-    	ListIterator<UMLAttribute> attributeIt = attributes.listIterator();
-    	while(attributeIt.hasNext()) {
-    		UMLAttribute attribute = attributeIt.next();
-    		if(attribute.equals(otherAttribute)) {
-    			return attribute;
-    		}
-    	}
-    	return null;
-    }
-
-    public UMLAttribute matchAttribute(UMLAttribute otherAttribute) {
-    	ListIterator<UMLAttribute> attributeIt = attributes.listIterator();
-    	while(attributeIt.hasNext()) {
-    		UMLAttribute attribute = attributeIt.next();
-    		if(attribute.getName().equals(otherAttribute.getName())) {
-    			String thisAttributeType = attribute.getType().getClassType();
-				String otherAttributeType = otherAttribute.getType().getClassType();
-				int thisArrayDimension = attribute.getType().getArrayDimension();
-				int otherArrayDimension = otherAttribute.getType().getArrayDimension();
-				String thisAttributeTypeComparedString = null;
-    			if(thisAttributeType.contains("."))
-    				thisAttributeTypeComparedString = thisAttributeType.substring(thisAttributeType.lastIndexOf(".")+1);
-    			else
-    				thisAttributeTypeComparedString = thisAttributeType;
-    			String otherAttributeTypeComparedString = null;
-    			if(otherAttributeType.contains("."))
-    				otherAttributeTypeComparedString = otherAttributeType.substring(otherAttributeType.lastIndexOf(".")+1);
-    			else
-    				otherAttributeTypeComparedString = otherAttributeType;
-    			if(thisAttributeTypeComparedString.equals(otherAttributeTypeComparedString) && thisArrayDimension == otherArrayDimension)
-    				return attribute;
-    		}
-    	}
-    	return null;
-    }
-
     public UMLOperation matchOperation(UMLOperation otherOperation) {
     	ListIterator<UMLOperation> operationIt = operations.listIterator();
     	while(operationIt.hasNext()) {
@@ -305,7 +268,37 @@ public class UMLClass extends UMLAbstractClass implements Comparable<UMLClass>, 
     }
 
 	private boolean equalTypeParameters(UMLClass umlClass) {
-		return this.typeParameters.equals(umlClass.typeParameters) || this.getTypeParameterNames().equals(umlClass.getTypeParameterNames());
+		return this.typeParameters.equals(umlClass.typeParameters) || this.getTypeParameterNames().equals(umlClass.getTypeParameterNames()) ||
+				this.renamedParameterizedType(umlClass);
+	}
+
+	private boolean renamedParameterizedType(UMLClass umlClass) {
+		for(UMLOperation operation1 : this.operations) {
+			List<UMLParameter> parameterized1 = operation1.getParameterizedTypesInSignature();
+			if(!parameterized1.isEmpty()) {
+				for(UMLOperation operation2 : umlClass.operations) {
+					if(operation1.equalSignatureWithIdenticalNameIgnoringChangedTypes(operation2)) {
+						List<UMLParameter> parameterized2 = operation2.getParameterizedTypesInSignature();
+						if(parameterized1.size() == parameterized2.size()) {
+							int renamed = 0;
+							for(int i=0; i<parameterized1.size(); i++) {
+								UMLType type1 = parameterized1.get(i).getType();
+								UMLType type2 = parameterized2.get(i).getType();
+								if(type1.getTypeArguments().toString().equals(this.typeParameters.toString()) &&
+										type2.getTypeArguments().toString().equals(umlClass.typeParameters.toString())) {
+									renamed++;
+								}
+							}
+							if(renamed == parameterized1.size()) {
+								return true;
+							}
+						}
+						break;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
     public boolean equals(Object o) {
