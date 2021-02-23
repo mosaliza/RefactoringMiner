@@ -321,10 +321,6 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
-	},
-	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match1"
 	}]
 }
 ]},{	"repository": "https://github.com/CyanogenMod/android_frameworks_base.git",
@@ -351,10 +347,6 @@
 	"description": "Extract Method public stringToPattern(string String, size byte) : List<LockPatternView.Cell> extracted from public stringToPattern(string String) : List<LockPatternView.Cell> in class com.android.internal.widget.LockPatternUtils",
 	"motivations": [ 
 	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match1"
-	},
-	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
 	} ]
@@ -363,10 +355,6 @@
 	"type": "Extract Method",
 	"description": "Extract Method public of(cells Cell[][], row int, column int, size byte) : Cell extracted from public of(row int, column int, size byte) : Cell in class com.android.internal.widget.LockPatternView.Cell",
 	"motivations": [ 
-	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match1"
-	},
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
@@ -2234,10 +2222,6 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
-	},
-	{
-	            "label": "EM: Extract reusable method",
-                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/baasbox/baasbox.git",
@@ -2250,10 +2234,6 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
-	},
-	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/phishman3579/java-algorithms-implementation.git",
@@ -2405,10 +2385,6 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
-	},
-	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match1"
 	} ]
 },
 {
@@ -2418,10 +2394,6 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
-	},
-	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/cwensel/cascading.git",
@@ -2761,10 +2733,6 @@
 	"motivations": [ 
 	{ 
                 "label": "EM: Introduce alternative method signature",
-                "status": "match1"
-	},
-	{ 
-                "label": "EM: Extract reusable method",
                 "status": "match1"
 	} ]
 },
@@ -5945,10 +5913,6 @@
 	"description": "Extract Method private propertyConstraint(type Class<Rule>, labelId int, propertyKeyId int) : Rule extracted from public uniquenessConstraint(labelId int, propertyKeyId int) : UniquenessConstraintRule in class org.neo4j.kernel.impl.store.SchemaStorage",
 	"motivations": [ 
 	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match1"
-	},
-	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
 	} ]
@@ -8885,10 +8849,6 @@
 	{ 
 		"label": "EM: Introduce alternative method signature",
 		"status": "match2"
-	},
-	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/bennidi/mbassador.git",
@@ -9575,10 +9535,6 @@
 	"type": "Extract Method",
 	"description": "Extract Method public get(buildTarget BuildTarget, eventBus Optional<BuckEventBus>) : TargetNode<?> extracted from public get(buildTarget BuildTarget) : TargetNode<?> in class com.facebook.buck.parser.Parser.CachedState",
 	"motivations": [ 
-	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match1"
-	},
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
@@ -11643,10 +11599,6 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "add"
-	},
-	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/bitcoinj/bitcoinj.git",
@@ -13321,10 +13273,6 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
-	},
-	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/apache/cassandra.git",
@@ -13681,10 +13629,6 @@
 	{
 			"label": "EM: Improve testability",
 			"status": "match1"
-	},
-	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match2"
 	}
 	]
 },
@@ -14391,11 +14335,7 @@
 	{
 				"label": "EM: Decompose method to improve readability",
                 "status": "match1"
-	},
-	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match2"
-	}	]
+	}]
 },
 {
 	"type": "Rename Variable",
@@ -14503,10 +14443,6 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
-	},
-	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match1"
 	} ]
 }
 ]},{	"repository": "https://github.com/spring-projects/spring-framework.git",
@@ -15195,11 +15131,7 @@
 	{ 
                 "label": "EM: Introduce alternative method signature",
                 "status": "match2"
-	},
-	{ 
-                "label": "EM: Extract reusable method",
-                "status": "match1"
-	} ]
+	}]
 }
 ]},{	"repository": "https://github.com/amplab/tachyon.git",
 	"sha1": "ed966510ccf8441115614e2258aea61df0ea55f5",

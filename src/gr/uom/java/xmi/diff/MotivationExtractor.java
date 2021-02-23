@@ -334,7 +334,7 @@ public class MotivationExtractor {
 			}
 			if(isExtractReusableMethod(ref , listRef)) {
 				if (!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)
-						/*&& !isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)*/) {
+						&& !isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
 					setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
 					//removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref); 
 					if(decomposeToImproveReadabilityFromMultipleMethodRefactorings == 0 && decomposeToImproveReadabilityFromSingleMethodRefactorings.size() > 0) {
