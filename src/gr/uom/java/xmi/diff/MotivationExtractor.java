@@ -333,8 +333,8 @@ public class MotivationExtractor {
 				}
 			}
 			if(isExtractReusableMethod(ref , listRef)) {
-				if (!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY) &&
-						!isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)) {
+				if (!isMotivationDetected(ref, MotivationType.EM_REPLACE_METHOD_PRESERVING_BACKWARD_COMPATIBILITY)
+						/*&& !isMotivationDetected(ref, MotivationType.EM_INTRODUCE_ALTERNATIVE_SIGNATURE)*/) {
 					setRefactoringMotivation(MotivationType.EM_REUSABLE_METHOD, ref);
 					//removeRefactoringMotivation(MotivationType.EM_FACILITATE_EXTENSION, ref); 
 					if(decomposeToImproveReadabilityFromMultipleMethodRefactorings == 0 && decomposeToImproveReadabilityFromSingleMethodRefactorings.size() > 0) {
@@ -660,7 +660,7 @@ public class MotivationExtractor {
 						for(String methodInvocation : declerationMethodInvocationMap.keySet()) {
 							List<OperationInvocation> invocations = declerationMethodInvocationMap.get(methodInvocation);
 							for(OperationInvocation invocation : invocations) {
-								if(invocation.matchesOperation(extractedOperation, sourceOperationAfterExtraction.variableTypeMap(), modelDiff)){
+								if(invocation.matchesOperation(extractedOperation, sourceOperationAfterExtraction.variableDeclarationMap(), modelDiff)){
 									setMotivationFlag(MotivationFlag.SOAE_ANONYMOUS_CLASS_RUNNABLE_EM_INVOCATION, extractOpRefactoring);
 									return true;
 								}
@@ -775,7 +775,7 @@ public class MotivationExtractor {
 					setMotivationFlag(MotivationFlag.EM_TEST_INVOCATION_CLASS_EQUAL_TO_EM_CLASS, extractOpRefactoring);
 					setMotivationFlag(MotivationFlag.EM_INVOCATION_IN_TEST_OPERATION, extractOpRefactoring);
 					for (OperationInvocation invocation : operation.getAllOperationInvocations()) {
-						if (invocation.matchesOperation(extractedOperation, operation.variableTypeMap(), modelDiff)) {
+						if (invocation.matchesOperation(extractedOperation, operation.variableDeclarationMap(), modelDiff)) {
 							if(classDiff == null) {
 								setMotivationFlag(MotivationFlag.EM_TEST_INVOCATION_IN_ADDED_NODE, extractOpRefactoring);
 								//classDiff is null when we have an added class and therefore invocation is in added operation.
@@ -833,7 +833,7 @@ public class MotivationExtractor {
 			boolean noExpression = invocation.getExpression() == null;
 			boolean thisExpression = invocation.getExpression() != null && invocation.getExpression().equals("this");
 			boolean noOrThisExpresion = noExpression || thisExpression;
-			if(invocation.matchesOperation(operation, operation.variableTypeMap(),modelDiff) && noOrThisExpresion){
+			if(invocation.matchesOperation(operation, operation.variableDeclarationMap(),modelDiff) && noOrThisExpresion){
 				recursiveInvokations.add(invocation);
 			}
 		}
@@ -1612,7 +1612,7 @@ public class MotivationExtractor {
 		for(String invocationString : notMappedNode.getMethodInvocationMap().keySet()) {
 			List<OperationInvocation> operationInvocations = notMappedNode.getMethodInvocationMap().get(invocationString);
 			for(OperationInvocation invocation : operationInvocations) {
-				if(invocation.matchesOperation(extractedOperation, extractedOperation.variableTypeMap() , modelDiff)) {
+				if(invocation.matchesOperation(extractedOperation, extractedOperation.variableDeclarationMap() , modelDiff)) {
 					recursiveInvocations.add(invocation);
 				}
 			}
@@ -1631,7 +1631,7 @@ public class MotivationExtractor {
 		for(OperationInvocation invocation : sourceOperationAfterExtraction.getAllOperationInvocations()) {
 			for(Refactoring ref : refList) {
 				ExtractOperationRefactoring extractOpRef = (ExtractOperationRefactoring)ref;
-				if(invocation.matchesOperation(extractOpRef.getExtractedOperation(),sourceOperationAfterExtraction.variableTypeMap(),modelDiff)) {
+				if(invocation.matchesOperation(extractOpRef.getExtractedOperation(),sourceOperationAfterExtraction.variableDeclarationMap(),modelDiff)) {
 					extractMethodInvocationArguments.addAll(invocation.getArguments());
 					break;
 				}
@@ -1653,7 +1653,7 @@ public class MotivationExtractor {
 		for(OperationInvocation invocation : sourceOperationAfterExtraction.getAllOperationInvocations()) {
 			for(Refactoring ref : refList) {
 				ExtractOperationRefactoring extractOpRef = (ExtractOperationRefactoring)ref;
-				if(invocation.matchesOperation(extractOpRef.getExtractedOperation(),sourceOperationAfterExtraction.variableTypeMap(),modelDiff)) {
+				if(invocation.matchesOperation(extractOpRef.getExtractedOperation(),sourceOperationAfterExtraction.variableDeclarationMap(),modelDiff)) {
 					extractMethodInvocationArguments.addAll(invocation.getArguments());
 					break;
 				}
@@ -2122,7 +2122,7 @@ public class MotivationExtractor {
 		for (OperationInvocation invokation: statementInvokations) {
 			for(Refactoring ref : refList) {
 				ExtractOperationRefactoring extractOperationRefactoring = (ExtractOperationRefactoring)ref;
-				if( invokation.matchesOperation(extractOperationRefactoring.getExtractedOperation(), statementOperation.variableTypeMap(),modelDiff)){
+				if( invokation.matchesOperation(extractOperationRefactoring.getExtractedOperation(), statementOperation.variableDeclarationMap(),modelDiff)){
 					invokationToExtractedOperation.add(invokation);
 				}
 			}
@@ -2273,10 +2273,10 @@ public class MotivationExtractor {
 			for(OperationInvocation invocation : mapExtraExtractedOperationInvokationsInClasses.get(invocationOperation) ) {
 				String invocationExpression = invocation.getExpression();
 				if( invocationExpression != null && !invocationExpression.equals("this")){
-					for(String variableString : invocationOperation.variableTypeMap().keySet()) {
-						String tyoeClassName = invocationOperation.variableTypeMap().get(variableString).getClassType();
+					for(String variableString : invocationOperation.variableDeclarationMap().keySet()) {
+						Set<VariableDeclaration> variableDeclaration = invocationOperation.variableDeclarationMap().get(variableString);
 						// Check to see if the expression type matches the extracted operation class
-						if( invocationExpression.contains(extractedOperationQualifiedClassName) || extractedOperationQualifiedClassName.equals(tyoeClassName)) {
+						if( invocationExpression.contains(extractedOperationQualifiedClassName) || extractedOperationQualifiedClassName.equals(variableDeclaration.iterator().next().getType().getClassType())) {
 							invocationsInOtherClassesContainingExtractedMethodClassNameOrVariableTypeInExpression.add(invocation);
 						}
 					}
@@ -2304,7 +2304,7 @@ public class MotivationExtractor {
 		 */
 		int extractedOperationCallsInsideSourceOperationAfterExtraction = 0 ;
 		for(OperationInvocation invokation : sourceOperationAfterExtractionInvokations) {
-			if(invokation.matchesOperation(extractedOperation,sourceOperationAfterExtraction.variableTypeMap(), modelDiff)) {
+			if(invokation.matchesOperation(extractedOperation,sourceOperationAfterExtraction.variableDeclarationMap(), modelDiff)) {
 				extractedOperationCallsInsideSourceOperationAfterExtraction++;
 			}
 		}
@@ -2412,7 +2412,7 @@ public class MotivationExtractor {
 		Map<UMLOperation, List<OperationInvocation>> mapOperationAInvokationsInOperationB = new HashMap<UMLOperation, List<OperationInvocation>>();
 		List<OperationInvocation> invocations = operationB.getAllOperationInvocations();
 		for(OperationInvocation invocation : invocations) {
-			if(invocation.matchesOperation(operationA,operationB.variableTypeMap(), modelDiff)) {
+			if(invocation.matchesOperation(operationA,operationB.variableDeclarationMap(), modelDiff)) {
 				if(mapOperationAInvokationsInOperationB.containsKey(operationB)){
 					mapOperationAInvokationsInOperationB.get(operationB).add(invocation);
 				}else {
@@ -2890,7 +2890,7 @@ public class MotivationExtractor {
 			for(String invokationString : mapMerthodInvokations.keySet()) {
 				List<OperationInvocation> listInvokations = mapMerthodInvokations.get(invokationString);
 				for(OperationInvocation invokation : listInvokations) {
-					if(invokation.matchesOperation(invokedOperation , sourceOperationAfterExtraction.variableTypeMap(), modelDiff)) {
+					if(invokation.matchesOperation(invokedOperation , sourceOperationAfterExtraction.variableDeclarationMap(), modelDiff)) {
 						listExpressionsWithCallToExtractedOperation.add(expression);
 					}
 				}

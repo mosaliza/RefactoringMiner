@@ -574,11 +574,15 @@ public class MotivationTestBuilder {
 						}
 					}
 					if (!matcher.notExpected.isEmpty()) {
-						System.out.println(" false positives");
-						for (String ref : matcher.notExpected) {
-							System.out.println("  " + ref);
+						if (matcher.notExpected.iterator().hasNext() && 
+								!matcher.notExpected.iterator().next().equals("none")) {
+							System.out.println(" false positives");
+							for (String ref : matcher.notExpected) {
+									System.out.println("  " + ref);
+							}
 						}
 					}
+						
 					if (!matcher.expectedMotivations.isEmpty()) {
 						System.out.println(" false negatives");
 						for (String ref : matcher.expectedMotivations) {
@@ -641,21 +645,35 @@ public class MotivationTestBuilder {
 								
 								motivationsARM.append("\"").append(commitUrl).append("\"").append("|").append(refactoringDescription).append("|");
 								if (!refactoringMatcher.notExpected.isEmpty()) {
-									System.out.println(" false positives");
-									for (String ref : refactoringMatcher.notExpected) {
-										if(ref.equals("EM: Facilitate extension")) {
-											System.out.println("  " + ref+ " "+ refactoringMatcher.facilitateExtensionT1T2[0]+","+refactoringMatcher.facilitateExtensionT1T2[1]);
-											faciliateExtensionAnalysis.append("FP").append("|").append(commitUrl).append("|").append(refactoringDescription).append("|").
-											append(refactoringMatcher.facilitateExtensionT1T2[0]).append("|").append(refactoringMatcher.facilitateExtensionT1T2[1]).append("\n");
-											}
-										else if(ref.equals("EM: Decompose method to improve readability")){
-											System.out.println("  " + ref+ " "+ refactoringMatcher.decomposeToImproveReadabilityExtractedCodeSize);
-											decomposeToImproveRedabilityAnalysis.append("FP").append("|").append(commitUrl).append("|").append(refactoringDescription).append("|").
-											append(refactoringMatcher.decomposeToImproveReadabilityExtractedCodeSize).append("\n");
-										}else{
+									if (refactoringMatcher.notExpected.iterator().hasNext() && 
+											!refactoringMatcher.notExpected.iterator().next().equals("none")) {
+										System.out.println(" false positives");
+										for (String ref : refactoringMatcher.notExpected) {
+
+											if (ref.equals("EM: Facilitate extension")) {
+												System.out.println(
+														"  " + ref + " " + refactoringMatcher.facilitateExtensionT1T2[0]
+																+ "," + refactoringMatcher.facilitateExtensionT1T2[1]);
+												faciliateExtensionAnalysis.append("FP").append("|").append(commitUrl)
+														.append("|").append(refactoringDescription).append("|")
+														.append(refactoringMatcher.facilitateExtensionT1T2[0])
+														.append("|")
+														.append(refactoringMatcher.facilitateExtensionT1T2[1])
+														.append("\n");
+											} else if (ref.equals("EM: Decompose method to improve readability")) {
+												System.out.println("  " + ref + " "
+														+ refactoringMatcher.decomposeToImproveReadabilityExtractedCodeSize);
+												decomposeToImproveRedabilityAnalysis.append("FP").append("|")
+														.append(commitUrl).append("|").append(refactoringDescription)
+														.append("|")
+														.append(refactoringMatcher.decomposeToImproveReadabilityExtractedCodeSize)
+														.append("\n");
+											} else {
 												System.out.println("  " + ref);
 											}
-										//motivationsARM.append(ref).append("|");
+											// motivationsARM.append(ref).append("|");
+
+										}
 									}
 								}
 								
