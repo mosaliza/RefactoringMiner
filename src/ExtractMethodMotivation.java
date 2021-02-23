@@ -41,7 +41,7 @@ public class ExtractMethodMotivation {
     @Column(name = "commit_id")
     private String commitId;
     
-	@Column(name = "commit_message")
+	@Column(name = "commit_message" , columnDefinition = "TEXT")
     private String commitMessage;
     
     @Column(name = "committer_name")
