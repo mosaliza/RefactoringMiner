@@ -23,9 +23,9 @@ import gr.uom.java.xmi.diff.UMLAnonymousClassDiff;
 import gr.uom.java.xmi.diff.CandidateAttributeRefactoring;
 import gr.uom.java.xmi.diff.CandidateMergeVariableRefactoring;
 import gr.uom.java.xmi.diff.CandidateSplitVariableRefactoring;
+import gr.uom.java.xmi.diff.ExtractOperationRefactoring;
 import gr.uom.java.xmi.diff.ExtractVariableRefactoring;
 import gr.uom.java.xmi.diff.StringDistance;
-import gr.uom.java.xmi.diff.UMLAttributeDiff;
 import gr.uom.java.xmi.diff.UMLClassBaseDiff;
 import gr.uom.java.xmi.diff.UMLClassMoveDiff;
 import gr.uom.java.xmi.diff.UMLModelDiff;
@@ -66,7 +66,8 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 	private List<UMLOperationBodyMapper> childMappers = new ArrayList<UMLOperationBodyMapper>();
 	private UMLOperationBodyMapper parentMapper;
 	private static final Pattern SPLIT_CONDITIONAL_PATTERN = Pattern.compile("(\\|\\|)|(&&)|(\\?)|(:)");
-	public static final String SPLIT_CONCAT_STRING_PATTERN = "(\\s)*(\\+)(\\s)*";
+	public static final Pattern SPLIT_CONCAT_STRING_PATTERN = Pattern.compile("(\\s)*(\\+)(\\s)*");
+	private static final int MAXIMUM_NUMBER_OF_COMPARED_STRINGS = 100;
 	private UMLClassBaseDiff classDiff;
 	private UMLModelDiff modelDiff;
 	private UMLOperation callSiteOperation;
@@ -1014,6 +1015,10 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 			}
 		}
 		return replacements;
+	}
+
+	public boolean involvesTestMethods() {
+		return operation1.hasTestAnnotation() && operation2.hasTestAnnotation();
 	}
 
 	public void processInnerNodes(List<CompositeStatementObject> innerNodes1, List<CompositeStatementObject> innerNodes2,
@@ -2125,8 +2130,9 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 							invocationCoveringTheEntireStatement1.identicalWithDifferentNumberOfArguments(invocationCoveringTheEntireStatement2, replacementInfo.getReplacements(), parameterToArgumentMap)))) {
 						UMLAnonymousClass anonymousClass1 = operation1.findAnonymousClass(anonymousClassDeclaration1);
 						UMLAnonymousClass anonymousClass2 = operation2.findAnonymousClass(anonymousClassDeclaration2);
-						UMLAnonymousClassDiff anonymousClassDiff = new UMLAnonymousClassDiff(anonymousClass1, anonymousClass2, classDiff);
-						List<UMLOperationBodyMapper> matchedOperationMappers = anonymousClassDiff.getMatchedOperationMappers();
+						UMLAnonymousClassDiff anonymousClassDiff = new UMLAnonymousClassDiff(anonymousClass1, anonymousClass2, classDiff, modelDiff);
+						anonymousClassDiff.process();
+						List<UMLOperationBodyMapper> matchedOperationMappers = anonymousClassDiff.getOperationBodyMapperList();
 						if(matchedOperationMappers.size() > 0) {
 							for(UMLOperationBodyMapper mapper : matchedOperationMappers) {
 								this.mappings.addAll(mapper.mappings);
@@ -2134,14 +2140,8 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 								this.nonMappedInnerNodesT2.addAll(mapper.nonMappedInnerNodesT2);
 								this.nonMappedLeavesT1.addAll(mapper.nonMappedLeavesT1);
 								this.nonMappedLeavesT2.addAll(mapper.nonMappedLeavesT2);
-								this.refactorings.addAll(mapper.getRefactorings());
 							}
-							for(UMLOperationDiff operationDiff : anonymousClassDiff.getOperationDiffs()) {
-								this.refactorings.addAll(operationDiff.getRefactorings());
-							}
-							for(UMLAttributeDiff attributeDiff : anonymousClassDiff.getAttributeDiffs()) {
-								this.refactorings.addAll(attributeDiff.getRefactorings());
-							}
+							this.refactorings.addAll(anonymousClassDiff.getRefactorings());
 							Replacement replacement = new Replacement(anonymousClassDeclaration1.toString(), anonymousClassDeclaration2.toString(), ReplacementType.ANONYMOUS_CLASS_DECLARATION);
 							replacementInfo.addReplacement(replacement);
 							return replacementInfo.getReplacements();
@@ -2245,6 +2245,14 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 						invocationCoveringTheEntireStatement1.getExpression().contains(".") == invocationCoveringTheEntireStatement2.getExpression().contains(".")) {
 					return replacementInfo.getReplacements();
 				}
+			}
+			String expression1 = invocationCoveringTheEntireStatement1.getExpression();
+			String expression2 = invocationCoveringTheEntireStatement2.getExpression();
+			boolean staticVSNonStatic = (expression1 == null && expression2 != null && operation1.getClassName().endsWith("." + expression2)) ||
+					(expression1 != null && expression2 == null && operation2.getClassName().endsWith("." + expression1));
+			if(invocationCoveringTheEntireStatement1.identicalName(invocationCoveringTheEntireStatement2) && staticVSNonStatic &&
+					invocationCoveringTheEntireStatement1.identicalOrReplacedArguments(invocationCoveringTheEntireStatement2, replacementInfo.getReplacements(), lambdaMappers)) {
+				return replacementInfo.getReplacements();
 			}
 		}
 		//method invocation is identical if arguments are replaced
@@ -3644,8 +3652,8 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 	private boolean commonConcat(String s1, String s2, ReplacementInfo info) {
 		if(s1.contains("+") && s2.contains("+") && !s1.contains("++") && !s2.contains("++") &&
 				!containsMethodSignatureOfAnonymousClass(s1) && !containsMethodSignatureOfAnonymousClass(s2)) {
-			Set<String> tokens1 = new LinkedHashSet<String>(Arrays.asList(s1.split(SPLIT_CONCAT_STRING_PATTERN)));
-			Set<String> tokens2 = new LinkedHashSet<String>(Arrays.asList(s2.split(SPLIT_CONCAT_STRING_PATTERN)));
+			Set<String> tokens1 = new LinkedHashSet<String>(Arrays.asList(SPLIT_CONCAT_STRING_PATTERN.split(s1)));
+			Set<String> tokens2 = new LinkedHashSet<String>(Arrays.asList(SPLIT_CONCAT_STRING_PATTERN.split(s2)));
 			Set<String> intersection = new LinkedHashSet<String>(tokens1);
 			intersection.retainAll(tokens2);
 			Set<String> filteredIntersection = new LinkedHashSet<String>();
@@ -3930,6 +3938,9 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 	}
 
 	private void findReplacements(Set<String> strings1, Set<String> strings2, ReplacementInfo replacementInfo, ReplacementType type) throws RefactoringMinerTimedOutException {
+		if(strings1.size() > MAXIMUM_NUMBER_OF_COMPARED_STRINGS || strings2.size() > MAXIMUM_NUMBER_OF_COMPARED_STRINGS) {
+			return;
+		}
 		TreeMap<Double, Set<Replacement>> globalReplacementMap = new TreeMap<Double, Set<Replacement>>();
 		TreeMap<Double, Set<Replacement>> replacementCache = new TreeMap<Double, Set<Replacement>>();
 		if(strings1.size() <= strings2.size()) {
@@ -4250,15 +4261,22 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 				return -Integer.compare(thisExactMatches, otherExactMatches);
 			}
 			else {
-				int thisEditDistance = this.editDistance();
-				int otherEditDistance = operationBodyMapper.editDistance();
-				if(thisEditDistance != otherEditDistance) {
-					return Integer.compare(thisEditDistance, otherEditDistance);
+				int thisNonMapped = this.nonMappedElementsT2();
+				int otherNonMapped = operationBodyMapper.nonMappedElementsT2();
+				if(thisNonMapped != otherNonMapped) {
+					return Integer.compare(thisNonMapped, otherNonMapped);
 				}
 				else {
-					int thisOperationNameEditDistance = this.operationNameEditDistance();
-					int otherOperationNameEditDistance = operationBodyMapper.operationNameEditDistance();
-					return Integer.compare(thisOperationNameEditDistance, otherOperationNameEditDistance);
+					int thisEditDistance = this.editDistance();
+					int otherEditDistance = operationBodyMapper.editDistance();
+					if(thisEditDistance != otherEditDistance) {
+						return Integer.compare(thisEditDistance, otherEditDistance);
+					}
+					else {
+						int thisOperationNameEditDistance = this.operationNameEditDistance();
+						int otherOperationNameEditDistance = operationBodyMapper.operationNameEditDistance();
+						return Integer.compare(thisOperationNameEditDistance, otherOperationNameEditDistance);
+					}
 				}
 			}
 		}
@@ -4299,7 +4317,17 @@ public class UMLOperationBodyMapper implements Comparable<UMLOperationBodyMapper
 
 	public boolean containsExtractOperationRefactoring(UMLOperation extractedOperation) {
 		if(classDiff != null) {
-			return classDiff.containsExtractOperationRefactoring(operation1, extractedOperation);
+			if(classDiff.containsExtractOperationRefactoring(operation1, extractedOperation)) {
+				return true;
+			}
+		}
+		for(Refactoring ref : refactorings) {
+			if(ref instanceof ExtractOperationRefactoring) {
+				ExtractOperationRefactoring extractRef = (ExtractOperationRefactoring)ref;
+				if(extractRef.getExtractedOperation().equals(extractedOperation)) {
+					return true;
+				}
+			}
 		}
 		return false;
 	}

@@ -28,7 +28,7 @@ public class UMLAttributeDiff {
 	private UMLAnnotationListDiff annotationListDiff;
 	private List<UMLAnonymousClassDiff> anonymousClassDiffList;
 
-	public UMLAttributeDiff(UMLAttribute removedAttribute, UMLAttribute addedAttribute, UMLClassBaseDiff classDiff) throws RefactoringMinerTimedOutException {
+	public UMLAttributeDiff(UMLAttribute removedAttribute, UMLAttribute addedAttribute, UMLClassBaseDiff classDiff, UMLModelDiff modelDiff) throws RefactoringMinerTimedOutException {
 		this(removedAttribute, addedAttribute, classDiff.getOperationBodyMapperList());
 		List<UMLAnonymousClass> removedAttributeAnonymousClassList = removedAttribute.getAnonymousClassList();
 		List<UMLAnonymousClass> addedAttributeAnonymousClassList = addedAttribute.getAnonymousClassList();
@@ -36,7 +36,8 @@ public class UMLAttributeDiff {
 			for(int i=0; i<removedAttributeAnonymousClassList.size(); i++) {
 				UMLAnonymousClass anonymousClass1 = removedAttributeAnonymousClassList.get(i);
 				UMLAnonymousClass anonymousClass2 = addedAttributeAnonymousClassList.get(i);
-				UMLAnonymousClassDiff anonymousClassDiff = new UMLAnonymousClassDiff(anonymousClass1, anonymousClass2, classDiff);
+				UMLAnonymousClassDiff anonymousClassDiff = new UMLAnonymousClassDiff(anonymousClass1, anonymousClass2, classDiff, modelDiff);
+				anonymousClassDiff.process();
 				anonymousClassDiffList.add(anonymousClassDiff);
 			}
 		}
@@ -143,15 +144,7 @@ public class UMLAttributeDiff {
 	private Set<Refactoring> getAnonymousClassRefactorings() {
 		Set<Refactoring> refactorings = new LinkedHashSet<Refactoring>();
 		for(UMLAnonymousClassDiff anonymousClassDiff : anonymousClassDiffList) {
-			for(UMLOperationBodyMapper mapper : anonymousClassDiff.getMatchedOperationMappers()) {
-				refactorings.addAll(mapper.getRefactorings());
-			}
-			for(UMLOperationDiff operationDiff : anonymousClassDiff.getOperationDiffs()) {
-				refactorings.addAll(operationDiff.getRefactorings());
-			}
-			for(UMLAttributeDiff attributeDiff : anonymousClassDiff.getAttributeDiffs()) {
-				refactorings.addAll(attributeDiff.getRefactorings());
-			}
+			refactorings.addAll(anonymousClassDiff.getRefactorings());
 		}
 		return refactorings;
 	}
