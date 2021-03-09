@@ -49,6 +49,7 @@ public class MotivationExtractor {
 	private Map<Refactoring , List<MotivationType>> mapRefactoringMotivations;
 	private Map<Refactoring , List<MotivationFlag>> mapMotivationFlags;
 	private List<ExtractOperationRefactoring> removeDuplicationFromSingleMethodRefactorings = new ArrayList<ExtractOperationRefactoring>();
+	private List<ExtractOperationRefactoring> oneLineRemoveDuplications = new ArrayList<ExtractOperationRefactoring>();
 	private List<ExtractOperationRefactoring> decomposeToImproveReadabilityFromSingleMethodRefactorings = new ArrayList<ExtractOperationRefactoring>();
 	private int decomposeToImproveReadabilityFromMultipleMethodRefactorings = 0;
 	private List<ExtractOperationRefactoring> decomposeToImproveReadabilityFromSingleMethodByHavingCallToExtractedMethodInReturn = new ArrayList<ExtractOperationRefactoring>();
@@ -2385,7 +2386,9 @@ public class MotivationExtractor {
 				setMotivationFlag(MotivationFlag.EM_INVOCATION_IN_REMOVE_DUPLICATION, extractOpRefactoring);
 			}
 		}else {
-			mapExtraInvokations.putAll(countOperationAInvokationsInOperationB(extractedOperation,operation));		 
+			if(!oneLineRemoveDuplications.contains(extractOpRefactoring)) {
+				mapExtraInvokations.putAll(countOperationAInvokationsInOperationB(extractedOperation,operation));		 
+			}
 		} 
 
 		return mapExtraInvokations;
@@ -2950,7 +2953,8 @@ public class MotivationExtractor {
 			 *  have the same extractedOperation the extract operations motivations is Remove Duplication*/
 			if(listSourceOperations.size() > 1){
 				if(isRemoveDuplicationOneLine(listSourceOperations)) {
-					return false;
+					oneLineRemoveDuplications.addAll(listSourceOperations);
+					continue;
 				}
 				if(isExtractMethodRefactoringsEqual(listSourceOperations)) {
 					removeDuplicationFromSingleMethodRefactorings.addAll(listSourceOperations);
