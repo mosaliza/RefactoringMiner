@@ -166,7 +166,8 @@
 	"description": "Inline Method private verifyReceiverRemovesSubscription(times VerificationMode) : void inlined to public shouldTimeoutSubscription() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Improve readability",
+                "status": "match1"
 	} ]
 },
 {
@@ -174,7 +175,8 @@
 	"description": "Inline Method private verifyReceiverRemovesSubscription(times VerificationMode) : void inlined to public shouldNotTimeoutSubscriptionOnKeepAlive() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Improve readability",
+                "status": "match1"
 	} ]
 },
 {
@@ -182,7 +184,8 @@
 	"description": "Inline Method private verifyReceiverSubscribes() : void inlined to public shouldTimeoutSubscription() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Improve readability",
+                "status": "match1"
 	} ]
 },
 {
@@ -208,7 +211,8 @@
 	"description": "Inline Method private verifyPublicationClosed(times VerificationMode) : void inlined to public shouldTimeoutPublication() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Improve readability",
+                "status": "match1"
 	} ]
 },
 {
@@ -216,7 +220,8 @@
 	"description": "Inline Method private verifyPublicationClosed(times VerificationMode) : void inlined to public shouldNotTimeoutPublicationOnKeepAlive() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Improve readability",
+                "status": "match1"
 	} ]
 },
 {
@@ -224,7 +229,8 @@
 	"description": "Inline Method private verifyExceptionLogged() : void inlined to public shouldErrorOnRemoveChannelOnUnknownSessionId() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Improve readability",
+                "status": "match1"
 	} ]
 },
 {
@@ -232,7 +238,8 @@
 	"description": "Inline Method private verifyExceptionLogged() : void inlined to public shouldErrorOnRemoveChannelOnUnknownStreamId() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Improve readability",
+                "status": "match1"
 	} ]
 },
 {
@@ -250,6 +257,8 @@
 	"description": "Inline Method private verifyNeverSucceeds() : void inlined to public shouldErrorOnRemoveChannelOnUnknownSessionId() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
+	                "label": "IM: Improve readability",
+                "status": "match1"
 
 	} ]
 },
@@ -258,7 +267,8 @@
 	"description": "Inline Method private verifyNeverSucceeds() : void inlined to public shouldErrorOnRemoveChannelOnUnknownStreamId() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Improve readability",
+                "status": "match1"
 	} ]
 },
 {
@@ -284,7 +294,8 @@
 	"description": "Inline Method private verifySenderNotifiedOfNewPublication() : void inlined to public shouldTimeoutPublication() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Improve readability",
+                "status": "match1"
 	} ]
 },
 {
@@ -292,7 +303,8 @@
 	"description": "Inline Method private verifySenderNotifiedOfNewPublication() : void inlined to public shouldNotTimeoutPublicationOnKeepAlive() : void in class uk.co.real_logic.aeron.driver.DriverConductorTest",
 	"motivations": [ 
 	{ 
-
+                "label": "IM: Improve readability",
+                "status": "match1"
 	} ]
 },
 {
@@ -1532,7 +1544,8 @@
 	"description": "Inline Method private getModuleFileName() : String inlined to public multiResolve(incompleteCode boolean) : ResolveResult[] in class org.intellij.erlang.psi.impl.ErlangFunctionReferenceImpl",
 	"motivations": [ 
 	{ 
-
+		                "label": "IM: Eliminate unnecessary method",
+                "status": "match2"
 	} ]
 }
 ]},{	"repository": "https://github.com/geoserver/geoserver.git",
@@ -15442,6 +15455,8 @@
 	"description": "Inline Method private initOpenAL(context Context) : void inlined to public initialise(rootContext Context) : void in class org.terasology.engine.subsystem.lwjgl.LwjglAudio",
 	"motivations": [ 
 	{ 
+	                "label": "IM: Eliminate unnecessary method",
+                "status": "match2"
 
 	} ]
 },
@@ -15522,6 +15537,8 @@
 	"description": "Inline Method private initTimer(context Context) : void inlined to public preInitialise(context Context) : void in class org.terasology.engine.subsystem.lwjgl.LwjglTimer",
 	"motivations": [ 
 	{ 
+	                "label": "IM: Eliminate unnecessary method",
+                "status": "match2"
 
 	} ]
 },
