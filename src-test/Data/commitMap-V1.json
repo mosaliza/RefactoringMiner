@@ -15876,8 +15876,7 @@
 	"description": "Move Attribute public VIDMINKY_MAP : Map<String,String> from class org.languagetool.tagging.uk.UkrainianTagger to public VIDMINKY_MAP : Map<String,String> from class org.languagetool.tagging.uk.PosTagHelper",
 	"motivations": [ 
 	{ 
-                "label": "MA: Remove duplication",
-                "status": "add"
+
 	} ]
 },
 {
@@ -16053,7 +16052,8 @@
 	"description": "Move Attribute private DEBUG_COMPOUNDS_PROPERTY : String from class org.languagetool.tagging.uk.UkrainianTagger to private DEBUG_COMPOUNDS_PROPERTY : String from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16061,7 +16061,8 @@
 	"description": "Move Attribute private TAG_ANIM : String from class org.languagetool.tagging.uk.UkrainianTagger to private TAG_ANIM : String from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16069,7 +16070,8 @@
 	"description": "Move Attribute private NV_TAG : String from class org.languagetool.tagging.uk.UkrainianTagger to private NV_TAG : String from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16077,7 +16079,8 @@
 	"description": "Move Attribute private COMPB_TAG : String from class org.languagetool.tagging.uk.UkrainianTagger to private COMPB_TAG : String from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16085,7 +16088,8 @@
 	"description": "Move Attribute private EXTRA_TAGS : Pattern from class org.languagetool.tagging.uk.UkrainianTagger to private EXTRA_TAGS : Pattern from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16093,7 +16097,8 @@
 	"description": "Move Attribute private NOUN_SING_V_ROD_REGEX : Pattern from class org.languagetool.tagging.uk.UkrainianTagger to private NOUN_SING_V_ROD_REGEX : Pattern from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16101,7 +16106,8 @@
 	"description": "Move Attribute private NOUN_V_NAZ_REGEX : Pattern from class org.languagetool.tagging.uk.UkrainianTagger to private NOUN_V_NAZ_REGEX : Pattern from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16109,7 +16115,8 @@
 	"description": "Move Attribute private SING_REGEX_F : Pattern from class org.languagetool.tagging.uk.UkrainianTagger to private SING_REGEX_F : Pattern from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16117,7 +16124,8 @@
 	"description": "Move Attribute private O_ADJ_PATTERN : Pattern from class org.languagetool.tagging.uk.UkrainianTagger to private O_ADJ_PATTERN : Pattern from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16125,7 +16133,8 @@
 	"description": "Move Attribute private MNP_NAZ_REGEX : Pattern from class org.languagetool.tagging.uk.UkrainianTagger to private MNP_NAZ_REGEX : Pattern from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16133,7 +16142,8 @@
 	"description": "Move Attribute private MNP_ZNA_REGEX : Pattern from class org.languagetool.tagging.uk.UkrainianTagger to private MNP_ZNA_REGEX : Pattern from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16141,7 +16151,8 @@
 	"description": "Move Attribute private MNP_ROD_REGEX : Pattern from class org.languagetool.tagging.uk.UkrainianTagger to private MNP_ROD_REGEX : Pattern from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16149,7 +16160,8 @@
 	"description": "Move Attribute private stdNounTag : String from class org.languagetool.tagging.uk.UkrainianTagger to private stdNounTag : String from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16157,7 +16169,8 @@
 	"description": "Move Attribute private stdNounTagLen : int from class org.languagetool.tagging.uk.UkrainianTagger to private stdNounTagLen : int from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16165,7 +16178,8 @@
 	"description": "Move Attribute private stdNounTagRegex : Pattern from class org.languagetool.tagging.uk.UkrainianTagger to private stdNounTagRegex : Pattern from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16173,7 +16187,8 @@
 	"description": "Move Attribute private dashPrefixes : Set<String> from class org.languagetool.tagging.uk.UkrainianTagger to private dashPrefixes : Set<String> from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16181,7 +16196,8 @@
 	"description": "Move Attribute private leftMasterSet : Set<String> from class org.languagetool.tagging.uk.UkrainianTagger to private leftMasterSet : Set<String> from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16189,7 +16205,8 @@
 	"description": "Move Attribute private cityAvenue : Set<String> from class org.languagetool.tagging.uk.UkrainianTagger to private cityAvenue : Set<String> from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16197,7 +16214,8 @@
 	"description": "Move Attribute private rightPartsWithLeftTagMap : Map<String,Pattern> from class org.languagetool.tagging.uk.UkrainianTagger to private rightPartsWithLeftTagMap : Map<String,Pattern> from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16205,7 +16223,8 @@
 	"description": "Move Attribute private slaveSet : Set<String> from class org.languagetool.tagging.uk.UkrainianTagger to private slaveSet : Set<String> from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16213,7 +16232,8 @@
 	"description": "Move Attribute private NUMR_ENDING_MAP : Map<String,List<String>> from class org.languagetool.tagging.uk.UkrainianTagger to private NUMR_ENDING_MAP : Map<String,List<String>> from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16221,7 +16241,8 @@
 	"description": "Move Attribute private ADJ_TAG_FOR_PO_ADV_MIS : String from class org.languagetool.tagging.uk.UkrainianTagger to private ADJ_TAG_FOR_PO_ADV_MIS : String from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16229,7 +16250,8 @@
 	"description": "Move Attribute private ADJ_TAG_FOR_PO_ADV_NAZ : String from class org.languagetool.tagging.uk.UkrainianTagger to private ADJ_TAG_FOR_PO_ADV_NAZ : String from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16237,7 +16259,8 @@
 	"description": "Move Attribute private LEFT_O_ADJ : List<String> from class org.languagetool.tagging.uk.UkrainianTagger to private LEFT_O_ADJ : List<String> from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16245,7 +16268,8 @@
 	"description": "Move Attribute private compoundUnknownDebugWriter : BufferedWriter from class org.languagetool.tagging.uk.UkrainianTagger to private compoundUnknownDebugWriter : BufferedWriter from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 },
 {
@@ -16253,7 +16277,8 @@
 	"description": "Move Attribute private compoundTaggedDebugWriter : BufferedWriter from class org.languagetool.tagging.uk.UkrainianTagger to private compoundTaggedDebugWriter : BufferedWriter from class org.languagetool.tagging.uk.CompoundTagger",
 	"motivations": [ 
 	{ 
-
+                "label": "MA: Remove duplication",
+                "status": "add"
 	} ]
 }
 ]},{	"repository": "https://github.com/puniverse/quasar.git",

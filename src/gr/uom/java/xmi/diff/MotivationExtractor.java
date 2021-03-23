@@ -133,6 +133,7 @@ public class MotivationExtractor {
 			detectMoveClassMotivation(listRef);
 			break;
 		case MOVE_ATTRIBUTE:
+			detectMoveAttributeMotivation(listRef);
 
 			break;
 		case RENAME_PACKAGE:
@@ -164,6 +165,52 @@ public class MotivationExtractor {
 		default:
 			break;
 		}
+	}
+
+	private void detectMoveAttributeMotivation(List<Refactoring> listRef) {
+		isMoveAttributeToRemoveDuplication(listRef);
+		for (Refactoring ref : listRef) {
+			if (isMoveAttributeToAppropriateClass(ref)) {
+			    setRefactoringMotivation(MotivationType.MA_MOVE_ATTRIBUTE_TO_APPROPRIATE_CLASS, ref);
+			}
+		}
+	}
+
+	private boolean isMoveAttributeToRemoveDuplication(List<Refactoring> listRef) {
+		Map<String, List<MoveAttributeRefactoring>> mapMoveAttributeWithTargetClassNameAsKey = new HashMap<String, List<MoveAttributeRefactoring>>();
+		for (Refactoring ref : listRef) {
+			MoveAttributeRefactoring moveAttributeRef = (MoveAttributeRefactoring) ref;
+			String moveAttributeTargetClassName = moveAttributeRef.getTargetClassName();
+			if (!mapMoveAttributeWithTargetClassNameAsKey.containsKey(moveAttributeTargetClassName)) {
+				List<MoveAttributeRefactoring> listMoveAttributeRef = new ArrayList<MoveAttributeRefactoring>();
+				listMoveAttributeRef.add(moveAttributeRef);
+				mapMoveAttributeWithTargetClassNameAsKey.put(moveAttributeTargetClassName, listMoveAttributeRef);
+			} else {
+				mapMoveAttributeWithTargetClassNameAsKey.get(moveAttributeTargetClassName).add(moveAttributeRef);
+			}
+		}
+		int numberOfRemoveDuplicationMoveAttributes = 0;
+		for (String moveAttributeTargetClassName : mapMoveAttributeWithTargetClassNameAsKey.keySet()) {
+			List<MoveAttributeRefactoring> listMoveAtrributeRefs = mapMoveAttributeWithTargetClassNameAsKey
+					.get(moveAttributeTargetClassName);			
+			if (listMoveAtrributeRefs.size() > 1 && !listMoveAtrributeRefs.stream()
+					.allMatch(x -> x.getSourceClassName() == listMoveAtrributeRefs.get(0).getSourceClassName())) {
+				
+				for (MoveAttributeRefactoring ref : listMoveAtrributeRefs) {
+					setRefactoringMotivation(MotivationType.MA_REMOVE_DUPLICATION, ref);
+					numberOfRemoveDuplicationMoveAttributes++;
+				}
+			}
+		}
+		if (numberOfRemoveDuplicationMoveAttributes > 1) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean isMoveAttributeToAppropriateClass(Refactoring ref) {
+		MoveAttributeRefactoring moveAttributeRef = (MoveAttributeRefactoring) ref;
+		return false;
 	}
 
 	private void setExtractMethodInitialMotivationFlags(List<Refactoring> listRef) {
